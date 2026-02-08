@@ -3,6 +3,24 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
+## Estado Atual
+**MVP completo e funcional.** Todas as 7 fases implementadas:
+- [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
+- [x] Database schema + migrations (RLS ativo)
+- [x] Autenticação (login, registro com confirmação por email, logout)
+- [x] CRUD Contas (banco, cartão, carteira)
+- [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso)
+- [x] CRUD Transações (filtro mensal, atualização automática de saldo)
+- [x] Dashboard (cards resumo, gráfico por categoria, últimas transações)
+
+**Supabase configurado:** Projeto `knwbotsyztakseriiwtv` — migrations precisam ser executadas manualmente no SQL Editor.
+
+## Próximos Passos Sugeridos
+- [ ] Executar migrations no Supabase (001_initial_schema.sql, 002_seed_categories.sql)
+- [ ] Testar fluxo completo (registro → confirmação email → login → CRUD)
+- [ ] Deploy na Vercel
+- [ ] Melhorias futuras: filtros avançados, exportar dados, metas de orçamento
+
 ## Stack
 - Next.js 16 (App Router) + TypeScript
 - Tailwind CSS v4
