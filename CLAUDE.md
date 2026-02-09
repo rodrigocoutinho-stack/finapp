@@ -15,11 +15,26 @@ FinApp - Gestão Financeira Pessoal
 
 **Supabase configurado:** Projeto `knwbotsyztakseriiwtv` — migrations precisam ser executadas manualmente no SQL Editor.
 
-## Próximos Passos Sugeridos
+## Próximos Passos
+### Imediato
 - [ ] Executar migrations no Supabase (001_initial_schema.sql, 002_seed_categories.sql)
-- [ ] Testar fluxo completo (registro → confirmação email → login → CRUD)
+
+### Fase 1: Fluxo Previsto (nova seção no Dashboard)
+- [ ] Nova seção "Fluxo Previsto" na tela inicial
+- [ ] Projeção de receitas e despesas futuras
+- [ ] Visualização do saldo projetado ao longo do tempo
+
+### Fase 2: Robustez e Qualidade
+- [ ] Tratamento de erros mais completo (edge cases, falhas de rede)
+- [ ] Validações de formulário mais rigorosas
+- [ ] Otimização de queries (evitar re-fetches desnecessários)
+- [ ] Feedback visual melhorado (toasts, confirmações)
+- [ ] Testes (unitários e/ou e2e)
+- [ ] Acessibilidade (a11y)
+
+### Futuro
 - [ ] Deploy na Vercel
-- [ ] Melhorias futuras: filtros avançados, exportar dados, metas de orçamento
+- [ ] Filtros avançados, exportar dados, metas de orçamento
 
 ## Stack
 - Next.js 16 (App Router) + TypeScript
