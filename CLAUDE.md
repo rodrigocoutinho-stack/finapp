@@ -20,9 +20,32 @@ FinApp - Gestão Financeira Pessoal
 - [ ] Executar migrations no Supabase (001_initial_schema.sql, 002_seed_categories.sql)
 
 ### Fase 1: Fluxo Previsto (nova seção no Dashboard)
-- [ ] Nova seção "Fluxo Previsto" na tela inicial
-- [ ] Projeção de receitas e despesas futuras
-- [ ] Visualização do saldo projetado ao longo do tempo
+
+**Requisitos definidos:**
+
+1. **Dois tipos de projeção por categoria:**
+   - Recorrentes: transações fixas conhecidas (ex: salário dia 5, aluguel dia 10)
+   - Histórico: média baseada nos últimos meses (para categorias sem padrão claro)
+   - Cada categoria pode escolher qual formato usar
+
+2. **Horizonte:** Próximos 3 meses
+
+3. **Visualização — dois blocos:**
+   - **Tabela:**
+     - Grupo Receitas + subcategorias
+     - Grupo Despesas + subcategorias
+     - Resultado final (saldo)
+   - **Gráfico simples:**
+     - Barras: Receita total, Despesa total, Resultado
+
+**Tarefas de implementação:**
+- [ ] Criar tabela `recurring_transactions` (categoria, valor, dia do mês, descrição)
+- [ ] Adicionar campo `projection_type` na tabela `categories` ('recurring' | 'historical')
+- [ ] Criar componente de configuração de projeção por categoria
+- [ ] Implementar lógica de cálculo (recorrentes + histórico)
+- [ ] Criar componente `ForecastTable` (receitas/despesas agrupadas)
+- [ ] Criar componente `ForecastChart` (barras: receita, despesa, resultado)
+- [ ] Integrar na página do Dashboard
 
 ### Fase 2: Robustez e Qualidade
 - [ ] Tratamento de erros mais completo (edge cases, falhas de rede)
