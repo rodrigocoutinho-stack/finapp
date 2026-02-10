@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/client";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 import { MonthPicker } from "@/components/dashboard/month-picker";
-import { ForecastChart } from "@/components/dashboard/forecast-chart";
 import { ForecastTable } from "@/components/dashboard/forecast-table";
 import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
 import { calculateForecast, type ForecastResult } from "@/lib/forecast";
@@ -170,25 +169,8 @@ export default function DashboardPage() {
                 Projeção para os próximos 3 meses
               </p>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg p-4 border border-gray-100">
-                  <h3 className="text-sm font-medium text-gray-600 mb-3">Resumo</h3>
-                  <ForecastChart
-                    totalReceitas={forecast.totalReceitas}
-                    totalDespesas={forecast.totalDespesas}
-                    resultado={forecast.resultado}
-                  />
-                </div>
-
-                <div className="bg-white rounded-lg p-4 border border-gray-100">
-                  <h3 className="text-sm font-medium text-gray-600 mb-3">Por Categoria</h3>
-                  <ForecastTable
-                    byCategory={forecast.byCategory}
-                    totalReceitas={forecast.totalReceitas}
-                    totalDespesas={forecast.totalDespesas}
-                    resultado={forecast.resultado}
-                  />
-                </div>
+              <div className="bg-white rounded-lg p-4 border border-gray-100">
+                <ForecastTable months={forecast.months} />
               </div>
             </div>
           )}
