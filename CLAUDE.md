@@ -3,7 +3,7 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
-## Estado Atual (Atualizado: 08/02/2026)
+## Estado Atual (Atualizado: 09/02/2026)
 
 **MVP completo e funcional.** Todas as 8 fases implementadas:
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
@@ -13,45 +13,42 @@ FinApp - Gestão Financeira Pessoal
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção)
 - [x] CRUD Transações (filtro mensal, atualização automática de saldo)
 - [x] Dashboard (cards resumo, gráfico por categoria, últimas transações)
-- [x] Fluxo Previsto (projeção 3 meses, recorrentes + histórico)
+- [x] Fluxo Previsto (projeção mensal aberta por categoria, recorrentes + histórico)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
 - [x] Migrations 001-004 executadas no SQL Editor
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Pendências Imediatas
+## Últimas Alterações (10/02/2026)
 
-### Git - Mudanças não commitadas
-Há mudanças locais que precisam ser enviadas ao GitHub:
-
-```bash
-git add .
-git commit -m "feat: adiciona fluxo previsto (forecast) ao dashboard"
-git push
-```
-
-**Arquivos modificados:**
-- `CLAUDE.md` - documentação
-- `src/types/database.ts` - tipos atualizados
-- `src/components/layout/navbar.tsx` - link Recorrentes
-- `src/components/categorias/category-form.tsx` - campo projection_type
-- `src/app/(dashboard)/page.tsx` - seção Fluxo Previsto
-
-**Arquivos novos:**
-- `supabase/migrations/003_add_projection_type.sql`
-- `supabase/migrations/004_recurring_transactions.sql`
-- `src/app/(dashboard)/recorrentes/page.tsx`
-- `src/components/recorrentes/recurring-form.tsx`
-- `src/components/recorrentes/recurring-list.tsx`
-- `src/lib/forecast.ts`
-- `src/components/dashboard/forecast-chart.tsx`
-- `src/components/dashboard/forecast-table.tsx`
+### Importação de OFX — Extrato bancário e cartão de crédito
+- **`src/lib/ofx-parser.ts`** — Parser OFX/QFX custom (sem dependências externas)
+  - Suporta BANKMSGSRSV1 (conta) e CREDITCARDMSGSRSV1 (cartão)
+  - Extrai DTPOSTED, TRNAMT, MEMO/NAME de cada STMTTRN
+  - Converte valores para centavos, detecta receita/despesa pelo sinal
+  - Limite de 5MB por arquivo
+- **`src/app/(dashboard)/transacoes/importar/page.tsx`** — Página wizard de 3 passos
+  - Step 1 (Upload): seleção de conta + upload de arquivo .ofx/.qfx
+  - Step 2 (Revisão): tabela com checkbox, categoria por linha, detecção de duplicatas
+  - Step 3 (Resumo): contadores de importadas/ignoradas/duplicatas
+- **`src/components/transacoes/import-upload.tsx`** — Componente de upload
+- **`src/components/transacoes/import-review-table.tsx`** — Tabela de revisão
+  - Duplicatas detectadas por data + valor + descrição (badge amarelo)
+  - Dropdown de categoria filtrado por tipo (receita/despesa)
+  - Botões: selecionar todas, desmarcar todas, ignorar duplicatas
+  - Validação: não permite importar sem categoria definida
+  - Atualiza saldo da conta em uma única operação após import
+- **`src/components/transacoes/import-summary.tsx`** — Resumo final
+- **`src/app/(dashboard)/transacoes/page.tsx`** — Adicionado botão "Importar OFX"
 
 ### Testes pendentes
 - [ ] Testar CRUD de transações recorrentes
 - [ ] Testar tipo de projeção nas categorias
-- [ ] Verificar cálculos do Fluxo Previsto no Dashboard
+- [ ] Verificar cálculos do Fluxo Previsto (projeção mensal por categoria)
+- [ ] Testar importação OFX com arquivos de Itaú, Bradesco, Nubank
+- [ ] Verificar detecção de duplicatas na importação
+- [ ] Verificar atualização de saldo da conta após importação
 
 ## Estrutura do Projeto
 
@@ -65,20 +62,23 @@ src/
 │       ├── page.tsx              # Dashboard principal
 │       ├── contas/page.tsx
 │       ├── categorias/page.tsx
-│       ├── transacoes/page.tsx
-│       └── recorrentes/page.tsx  # NOVO
+│       ├── transacoes/
+│       │   ├── page.tsx
+│       │   └── importar/page.tsx # NOVO
+│       └── recorrentes/page.tsx
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal
 │   ├── layout/                   # Navbar
-│   ├── dashboard/                # SummaryCards, CategoryChart, MonthPicker, ForecastChart, ForecastTable
+│   ├── dashboard/                # SummaryCards, CategoryChart, MonthPicker, ForecastTable
 │   ├── contas/
 │   ├── categorias/
-│   ├── transacoes/
-│   └── recorrentes/              # NOVO
+│   ├── transacoes/               # TransactionForm, TransactionList, Import*
+│   └── recorrentes/
 ├── lib/
 │   ├── supabase/                 # client.ts, server.ts
 │   ├── utils.ts                  # formatCurrency, toCents, formatDate, etc.
-│   └── forecast.ts               # NOVO - lógica de projeção
+│   ├── forecast.ts               # Lógica de projeção
+│   └── ofx-parser.ts            # NOVO - Parser OFX/QFX
 └── types/
     └── database.ts               # Types do Supabase
 ```
@@ -148,6 +148,10 @@ src/
 - Tratar erros com mensagens claras em pt-BR
 - Estados de loading em toda operação assíncrona
 - Confirmação antes de excluir registros
+
+### Documentação
+- Ao final de toda sessão com alteração de código, atualizar a seção "Últimas Alterações" do CLAUDE.md do projeto antes de encerrar
+- Incluir: o que mudou, quais arquivos foram afetados e a data
 
 ## Comandos Úteis
 

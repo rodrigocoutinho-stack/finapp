@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -25,6 +26,7 @@ interface TransactionWithRelations {
 
 export default function TransacoesPage() {
   const supabase = createClient();
+  const router = useRouter();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -86,7 +88,12 @@ export default function TransacoesPage() {
             Registre e acompanhe suas movimentações financeiras
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)}>Nova transação</Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => router.push("/transacoes/importar")}>
+            Importar OFX
+          </Button>
+          <Button onClick={() => setShowForm(true)}>Nova transação</Button>
+        </div>
       </div>
 
       {/* Month navigator */}
