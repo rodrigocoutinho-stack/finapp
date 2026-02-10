@@ -12,6 +12,11 @@ const categoryTypeOptions = [
   { value: "despesa", label: "Despesa" },
 ];
 
+const projectionTypeOptions = [
+  { value: "historical", label: "Histórico (média dos últimos meses)" },
+  { value: "recurring", label: "Recorrente (valor fixo mensal)" },
+];
+
 interface CategoryFormProps {
   category?: Category;
   onSuccess: () => void;
@@ -22,6 +27,9 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
   const supabase = createClient();
   const [name, setName] = useState(category?.name ?? "");
   const [type, setType] = useState(category?.type ?? "despesa");
+  const [projectionType, setProjectionType] = useState<"recurring" | "historical">(
+    category?.projection_type ?? "historical"
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -43,7 +51,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
     if (category) {
       const { error } = await supabase
         .from("categories")
-        .update({ name, type })
+        .update({ name, type, projection_type: projectionType })
         .eq("id", category.id);
 
       if (error) {
@@ -54,7 +62,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
     } else {
       const { error } = await supabase
         .from("categories")
-        .insert({ user_id: user.id, name, type });
+        .insert({ user_id: user.id, name, type, projection_type: projectionType });
 
       if (error) {
         setError("Erro ao criar categoria.");
@@ -90,6 +98,17 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
         onChange={(e) => setType(e.target.value as Category["type"])}
         options={categoryTypeOptions}
       />
+
+      <Select
+        id="projectionType"
+        label="Tipo de projeção"
+        value={projectionType}
+        onChange={(e) => setProjectionType(e.target.value as "recurring" | "historical")}
+        options={projectionTypeOptions}
+      />
+      <p className="text-xs text-gray-500 -mt-2">
+        Define como calcular a projeção de gastos futuros desta categoria.
+      </p>
 
       <div className="flex gap-3 justify-end pt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>

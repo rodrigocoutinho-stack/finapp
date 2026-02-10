@@ -5,7 +5,10 @@ import { createClient } from "@/lib/supabase/client";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 import { MonthPicker } from "@/components/dashboard/month-picker";
+import { ForecastChart } from "@/components/dashboard/forecast-chart";
+import { ForecastTable } from "@/components/dashboard/forecast-table";
 import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
+import { calculateForecast, type ForecastResult } from "@/lib/forecast";
 
 interface TransactionRow {
   id: string;
@@ -23,20 +26,25 @@ export default function DashboardPage() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
+  const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     const { start, end } = getMonthRange(year, month);
 
-    const { data } = await supabase
-      .from("transactions")
-      .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
-      .gte("date", start)
-      .lte("date", end)
-      .order("date", { ascending: false });
+    const [transactionsRes, forecastRes] = await Promise.all([
+      supabase
+        .from("transactions")
+        .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
+        .gte("date", start)
+        .lte("date", end)
+        .order("date", { ascending: false }),
+      calculateForecast(supabase, 3),
+    ]);
 
-    setTransactions((data as TransactionRow[]) ?? []);
+    setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
+    setForecast(forecastRes);
     setLoading(false);
   }, [supabase, year, month]);
 
@@ -62,7 +70,6 @@ export default function DashboardPage() {
     }
   }
 
-  // Compute totals
   const totalReceitas = transactions
     .filter((t) => t.type === "receita")
     .reduce((sum, t) => sum + t.amount_cents, 0);
@@ -71,7 +78,6 @@ export default function DashboardPage() {
     .filter((t) => t.type === "despesa")
     .reduce((sum, t) => sum + t.amount_cents, 0);
 
-  // Compute category chart data (despesas only)
   const categoryMap = new Map<string, number>();
   transactions
     .filter((t) => t.type === "despesa")
@@ -84,7 +90,6 @@ export default function DashboardPage() {
     .map(([name, amount]) => ({ name, amount }))
     .sort((a, b) => b.amount - a.amount);
 
-  // Recent transactions (last 5)
   const recentTransactions = transactions.slice(0, 5);
 
   return (
@@ -110,7 +115,6 @@ export default function DashboardPage() {
         <div className="space-y-8">
           <SummaryCards totalReceitas={totalReceitas} totalDespesas={totalDespesas} />
 
-          {/* Category chart */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">
               Despesas por Categoria
@@ -118,7 +122,6 @@ export default function DashboardPage() {
             <CategoryChart data={chartData} />
           </div>
 
-          {/* Recent transactions */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">
               Últimas Transações
@@ -157,6 +160,38 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {forecast && (
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border border-blue-100 p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-800 mb-1">
+                Fluxo Previsto
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Projeção para os próximos 3 meses
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg p-4 border border-gray-100">
+                  <h3 className="text-sm font-medium text-gray-600 mb-3">Resumo</h3>
+                  <ForecastChart
+                    totalReceitas={forecast.totalReceitas}
+                    totalDespesas={forecast.totalDespesas}
+                    resultado={forecast.resultado}
+                  />
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border border-gray-100">
+                  <h3 className="text-sm font-medium text-gray-600 mb-3">Por Categoria</h3>
+                  <ForecastTable
+                    byCategory={forecast.byCategory}
+                    totalReceitas={forecast.totalReceitas}
+                    totalDespesas={forecast.totalDespesas}
+                    resultado={forecast.resultado}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

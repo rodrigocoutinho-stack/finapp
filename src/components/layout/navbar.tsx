@@ -10,6 +10,7 @@ const links = [
   { href: "/contas", label: "Contas" },
   { href: "/categorias", label: "Categorias" },
   { href: "/transacoes", label: "Transações" },
+  { href: "/recorrentes", label: "Recorrentes" },
 ];
 
 export function Navbar() {
