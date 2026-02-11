@@ -120,6 +120,33 @@ src/
 - Supabase (Auth + PostgreSQL + RLS)
 - Recharts (gráficos)
 
+## Segurança e Operação
+
+### Dados Financeiros
+- Este projeto lida com dados financeiros sensíveis — assumir postura conservadora por padrão
+- Nunca executar comandos destrutivos sem confirmação explícita do usuário:
+  - `rm -rf`, `del /s`, `truncate`, `drop`, `reset --hard`, `prune`
+  - Migrations que removam colunas, alterem tipos ou afetem dados existentes
+  - Qualquer comando que afete produção, credenciais ou dados persistentes
+
+### Schema e Migrations
+- Nunca alterar schema, constraints, RLS ou criar migrations destrutivas sem:
+  - Explicar o impacto da mudança
+  - Descrever como reverter (rollback)
+  - Pedir confirmação explícita do usuário
+- Migrations aditivas simples (ADD COLUMN, CREATE TABLE) podem ser propostas diretamente
+
+### Autonomia do Agente
+- **Pode executar sozinho:** leitura/escrita de arquivos, ajustes de código, `npm test`, `npm run build`, `npm run lint`
+- **Precisa de confirmação:** migrations destrutivas, comandos que afetem dados persistentes, ações irreversíveis, push para produção
+
+### Validação Pós-Tarefa
+- Antes de concluir tarefas que envolvam mais de 3 arquivos ou alterações estruturais, verificar:
+  - O código compila? (`npm run build`)
+  - Houve impacto em dados ou schema? Se sim, explicitar
+  - Existe risco de segurança introduzido? Se sim, explicitar
+  - Existe rollback claro? Se não, alertar o usuário
+
 ## Regras
 
 ### Linguagem
