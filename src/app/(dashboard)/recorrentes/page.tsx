@@ -47,12 +47,12 @@ export default function RecorrentesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Transações Recorrentes</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Transações Planejadas</h1>
           <p className="text-gray-600 text-sm mt-1">
-            Gerencie suas receitas e despesas fixas mensais
+            Gerencie recorrentes, pontuais e despesas com período definido
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)}>Nova recorrente</Button>
+        <Button onClick={() => setShowForm(true)}>Nova transação</Button>
       </div>
 
       {loading ? (
@@ -71,7 +71,7 @@ export default function RecorrentesPage() {
       <Modal
         open={showForm}
         onClose={() => setShowForm(false)}
-        title="Nova transação recorrente"
+        title="Nova transação planejada"
       >
         <RecurringForm
           accounts={accounts}

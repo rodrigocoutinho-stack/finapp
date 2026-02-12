@@ -13,6 +13,19 @@ const transactionTypeOptions = [
   { value: "receita", label: "Receita" },
 ];
 
+const scheduleTypeOptions = [
+  { value: "recurring", label: "Recorrente (sem prazo)" },
+  { value: "pontual", label: "Pontual (mês único)" },
+  { value: "period", label: "Recorrente com período" },
+];
+
+function getInitialScheduleType(recurring?: RecurringTransaction): string {
+  if (!recurring) return "recurring";
+  if (!recurring.start_month && !recurring.end_month) return "recurring";
+  if (recurring.start_month === recurring.end_month) return "pontual";
+  return "period";
+}
+
 interface RecurringFormProps {
   recurring?: RecurringTransaction;
   accounts: Account[];
@@ -42,6 +55,11 @@ export function RecurringForm({
     recurring?.day_of_month?.toString() ?? ""
   );
   const [isActive, setIsActive] = useState(recurring?.is_active ?? true);
+  const [scheduleType, setScheduleType] = useState(
+    getInitialScheduleType(recurring)
+  );
+  const [startMonth, setStartMonth] = useState(recurring?.start_month ?? "");
+  const [endMonth, setEndMonth] = useState(recurring?.end_month ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -56,6 +74,22 @@ export function RecurringForm({
     value: c.id,
     label: c.name,
   }));
+
+  function resolveMonthFields(): {
+    start_month: string | null;
+    end_month: string | null;
+  } {
+    if (scheduleType === "recurring") {
+      return { start_month: null, end_month: null };
+    }
+    if (scheduleType === "pontual") {
+      return { start_month: startMonth || null, end_month: startMonth || null };
+    }
+    return {
+      start_month: startMonth || null,
+      end_month: endMonth || null,
+    };
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -83,6 +117,21 @@ export function RecurringForm({
       return;
     }
 
+    if (scheduleType === "pontual" && !startMonth) {
+      setError("Selecione o mês da transação pontual.");
+      return;
+    }
+
+    if (scheduleType === "period" && !startMonth) {
+      setError("Selecione o mês de início.");
+      return;
+    }
+
+    if (scheduleType === "period" && endMonth && endMonth < startMonth) {
+      setError("O mês de término deve ser igual ou posterior ao mês de início.");
+      return;
+    }
+
     setLoading(true);
 
     const {
@@ -95,6 +144,8 @@ export function RecurringForm({
       return;
     }
 
+    const monthFields = resolveMonthFields();
+
     if (recurring) {
       const { error } = await supabase
         .from("recurring_transactions")
@@ -106,11 +157,12 @@ export function RecurringForm({
           description,
           day_of_month: day,
           is_active: isActive,
+          ...monthFields,
         })
         .eq("id", recurring.id);
 
       if (error) {
-        setError("Erro ao atualizar transação recorrente.");
+        setError("Erro ao atualizar transação.");
         setLoading(false);
         return;
       }
@@ -124,10 +176,11 @@ export function RecurringForm({
         description,
         day_of_month: day,
         is_active: isActive,
+        ...monthFields,
       });
 
       if (error) {
-        setError("Erro ao criar transação recorrente.");
+        setError("Erro ao criar transação.");
         setLoading(false);
         return;
       }
@@ -187,9 +240,48 @@ export function RecurringForm({
         label="Descrição"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="Ex: Salário, Aluguel"
+        placeholder="Ex: Salário, Aluguel, Viagem"
         required
       />
+
+      <Select
+        id="scheduleType"
+        label="Frequência"
+        value={scheduleType}
+        onChange={(e) => setScheduleType(e.target.value)}
+        options={scheduleTypeOptions}
+      />
+
+      {scheduleType === "pontual" && (
+        <Input
+          id="startMonth"
+          label="Mês"
+          type="month"
+          value={startMonth}
+          onChange={(e) => setStartMonth(e.target.value)}
+          required
+        />
+      )}
+
+      {scheduleType === "period" && (
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            id="startMonth"
+            label="Mês de início"
+            type="month"
+            value={startMonth}
+            onChange={(e) => setStartMonth(e.target.value)}
+            required
+          />
+          <Input
+            id="endMonth"
+            label="Mês de término (opcional)"
+            type="month"
+            value={endMonth}
+            onChange={(e) => setEndMonth(e.target.value)}
+          />
+        </div>
+      )}
 
       <Input
         id="dayOfMonth"
@@ -221,7 +313,7 @@ export function RecurringForm({
           Cancelar
         </Button>
         <Button type="submit" loading={loading}>
-          {recurring ? "Salvar" : "Criar recorrente"}
+          {recurring ? "Salvar" : "Criar"}
         </Button>
       </div>
     </form>

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { RecurringForm } from "./recurring-form";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatMonthLabel } from "@/lib/utils";
 import type { Account, Category, RecurringTransaction } from "@/types/database";
 
 interface RecurringWithRelations extends RecurringTransaction {
@@ -18,6 +18,24 @@ interface RecurringListProps {
   accounts: Account[];
   categories: Category[];
   onRefresh: () => void;
+}
+
+function getPeriodBadge(r: RecurringWithRelations) {
+  if (!r.start_month && !r.end_month) {
+    return { label: "Recorrente", className: "bg-blue-100 text-blue-800" };
+  }
+  if (r.start_month === r.end_month) {
+    return {
+      label: `Pontual (${formatMonthLabel(r.start_month!)})`,
+      className: "bg-purple-100 text-purple-800",
+    };
+  }
+  const start = formatMonthLabel(r.start_month!);
+  const end = r.end_month ? formatMonthLabel(r.end_month) : "...";
+  return {
+    label: `${start} a ${end}`,
+    className: "bg-indigo-100 text-indigo-800",
+  };
 }
 
 export function RecurringList({
@@ -69,6 +87,7 @@ export function RecurringList({
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Categoria</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Conta</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Dia</th>
+                <th className="text-center px-4 py-3 font-medium text-gray-600">Período</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">Valor</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Status</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">Ações</th>
@@ -86,6 +105,18 @@ export function RecurringList({
                   </td>
                   <td className="px-4 py-3 text-center text-gray-600">
                     {r.day_of_month}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {(() => {
+                      const badge = getPeriodBadge(r);
+                      return (
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badge.className}`}
+                        >
+                          {badge.label}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td
                     className={`px-4 py-3 text-right font-medium ${

@@ -7,6 +7,7 @@ export interface CategoryForecast {
   type: "receita" | "despesa";
   projectedAmount: number;
   projectionType: "recurring" | "historical";
+  hasPontual: boolean;
 }
 
 export interface MonthForecast {
@@ -58,19 +59,27 @@ export async function calculateForecast(
       month: "short",
       year: "numeric",
     });
+    const targetMonth = `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, "0")}`;
 
     const byCategory: CategoryForecast[] = [];
 
     for (const category of categories) {
       let monthlyAmount = 0;
 
+      let hasPontual = false;
+
       if (category.projection_type === "recurring") {
         const categoryRecurrings = recurrings.filter(
-          (r) => r.category_id === category.id
+          (r) =>
+            r.category_id === category.id &&
+            isRecurringActiveInMonth(r, targetMonth)
         );
         monthlyAmount = categoryRecurrings.reduce(
           (sum, r) => sum + r.amount_cents,
           0
+        );
+        hasPontual = categoryRecurrings.some(
+          (r) => r.start_month !== null && r.start_month === r.end_month
         );
       } else {
         const categoryTransactions = transactions.filter(
@@ -93,6 +102,7 @@ export async function calculateForecast(
           type: category.type,
           projectedAmount: monthlyAmount,
           projectionType: category.projection_type,
+          hasPontual,
         });
       }
     }
@@ -160,4 +170,14 @@ async function getHistoricalTransactions(
   }
 
   return { transactions, monthsPerCategory };
+}
+
+function isRecurringActiveInMonth(
+  recurring: RecurringRow,
+  targetMonth: string
+): boolean {
+  const { start_month, end_month } = recurring;
+  if (start_month && targetMonth < start_month) return false;
+  if (end_month && targetMonth > end_month) return false;
+  return true;
 }

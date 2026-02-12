@@ -50,3 +50,15 @@ export function getMonthName(month: number): string {
   ];
   return names[month];
 }
+
+/**
+ * Formata "YYYY-MM" para "mmm/aaaa" (ex: "2026-04" → "abr/2026").
+ */
+export function formatMonthLabel(yearMonth: string): string {
+  const [year, month] = yearMonth.split("-");
+  const shortNames = [
+    "jan", "fev", "mar", "abr", "mai", "jun",
+    "jul", "ago", "set", "out", "nov", "dez",
+  ];
+  return `${shortNames[parseInt(month, 10) - 1]}/${year}`;
+}

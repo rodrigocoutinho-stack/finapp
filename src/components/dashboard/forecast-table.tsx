@@ -75,17 +75,10 @@ export function ForecastTable({ months }: ForecastTableProps) {
                     >
                       <td className="py-1.5 pr-4 pl-6 text-gray-700">
                         <span className="flex items-center gap-2">
-                          <span
-                            className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                              cat.projectionType === "recurring"
-                                ? "bg-emerald-500"
-                                : "bg-emerald-300"
-                            }`}
-                            title={
-                              cat.projectionType === "recurring"
-                                ? "Recorrente (fixo)"
-                                : "Histórico (estimado)"
-                            }
+                          <ProjectionIcon
+                            projectionType={cat.projectionType}
+                            hasPontual={cat.hasPontual}
+                            color="emerald"
                           />
                           {cat.categoryName}
                         </span>
@@ -141,17 +134,10 @@ export function ForecastTable({ months }: ForecastTableProps) {
                     >
                       <td className="py-1.5 pr-4 pl-6 text-gray-700">
                         <span className="flex items-center gap-2">
-                          <span
-                            className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                              cat.projectionType === "recurring"
-                                ? "bg-red-500"
-                                : "bg-red-300"
-                            }`}
-                            title={
-                              cat.projectionType === "recurring"
-                                ? "Recorrente (fixo)"
-                                : "Histórico (estimado)"
-                            }
+                          <ProjectionIcon
+                            projectionType={cat.projectionType}
+                            hasPontual={cat.hasPontual}
+                            color="red"
                           />
                           {cat.categoryName}
                         </span>
@@ -196,18 +182,58 @@ export function ForecastTable({ months }: ForecastTableProps) {
       </div>
 
       <div className="pt-2 border-t border-gray-100">
-        <p className="text-xs text-gray-500 flex items-center gap-3">
+        <p className="text-xs text-gray-500 flex items-center gap-4">
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-gray-500" /> Recorrente
-            (fixo)
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-gray-300" /> Histórico
-            (estimado)
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rotate-45 bg-gray-500" style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }} /> Pontual
           </span>
         </p>
       </div>
     </div>
+  );
+}
+
+function ProjectionIcon({
+  projectionType,
+  hasPontual,
+  color,
+}: {
+  projectionType: "recurring" | "historical";
+  hasPontual: boolean;
+  color: "emerald" | "red";
+}) {
+  const solid = color === "emerald" ? "bg-emerald-500" : "bg-red-500";
+  const light = color === "emerald" ? "bg-emerald-300" : "bg-red-300";
+
+  if (projectionType === "historical") {
+    return (
+      <span
+        className={`w-2 h-2 rounded-full flex-shrink-0 ${light}`}
+        title="Histórico (estimado)"
+      />
+    );
+  }
+
+  if (hasPontual) {
+    return (
+      <span
+        className={`w-2 h-2 flex-shrink-0 ${solid}`}
+        style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
+        title="Inclui pontual"
+      />
+    );
+  }
+
+  return (
+    <span
+      className={`w-2 h-2 rounded-full flex-shrink-0 ${solid}`}
+      title="Recorrente (fixo)"
+    />
   );
 }
 
