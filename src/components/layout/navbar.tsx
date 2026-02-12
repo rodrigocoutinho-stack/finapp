@@ -11,6 +11,8 @@ const links = [
   { href: "/categorias", label: "Categorias" },
   { href: "/transacoes", label: "Transações" },
   { href: "/recorrentes", label: "Recorrentes" },
+  { href: "/fluxo-diario", label: "Fluxo Diário" },
+  { href: "/investimentos", label: "Investimentos" },
 ];
 
 export function Navbar() {

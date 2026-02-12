@@ -158,6 +158,8 @@ export type Database = {
           description: string;
           day_of_month: number;
           is_active: boolean;
+          start_month: string | null;
+          end_month: string | null;
           created_at: string;
         };
         Insert: {
@@ -170,6 +172,8 @@ export type Database = {
           description: string;
           day_of_month: number;
           is_active?: boolean;
+          start_month?: string | null;
+          end_month?: string | null;
           created_at?: string;
         };
         Update: {
@@ -182,6 +186,8 @@ export type Database = {
           description?: string;
           day_of_month?: number;
           is_active?: boolean;
+          start_month?: string | null;
+          end_month?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -208,6 +214,111 @@ export type Database = {
           },
         ];
       };
+      investments: {
+        Row: {
+          id: string;
+          user_id: string;
+          account_id: string;
+          name: string;
+          product: "cdb" | "lci_lca" | "tesouro_selic" | "tesouro_prefixado" | "tesouro_ipca" | "fundo" | "acao" | "fii" | "cri_cra" | "debenture" | "outro";
+          indexer: "cdi" | "prefixado" | "ipca" | "selic" | "ibovespa" | "outro";
+          rate: string | null;
+          maturity_date: string | null;
+          is_active: boolean;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          account_id: string;
+          name: string;
+          product: "cdb" | "lci_lca" | "tesouro_selic" | "tesouro_prefixado" | "tesouro_ipca" | "fundo" | "acao" | "fii" | "cri_cra" | "debenture" | "outro";
+          indexer: "cdi" | "prefixado" | "ipca" | "selic" | "ibovespa" | "outro";
+          rate?: string | null;
+          maturity_date?: string | null;
+          is_active?: boolean;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          account_id?: string;
+          name?: string;
+          product?: "cdb" | "lci_lca" | "tesouro_selic" | "tesouro_prefixado" | "tesouro_ipca" | "fundo" | "acao" | "fii" | "cri_cra" | "debenture" | "outro";
+          indexer?: "cdi" | "prefixado" | "ipca" | "selic" | "ibovespa" | "outro";
+          rate?: string | null;
+          maturity_date?: string | null;
+          is_active?: boolean;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "investments_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "investments_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      investment_entries: {
+        Row: {
+          id: string;
+          user_id: string;
+          investment_id: string;
+          type: "aporte" | "resgate" | "saldo";
+          amount_cents: number;
+          date: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          investment_id: string;
+          type: "aporte" | "resgate" | "saldo";
+          amount_cents: number;
+          date: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          investment_id?: string;
+          type?: "aporte" | "resgate" | "saldo";
+          amount_cents?: number;
+          date?: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "investment_entries_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "investment_entries_investment_id_fkey";
+            columns: ["investment_id"];
+            isOneToOne: false;
+            referencedRelation: "investments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -221,3 +332,5 @@ export type Account = Database["public"]["Tables"]["accounts"]["Row"];
 export type Category = Database["public"]["Tables"]["categories"]["Row"];
 export type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
 export type RecurringTransaction = Database["public"]["Tables"]["recurring_transactions"]["Row"];
+export type Investment = Database["public"]["Tables"]["investments"]["Row"];
+export type InvestmentEntry = Database["public"]["Tables"]["investment_entries"]["Row"];
