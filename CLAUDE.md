@@ -20,7 +20,32 @@ FinApp - Gestão Financeira Pessoal
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Últimas Alterações (11/02/2026)
+## Últimas Alterações (12/02/2026)
+
+### Reestruturação Dashboard + Fluxo Previsto
+- **`src/lib/forecast.ts`** — Novo parâmetro `includeCurrentMonth`
+  - Quando `true`, inicia projeção no mês atual com mix real+planejado
+  - Categorias `recurring`: real até hoje + recorrentes com day_of_month > hoje
+  - Categorias `historical`: real até hoje + (média / dias_no_mês × dias_restantes)
+  - Novo campo `isCurrentMonth: boolean` em `MonthForecast`
+- **`src/components/dashboard/investment-summary.tsx`** — Widget NOVO
+  - Mostra total investido, retorno projetado no mês e variação %
+  - Link "Ver detalhes" para /investimentos
+  - Estado vazio com link para cadastrar
+- **`src/components/dashboard/forecast-table.tsx`** — Destaque mês atual
+  - Coluna do mês atual com fundo sutil verde e indicador "(atual)"
+- **`src/app/(dashboard)/fluxo-previsto/page.tsx`** — Página NOVA
+  - Chama `calculateForecast(supabase, 3, true)` incluindo mês atual
+  - Renderiza ForecastTable com mês atual + 3 futuros
+- **`src/app/(dashboard)/page.tsx`** — Dashboard reestruturado
+  - Removido ForecastTable, adicionado DailyFlowTable
+  - Widget InvestmentSummary + CategoryChart lado a lado
+  - Layout: MonthPicker → SummaryCards → DailyFlowTable → [Investimentos | Gráfico] → Últimas Transações
+  - Fetch de investimentos em useEffect separado (1x, sem depender de mês)
+- **`src/components/layout/navbar.tsx`** — Link "Fluxo Diário" substituído por "Fluxo Previsto"
+- **`src/app/(dashboard)/fluxo-diario/`** — Diretório removido (conteúdo migrou para dashboard)
+
+### Alterações anteriores (11/02/2026)
 
 ### Seção de Investimentos
 - **`supabase/migrations/006_investments.sql`** — Migration (NOVO)
@@ -155,13 +180,13 @@ src/
 │       ├── transacoes/
 │       │   ├── page.tsx
 │       │   └── importar/page.tsx # NOVO
-│       ├── fluxo-diario/page.tsx
+│       ├── fluxo-previsto/page.tsx  # NOVO (substituiu fluxo-diario)
 │       ├── investimentos/page.tsx # NOVO
 │       └── recorrentes/page.tsx
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal
 │   ├── layout/                   # Navbar
-│   ├── dashboard/                # SummaryCards, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable
+│   ├── dashboard/                # SummaryCards, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary
 │   ├── contas/
 │   ├── categorias/
 │   ├── transacoes/               # TransactionForm, TransactionList, Import*

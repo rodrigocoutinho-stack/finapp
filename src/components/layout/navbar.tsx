@@ -11,7 +11,7 @@ const links = [
   { href: "/categorias", label: "Categorias" },
   { href: "/transacoes", label: "Transações" },
   { href: "/recorrentes", label: "Recorrentes" },
-  { href: "/fluxo-diario", label: "Fluxo Diário" },
+  { href: "/fluxo-previsto", label: "Fluxo Previsto" },
   { href: "/investimentos", label: "Investimentos" },
 ];
 

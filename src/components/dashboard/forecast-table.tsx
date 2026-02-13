@@ -36,9 +36,18 @@ export function ForecastTable({ months }: ForecastTableProps) {
               {months.map((m) => (
                 <th
                   key={m.label}
-                  className="text-right py-2 px-3 font-medium text-gray-600 min-w-[110px] capitalize"
+                  className={`text-right py-2 px-3 font-medium min-w-[110px] capitalize ${
+                    m.isCurrentMonth
+                      ? "text-emerald-700 bg-emerald-50/50"
+                      : "text-gray-600"
+                  }`}
                 >
                   {m.label}
+                  {m.isCurrentMonth && (
+                    <span className="block text-[10px] font-normal text-emerald-600">
+                      (atual)
+                    </span>
+                  )}
                 </th>
               ))}
             </tr>
@@ -60,7 +69,9 @@ export function ForecastTable({ months }: ForecastTableProps) {
                   {months.map((m) => (
                     <td
                       key={m.label}
-                      className="text-right py-2.5 px-3 font-semibold text-emerald-700"
+                      className={`text-right py-2.5 px-3 font-semibold text-emerald-700 ${
+                        m.isCurrentMonth ? "bg-emerald-50/50" : ""
+                      }`}
                     >
                       {formatCurrency(m.totalReceitas)}
                     </td>
@@ -90,7 +101,9 @@ export function ForecastTable({ months }: ForecastTableProps) {
                         return (
                           <td
                             key={m.label}
-                            className="text-right py-1.5 px-3 text-gray-600"
+                            className={`text-right py-1.5 px-3 text-gray-600 ${
+                              m.isCurrentMonth ? "bg-emerald-50/50" : ""
+                            }`}
                           >
                             {monthCat
                               ? formatCurrency(monthCat.projectedAmount)
@@ -119,7 +132,9 @@ export function ForecastTable({ months }: ForecastTableProps) {
                   {months.map((m) => (
                     <td
                       key={m.label}
-                      className="text-right py-2.5 px-3 font-semibold text-red-700 border-t border-gray-100"
+                      className={`text-right py-2.5 px-3 font-semibold text-red-700 border-t border-gray-100 ${
+                        m.isCurrentMonth ? "bg-emerald-50/50" : ""
+                      }`}
                     >
                       {formatCurrency(m.totalDespesas)}
                     </td>
@@ -149,7 +164,9 @@ export function ForecastTable({ months }: ForecastTableProps) {
                         return (
                           <td
                             key={m.label}
-                            className="text-right py-1.5 px-3 text-gray-600"
+                            className={`text-right py-1.5 px-3 text-gray-600 ${
+                              m.isCurrentMonth ? "bg-emerald-50/50" : ""
+                            }`}
                           >
                             {monthCat
                               ? formatCurrency(monthCat.projectedAmount)
@@ -170,7 +187,7 @@ export function ForecastTable({ months }: ForecastTableProps) {
                   key={m.label}
                   className={`text-right py-3 px-3 font-bold ${
                     m.saldo >= 0 ? "text-blue-600" : "text-orange-600"
-                  }`}
+                  } ${m.isCurrentMonth ? "bg-emerald-50/50" : ""}`}
                 >
                   {m.saldo >= 0 ? "+" : ""}
                   {formatCurrency(m.saldo)}

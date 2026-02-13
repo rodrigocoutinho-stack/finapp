@@ -5,9 +5,12 @@ import { createClient } from "@/lib/supabase/client";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 import { MonthPicker } from "@/components/dashboard/month-picker";
-import { ForecastTable } from "@/components/dashboard/forecast-table";
+import { DailyFlowTable } from "@/components/dashboard/daily-flow-table";
+import { InvestmentSummary } from "@/components/dashboard/investment-summary";
 import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
-import { calculateForecast, type ForecastResult } from "@/lib/forecast";
+import { calculateDailyFlow, type DailyFlowResult } from "@/lib/daily-flow";
+import { getMonthEndBalance } from "@/lib/investment-utils";
+import type { InvestmentEntry } from "@/types/database";
 
 interface TransactionRow {
   id: string;
@@ -19,33 +22,112 @@ interface TransactionRow {
   accounts: { name: string } | null;
 }
 
+interface InvestmentData {
+  totalBalance: number;
+  projectedReturn: number;
+  returnPercent: number;
+  hasData: boolean;
+}
+
 export default function DashboardPage() {
   const supabase = createClient();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
-  const [forecast, setForecast] = useState<ForecastResult | null>(null);
+  const [dailyFlow, setDailyFlow] = useState<DailyFlowResult | null>(null);
+  const [investmentData, setInvestmentData] = useState<InvestmentData>({
+    totalBalance: 0,
+    projectedReturn: 0,
+    returnPercent: 0,
+    hasData: false,
+  });
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     const { start, end } = getMonthRange(year, month);
 
-    const [transactionsRes, forecastRes] = await Promise.all([
+    const [transactionsRes, flowResult] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
         .gte("date", start)
         .lte("date", end)
         .order("date", { ascending: false }),
-      calculateForecast(supabase, 3),
+      calculateDailyFlow(supabase, year, month),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
-    setForecast(forecastRes);
+    setDailyFlow(flowResult);
     setLoading(false);
   }, [supabase, year, month]);
+
+  // Fetch investment data once (does not depend on month)
+  useEffect(() => {
+    async function fetchInvestments() {
+      const [investmentsRes, entriesRes] = await Promise.all([
+        supabase
+          .from("investments")
+          .select("id, product, indexer")
+          .eq("is_active", true),
+        supabase
+          .from("investment_entries")
+          .select("investment_id, type, amount_cents, date"),
+      ]);
+
+      const investments = investmentsRes.data ?? [];
+      const entries = (entriesRes.data ?? []) as InvestmentEntry[];
+
+      if (investments.length === 0) {
+        setInvestmentData({
+          totalBalance: 0,
+          projectedReturn: 0,
+          returnPercent: 0,
+          hasData: false,
+        });
+        return;
+      }
+
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0];
+
+      // Current month and previous months for comparison
+      const currentYM = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+      const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const prevYM = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
+      const twoMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+      const twoMonthsYM = `${twoMonthsAgo.getFullYear()}-${String(twoMonthsAgo.getMonth() + 1).padStart(2, "0")}`;
+
+      let totalBalance = 0;
+      let totalPrevMonth = 0;
+      let totalTwoMonthsAgo = 0;
+
+      for (const inv of investments) {
+        const invEntries = entries.filter((e) => e.investment_id === inv.id);
+        // Current balance: use all entries up to today
+        totalBalance += getMonthEndBalance(invEntries, currentYM);
+        totalPrevMonth += getMonthEndBalance(invEntries, prevYM);
+        totalTwoMonthsAgo += getMonthEndBalance(invEntries, twoMonthsYM);
+      }
+
+      // Calculate variation based on last month vs two months ago
+      const variacao =
+        totalTwoMonthsAgo > 0
+          ? (totalPrevMonth / totalTwoMonthsAgo - 1) * 100
+          : 0;
+      const projectedReturn = Math.round(totalBalance * (variacao / 100));
+
+      setInvestmentData({
+        totalBalance,
+        projectedReturn,
+        returnPercent: variacao,
+        hasData: true,
+      });
+    }
+
+    fetchInvestments();
+  }, [supabase]);
 
   useEffect(() => {
     fetchData();
@@ -114,11 +196,29 @@ export default function DashboardPage() {
         <div className="space-y-8">
           <SummaryCards totalReceitas={totalReceitas} totalDespesas={totalDespesas} />
 
-          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              Despesas por Categoria
-            </h2>
-            <CategoryChart data={chartData} />
+          {dailyFlow && (
+            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                Fluxo Diário
+              </h2>
+              <DailyFlowTable data={dailyFlow} />
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <InvestmentSummary
+              totalBalance={investmentData.totalBalance}
+              projectedReturn={investmentData.projectedReturn}
+              returnPercent={investmentData.returnPercent}
+              hasData={investmentData.hasData}
+            />
+
+            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                Despesas por Categoria
+              </h2>
+              <CategoryChart data={chartData} />
+            </div>
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
@@ -159,21 +259,6 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-
-          {forecast && (
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border border-blue-100 p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-800 mb-1">
-                Fluxo Previsto
-              </h2>
-              <p className="text-sm text-gray-500 mb-4">
-                Projeção para os próximos 3 meses
-              </p>
-
-              <div className="bg-white rounded-lg p-4 border border-gray-100">
-                <ForecastTable months={forecast.months} />
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
