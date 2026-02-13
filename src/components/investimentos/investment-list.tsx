@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { InvestmentForm } from "./investment-form";
@@ -26,6 +27,7 @@ interface InvestmentListProps {
 
 export function InvestmentList({ investments, accounts, onRefresh }: InvestmentListProps) {
   const supabase = createClient();
+  const { addToast } = useToast();
   const [editingInvestment, setEditingInvestment] = useState<Investment | null>(null);
   const [deletingInvestment, setDeletingInvestment] = useState<Investment | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -92,6 +94,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
     setDeleteLoading(false);
     setDeletingInvestment(null);
     onRefresh();
+    addToast("Investimento excluído.");
   }
 
   function getAccountName(accountId: string): string {
@@ -214,6 +217,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
             onSuccess={() => {
               setEditingInvestment(null);
               onRefresh();
+              addToast("Investimento atualizado.");
             }}
             onCancel={() => setEditingInvestment(null)}
           />
@@ -268,6 +272,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
                 onSuccess={() => {
                   setShowEntryForm(false);
                   fetchEntries(entriesInvestment.id);
+                  addToast("Lançamento registrado.");
                 }}
                 onCancel={() => setShowEntryForm(false)}
               />

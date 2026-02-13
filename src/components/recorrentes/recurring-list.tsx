@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { RecurringForm } from "./recurring-form";
@@ -45,6 +46,7 @@ export function RecurringList({
   onRefresh,
 }: RecurringListProps) {
   const supabase = createClient();
+  const { addToast } = useToast();
   const [editingRecurring, setEditingRecurring] = useState<RecurringWithRelations | null>(null);
   const [deletingRecurring, setDeletingRecurring] = useState<RecurringWithRelations | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -58,6 +60,7 @@ export function RecurringList({
     setDeleteLoading(false);
     setDeletingRecurring(null);
     onRefresh();
+    addToast("Transação planejada excluída.");
   }
 
   async function handleToggleActive(recurring: RecurringWithRelations) {
@@ -66,6 +69,7 @@ export function RecurringList({
       .update({ is_active: !recurring.is_active })
       .eq("id", recurring.id);
     onRefresh();
+    addToast(recurring.is_active ? "Transação desativada." : "Transação ativada.");
   }
 
   if (recurrings.length === 0) {
@@ -176,6 +180,7 @@ export function RecurringList({
             onSuccess={() => {
               setEditingRecurring(null);
               onRefresh();
+              addToast("Transação planejada atualizada.");
             }}
             onCancel={() => setEditingRecurring(null)}
           />

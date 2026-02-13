@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { TransactionForm } from "@/components/transacoes/transaction-form";
 import { TransactionList } from "@/components/transacoes/transaction-list";
 import { getMonthRange, getMonthName } from "@/lib/utils";
+import { useToast } from "@/contexts/toast-context";
 import type { Account, Category } from "@/types/database";
 
 interface TransactionWithRelations {
@@ -26,6 +27,7 @@ interface TransactionWithRelations {
 
 export default function TransacoesPage() {
   const supabase = createClient();
+  const { addToast } = useToast();
   const router = useRouter();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -143,6 +145,7 @@ export default function TransacoesPage() {
           onSuccess={() => {
             setShowForm(false);
             fetchData();
+            addToast("Transação criada com sucesso.");
           }}
           onCancel={() => setShowForm(false)}
         />

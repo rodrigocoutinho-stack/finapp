@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { ParsedTransaction } from "@/lib/ofx-parser";
@@ -36,6 +37,7 @@ export function ImportReviewTable({
   onImported,
   onBack,
 }: ImportReviewTableProps) {
+  const { addToast } = useToast();
   const [rows, setRows] = useState<ReviewRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -140,7 +142,7 @@ export function ImportReviewTable({
     const { error } = await supabase.from("transactions").insert(toInsert);
 
     if (error) {
-      alert("Erro ao importar transações: " + error.message);
+      addToast("Erro ao importar transações.", "error");
       setSaving(false);
       return;
     }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -20,6 +21,7 @@ interface EntryListProps {
 
 export function EntryList({ entries, onRefresh }: EntryListProps) {
   const supabase = createClient();
+  const { addToast } = useToast();
   const [deletingEntry, setDeletingEntry] = useState<InvestmentEntry | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -30,6 +32,7 @@ export function EntryList({ entries, onRefresh }: EntryListProps) {
     setDeleteLoading(false);
     setDeletingEntry(null);
     onRefresh();
+    addToast("Lançamento excluído.");
   }
 
   if (entries.length === 0) {

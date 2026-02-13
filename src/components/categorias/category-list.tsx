@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { CategoryForm } from "./category-form";
@@ -14,6 +15,7 @@ interface CategoryListProps {
 
 export function CategoryList({ categories, onRefresh }: CategoryListProps) {
   const supabase = createClient();
+  const { addToast } = useToast();
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -55,6 +57,7 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
     setDeleteLoading(false);
     setDeletingCategory(null);
     onRefresh();
+    addToast("Categoria excluída.");
   }
 
   function renderGroup(title: string, items: Category[]) {
@@ -116,6 +119,7 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
             onSuccess={() => {
               setEditingCategory(null);
               onRefresh();
+              addToast("Categoria atualizada.");
             }}
             onCancel={() => setEditingCategory(null)}
           />

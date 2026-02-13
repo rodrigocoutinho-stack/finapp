@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { CategoryForm } from "@/components/categorias/category-form";
 import { CategoryList } from "@/components/categorias/category-list";
+import { useToast } from "@/contexts/toast-context";
 import type { Category } from "@/types/database";
 
 export default function CategoriasPage() {
   const supabase = createClient();
+  const { addToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -59,6 +61,7 @@ export default function CategoriasPage() {
           onSuccess={() => {
             setShowForm(false);
             fetchCategories();
+            addToast("Categoria criada com sucesso.");
           }}
           onCancel={() => setShowForm(false)}
         />

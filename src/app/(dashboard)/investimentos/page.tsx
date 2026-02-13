@@ -7,12 +7,14 @@ import { Modal } from "@/components/ui/modal";
 import { InvestmentForm } from "@/components/investimentos/investment-form";
 import { InvestmentList } from "@/components/investimentos/investment-list";
 import { InvestmentDashboard } from "@/components/investimentos/investment-dashboard";
+import { useToast } from "@/contexts/toast-context";
 import type { Investment, Account } from "@/types/database";
 
 type Tab = "carteira" | "evolucao";
 
 export default function InvestimentosPage() {
   const supabase = createClient();
+  const { addToast } = useToast();
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,6 +105,7 @@ export default function InvestimentosPage() {
           onSuccess={() => {
             setShowForm(false);
             fetchData();
+            addToast("Investimento criado com sucesso.");
           }}
           onCancel={() => setShowForm(false)}
         />

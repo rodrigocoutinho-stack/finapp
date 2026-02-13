@@ -20,7 +20,36 @@ FinApp - Gestão Financeira Pessoal
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Últimas Alterações (12/02/2026)
+## Últimas Alterações (13/02/2026)
+
+### Sistema de Toast — Feedback visual para operações CRUD
+- **`src/contexts/toast-context.tsx`** — Context + Provider + hook `useToast()` (NOVO)
+  - `addToast(message, variant?)` com variantes: success, error, info
+  - Auto-dismiss em 4s com animação de saída 500ms antes da remoção
+  - Counter module-level para IDs únicos
+- **`src/components/ui/toast.tsx`** — Componente visual do toast (NOVO)
+  - `ToastContainer` fixo bottom-4 right-4 z-[100] (acima de modais)
+  - Variantes: success (emerald-600), error (red-600), info (blue-600)
+  - Ícones SVG por variante, animação slide-in/out da direita
+  - ARIA: `role="status"` (success/info), `role="alert"` (error)
+- **`src/app/providers.tsx`** — Wrapper client com ToastProvider + ToastOutlet (NOVO)
+- **`src/app/layout.tsx`** — Envolve children com `<Providers>`
+- **5 páginas** — Toast no create:
+  - `contas/page.tsx`: "Conta criada com sucesso."
+  - `categorias/page.tsx`: "Categoria criada com sucesso."
+  - `transacoes/page.tsx`: "Transação criada com sucesso."
+  - `recorrentes/page.tsx`: "Transação planejada criada com sucesso."
+  - `investimentos/page.tsx`: "Investimento criado com sucesso."
+- **6 componentes de lista** — Toast no edit/delete:
+  - `account-list.tsx`: "Conta atualizada." / "Conta excluída."
+  - `category-list.tsx`: "Categoria atualizada." / "Categoria excluída."
+  - `transaction-list.tsx`: "Transação atualizada." / "Transação excluída."
+  - `recurring-list.tsx`: "Transação planejada atualizada." / "Transação planejada excluída." + toggle "Transação ativada/desativada."
+  - `investment-list.tsx`: "Investimento atualizado." / "Investimento excluído." + "Lançamento registrado."
+  - `entry-list.tsx`: "Lançamento excluído."
+- **`import-review-table.tsx`** — `alert()` substituído por `addToast("Erro ao importar transações.", "error")`
+
+### Alterações anteriores (12/02/2026)
 
 ### Reestruturação Dashboard + Fluxo Previsto
 - **`src/lib/forecast.ts`** — Novo parâmetro `includeCurrentMonth`
@@ -192,6 +221,8 @@ src/
 │   ├── transacoes/               # TransactionForm, TransactionList, Import*
 │   ├── recorrentes/
 │   └── investimentos/            # NOVO - InvestmentForm, InvestmentList, EntryForm, EntryList, InvestmentDashboard
+├── contexts/
+│   └── toast-context.tsx         # NOVO - Context + Provider + useToast()
 ├── lib/
 │   ├── supabase/                 # client.ts, server.ts
 │   ├── utils.ts                  # formatCurrency, toCents, formatDate, etc.

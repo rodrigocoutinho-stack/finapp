@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { AccountForm } from "./account-form";
@@ -21,6 +22,7 @@ interface AccountListProps {
 
 export function AccountList({ accounts, onRefresh }: AccountListProps) {
   const supabase = createClient();
+  const { addToast } = useToast();
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -34,6 +36,7 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
     setDeleteLoading(false);
     setDeletingAccount(null);
     onRefresh();
+    addToast("Conta excluída.");
   }
 
   if (accounts.length === 0) {
@@ -95,6 +98,7 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
             onSuccess={() => {
               setEditingAccount(null);
               onRefresh();
+              addToast("Conta atualizada.");
             }}
             onCancel={() => setEditingAccount(null)}
           />

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { TransactionForm } from "./transaction-form";
@@ -27,6 +28,7 @@ export function TransactionList({
   onRefresh,
 }: TransactionListProps) {
   const supabase = createClient();
+  const { addToast } = useToast();
   const [editingTransaction, setEditingTransaction] = useState<TransactionWithRelations | null>(null);
   const [deletingTransaction, setDeletingTransaction] = useState<TransactionWithRelations | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -53,6 +55,7 @@ export function TransactionList({
     setDeleteLoading(false);
     setDeletingTransaction(null);
     onRefresh();
+    addToast("Transação excluída.");
   }
 
   if (transactions.length === 0) {
@@ -135,6 +138,7 @@ export function TransactionList({
             onSuccess={() => {
               setEditingTransaction(null);
               onRefresh();
+              addToast("Transação atualizada.");
             }}
             onCancel={() => setEditingTransaction(null)}
           />

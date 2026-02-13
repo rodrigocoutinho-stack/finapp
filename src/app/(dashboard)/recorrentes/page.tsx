@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { RecurringForm } from "@/components/recorrentes/recurring-form";
 import { RecurringList } from "@/components/recorrentes/recurring-list";
+import { useToast } from "@/contexts/toast-context";
 import type { Account, Category, RecurringTransaction } from "@/types/database";
 
 interface RecurringWithRelations extends RecurringTransaction {
@@ -15,6 +16,7 @@ interface RecurringWithRelations extends RecurringTransaction {
 
 export default function RecorrentesPage() {
   const supabase = createClient();
+  const { addToast } = useToast();
   const [recurrings, setRecurrings] = useState<RecurringWithRelations[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -79,6 +81,7 @@ export default function RecorrentesPage() {
           onSuccess={() => {
             setShowForm(false);
             fetchData();
+            addToast("Transação planejada criada com sucesso.");
           }}
           onCancel={() => setShowForm(false)}
         />
