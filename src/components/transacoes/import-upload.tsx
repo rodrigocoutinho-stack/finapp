@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { parseOFX, type OFXParseResult } from "@/lib/ofx-parser";
 import type { Account } from "@/types/database";

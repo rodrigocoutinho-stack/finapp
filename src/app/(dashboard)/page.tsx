@@ -90,7 +90,6 @@ export default function DashboardPage() {
       }
 
       const today = new Date();
-      const todayStr = today.toISOString().split("T")[0];
 
       // Current month and previous months for comparison
       const currentYM = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
