@@ -68,12 +68,12 @@ export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
 
   return (
     <div className="max-w-lg mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-slate-900">
             1. Selecione a conta e o arquivo
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Escolha a conta de destino e envie o extrato OFX/QFX do seu banco.
           </p>
         </div>
@@ -88,7 +88,7 @@ export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
         />
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             Arquivo OFX/QFX
           </label>
           <input
@@ -97,12 +97,12 @@ export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
             accept=".ofx,.qfx"
             onChange={handleFileChange}
             disabled={parsing}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 disabled:opacity-50"
+            className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 disabled:opacity-50"
           />
         </div>
 
         {parsing && (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600" />
             Processando arquivo...
           </div>
@@ -114,7 +114,7 @@ export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
           </div>
         )}
 
-        <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 text-xs text-gray-500 space-y-1">
+        <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-500 space-y-1">
           <p><strong>Formatos aceitos:</strong> .ofx, .qfx</p>
           <p><strong>Limite:</strong> 5MB por arquivo</p>
           <p><strong>Bancos testados:</strong> Itaú, Bradesco, Nubank e outros</p>

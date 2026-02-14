@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+/* Tabular numbers for financial data alignment */
+td, .tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

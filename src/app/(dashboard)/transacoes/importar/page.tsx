@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { PageHeader } from "@/components/ui/page-header";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import { ImportUpload } from "@/components/transacoes/import-upload";
 import { ImportReviewTable } from "@/components/transacoes/import-review-table";
 import { ImportSummary } from "@/components/transacoes/import-summary";
@@ -76,11 +78,7 @@ export default function ImportarPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
-      </div>
-    );
+    return <TableSkeleton rows={4} cols={3} />;
   }
 
   // Step indicators
@@ -93,20 +91,18 @@ export default function ImportarPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Importar OFX</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Importe transações do extrato bancário ou cartão de crédito.
-          </p>
-        </div>
-        <button
-          onClick={() => router.push("/transacoes")}
-          className="text-sm text-gray-600 hover:text-gray-900"
-        >
-          Voltar para Transações
-        </button>
-      </div>
+      <PageHeader
+        title="Importar OFX"
+        description="Importe transações do extrato bancário ou cartão de crédito."
+        action={
+          <button
+            onClick={() => router.push("/transacoes")}
+            className="text-sm text-slate-500 hover:text-slate-900"
+          >
+            Voltar para Transações
+          </button>
+        }
+      />
 
       {/* Step indicator */}
       <div className="flex items-center justify-center gap-2 mb-8">
@@ -116,7 +112,7 @@ export default function ImportarPage() {
               className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
                 i <= currentIndex
                   ? "bg-emerald-600 text-white"
-                  : "bg-gray-200 text-gray-500"
+                  : "bg-slate-200 text-slate-500"
               }`}
             >
               {i + 1}
@@ -124,8 +120,8 @@ export default function ImportarPage() {
             <span
               className={`ml-2 text-sm ${
                 i <= currentIndex
-                  ? "text-gray-900 font-medium"
-                  : "text-gray-400"
+                  ? "text-slate-900 font-medium"
+                  : "text-slate-400"
               }`}
             >
               {s.label}
@@ -133,7 +129,7 @@ export default function ImportarPage() {
             {i < steps.length - 1 && (
               <div
                 className={`w-12 h-0.5 mx-3 ${
-                  i < currentIndex ? "bg-emerald-600" : "bg-gray-200"
+                  i < currentIndex ? "bg-emerald-600" : "bg-slate-200"
                 }`}
               />
             )}

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { EmptyState } from "@/components/ui/empty-state";
 import { RecurringForm } from "./recurring-form";
 import { formatCurrency, formatMonthLabel } from "@/lib/utils";
 import type { Account, Category, RecurringTransaction } from "@/types/database";
@@ -73,41 +74,37 @@ export function RecurringList({
   }
 
   if (recurrings.length === 0) {
-    return (
-      <p className="text-gray-500 text-center py-8">
-        Nenhuma transação recorrente cadastrada.
-      </p>
-    );
+    return <EmptyState message="Nenhuma transação recorrente cadastrada." />;
   }
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Descrição</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Categoria</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Conta</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">Dia</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">Período</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Valor</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Ações</th>
+              <tr className="border-b border-slate-100 bg-slate-50">
+                <th className="text-left px-4 py-3 font-medium text-slate-600">Descrição</th>
+                <th className="text-left px-4 py-3 font-medium text-slate-600">Categoria</th>
+                <th className="text-left px-4 py-3 font-medium text-slate-600">Conta</th>
+                <th className="text-center px-4 py-3 font-medium text-slate-600">Dia</th>
+                <th className="text-center px-4 py-3 font-medium text-slate-600">Período</th>
+                <th className="text-right px-4 py-3 font-medium text-slate-600">Valor</th>
+                <th className="text-center px-4 py-3 font-medium text-slate-600">Status</th>
+                <th className="text-right px-4 py-3 font-medium text-slate-600">Ações</th>
               </tr>
             </thead>
             <tbody>
               {recurrings.map((r) => (
-                <tr key={r.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-900">{r.description}</td>
-                  <td className="px-4 py-3 text-gray-600">
+                <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50">
+                  <td className="px-4 py-3 text-slate-900">{r.description}</td>
+                  <td className="px-4 py-3 text-slate-600">
                     {r.categories?.name ?? "-"}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-slate-600">
                     {r.accounts?.name ?? "-"}
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-600">
+                  <td className="px-4 py-3 text-center text-slate-600">
                     {r.day_of_month}
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -124,7 +121,7 @@ export function RecurringList({
                   </td>
                   <td
                     className={`px-4 py-3 text-right font-medium ${
-                      r.type === "receita" ? "text-emerald-600" : "text-red-600"
+                      r.type === "receita" ? "text-emerald-600" : "text-rose-600"
                     }`}
                   >
                     {r.type === "receita" ? "+" : "-"}{" "}
@@ -133,10 +130,12 @@ export function RecurringList({
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => handleToggleActive(r)}
+                      role="switch"
+                      aria-checked={r.is_active}
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         r.is_active
                           ? "bg-emerald-100 text-emerald-800"
-                          : "bg-gray-100 text-gray-600"
+                          : "bg-slate-100 text-slate-600"
                       }`}
                     >
                       {r.is_active ? "Ativo" : "Inativo"}
@@ -192,7 +191,7 @@ export function RecurringList({
         onClose={() => setDeletingRecurring(null)}
         title="Excluir transação recorrente"
       >
-        <p className="text-gray-600 mb-6">
+        <p className="text-slate-600 mb-6">
           Tem certeza que deseja excluir a transação recorrente{" "}
           <strong>{deletingRecurring?.description}</strong>?
         </p>

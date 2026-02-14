@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { EmptyState } from "@/components/ui/empty-state";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import { InvestmentForm } from "./investment-form";
 import { EntryForm } from "./entry-form";
 import { EntryList } from "./entry-list";
@@ -102,11 +104,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
   }
 
   if (investments.length === 0) {
-    return (
-      <p className="text-gray-500 text-center py-8">
-        Nenhum investimento cadastrado. Clique em &quot;Novo investimento&quot; para começar.
-      </p>
-    );
+    return <EmptyState message="Nenhum investimento cadastrado. Clique em &quot;Novo investimento&quot; para começar." />;
   }
 
   // Group investments
@@ -132,10 +130,10 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
             return (
               <div key={group}>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-700">
+                  <h3 className="text-sm font-semibold text-slate-700">
                     {getGroupLabel(group)}
                   </h3>
-                  <span className="text-sm font-semibold text-gray-900">
+                  <span className="text-sm font-semibold text-slate-900">
                     {formatCurrency(groupTotal)}
                   </span>
                 </div>
@@ -143,29 +141,29 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
                   {items.map((inv) => (
                     <div
                       key={inv.id}
-                      className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm"
+                      className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"
                     >
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <h4 className="font-semibold text-gray-900 truncate">
+                          <h4 className="font-semibold text-slate-900 truncate">
                             {inv.name}
                           </h4>
                           <div className="flex flex-wrap gap-1.5 mt-1">
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                            <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                               {getProductLabel(inv.product)}
                             </span>
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                            <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                               {getIndexerLabel(inv.indexer)}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <p className="text-xl font-bold text-gray-900 mt-3">
+                      <p className="text-xl font-bold text-slate-900 mt-3">
                         {formatCurrency(balances[inv.id] ?? 0)}
                       </p>
 
-                      <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                      <div className="text-xs text-slate-500 mt-1 space-y-0.5">
                         <p>Conta: {getAccountName(inv.account_id)}</p>
                         {inv.rate && <p>Taxa: {inv.rate}</p>}
                         {inv.maturity_date && (
@@ -230,7 +228,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
         onClose={() => setDeletingInvestment(null)}
         title="Excluir investimento"
       >
-        <p className="text-gray-600 mb-6">
+        <p className="text-slate-600 mb-6">
           Tem certeza que deseja excluir{" "}
           <strong>{deletingInvestment?.name}</strong>? Todos os lançamentos
           associados serão excluídos. Esta ação não pode ser desfeita.
@@ -279,9 +277,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
             )}
 
             {entriesLoading ? (
-              <div className="flex justify-center py-6">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600" />
-              </div>
+              <TableSkeleton rows={3} cols={4} />
             ) : (
               <EntryList
                 entries={entries}

@@ -7,6 +7,7 @@ import { CategoryChart } from "@/components/dashboard/category-chart";
 import { MonthPicker } from "@/components/dashboard/month-picker";
 import { DailyFlowTable } from "@/components/dashboard/daily-flow-table";
 import { InvestmentSummary } from "@/components/dashboard/investment-summary";
+import { CardsSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
 import { calculateDailyFlow, type DailyFlowResult } from "@/lib/daily-flow";
 import { getMonthEndBalance } from "@/lib/investment-utils";
@@ -176,8 +177,8 @@ export default function DashboardPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-slate-600 text-sm mt-1">
             Visão geral das suas finanças
           </p>
         </div>
@@ -188,16 +189,17 @@ export default function DashboardPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
+        <div className="space-y-10">
+          <CardsSkeleton />
+          <TableSkeleton rows={6} cols={5} />
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-10">
           <SummaryCards totalReceitas={totalReceitas} totalDespesas={totalDespesas} />
 
           {dailyFlow && (
-            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-800 mb-4">
                 Fluxo Diário
               </h2>
               <DailyFlowTable data={dailyFlow} />
@@ -212,20 +214,20 @@ export default function DashboardPage() {
               hasData={investmentData.hasData}
             />
 
-            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-800 mb-4">
                 Despesas por Categoria
               </h2>
               <CategoryChart data={chartData} />
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">
               Últimas Transações
             </h2>
             {recentTransactions.length === 0 ? (
-              <p className="text-gray-500 text-sm">
+              <p className="text-slate-500 text-sm">
                 Nenhuma transação neste mês.
               </p>
             ) : (
@@ -233,21 +235,21 @@ export default function DashboardPage() {
                 {recentTransactions.map((t) => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"
+                    className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-slate-900">
                         {t.description}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500">
                         {formatDate(t.date)} &middot;{" "}
                         {t.categories?.name ?? "-"} &middot;{" "}
                         {t.accounts?.name ?? "-"}
                       </p>
                     </div>
                     <span
-                      className={`text-sm font-semibold ${
-                        t.type === "receita" ? "text-emerald-600" : "text-red-600"
+                      className={`text-sm font-semibold tabular-nums ${
+                        t.type === "receita" ? "text-emerald-600" : "text-rose-600"
                       }`}
                     >
                       {t.type === "receita" ? "+" : "-"}{" "}

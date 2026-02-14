@@ -40,7 +40,7 @@ export default function LoginPage() {
     <div className="w-full max-w-sm">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-emerald-600">FinApp</h1>
-        <p className="text-gray-600 mt-2">Entre na sua conta</p>
+        <p className="text-slate-600 mt-2">Entre na sua conta</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,7 +75,7 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-600 mt-6">
+      <p className="text-center text-sm text-slate-600 mt-6">
         Não tem conta?{" "}
         <Link href="/register" className="text-emerald-600 hover:underline font-medium">
           Criar conta

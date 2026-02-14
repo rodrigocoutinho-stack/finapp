@@ -11,9 +11,9 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary:
     "bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500",
   secondary:
-    "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-emerald-500",
+    "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 focus:ring-emerald-500",
   danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
-  ghost: "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
+  ghost: "text-slate-600 hover:text-slate-900 hover:bg-slate-100",
 };
 
 export function Button({

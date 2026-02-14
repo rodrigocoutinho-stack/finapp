@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { EmptyState } from "@/components/ui/empty-state";
 import { AccountForm } from "./account-form";
 import { formatCurrency } from "@/lib/utils";
 import type { Account } from "@/types/database";
@@ -40,30 +41,26 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
   }
 
   if (accounts.length === 0) {
-    return (
-      <p className="text-gray-500 text-center py-8">
-        Nenhuma conta cadastrada. Clique em &quot;Nova conta&quot; para começar.
-      </p>
-    );
+    return <EmptyState message="Nenhuma conta cadastrada. Clique em &quot;Nova conta&quot; para começar." />;
   }
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {accounts.map((account) => (
           <div
             key={account.id}
-            className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm"
+            className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-semibold text-gray-900">{account.name}</h3>
-                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                <h3 className="font-semibold text-slate-900">{account.name}</h3>
+                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                   {typeLabels[account.type]}
                 </span>
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mt-4">
+            <p className="text-2xl font-bold text-slate-900 mt-4">
               {formatCurrency(account.balance_cents)}
             </p>
             <div className="flex gap-2 mt-4">
@@ -111,7 +108,7 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
         onClose={() => setDeletingAccount(null)}
         title="Excluir conta"
       >
-        <p className="text-gray-600 mb-6">
+        <p className="text-slate-600 mb-6">
           Tem certeza que deseja excluir a conta{" "}
           <strong>{deletingAccount?.name}</strong>? Esta ação não pode ser
           desfeita.

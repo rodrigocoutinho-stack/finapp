@@ -63,17 +63,17 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
   function renderGroup(title: string, items: Category[]) {
     return (
       <div>
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">{title}</h2>
+        <h2 className="text-lg font-semibold text-slate-800 mb-3">{title}</h2>
         {items.length === 0 ? (
-          <p className="text-gray-500 text-sm">Nenhuma categoria.</p>
+          <p className="text-slate-500 text-sm">Nenhuma categoria.</p>
         ) : (
           <div className="space-y-2">
             {items.map((cat) => (
               <div
                 key={cat.id}
-                className="flex items-center justify-between bg-white rounded-lg border border-gray-200 px-4 py-3"
+                className="flex items-center justify-between bg-white rounded-lg border border-slate-200 px-4 py-3"
               >
-                <span className="text-gray-900">{cat.name}</span>
+                <span className="text-slate-900">{cat.name}</span>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"
@@ -136,7 +136,7 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
             {deleteError}
           </div>
         )}
-        <p className="text-gray-600 mb-6">
+        <p className="text-slate-600 mb-6">
           Tem certeza que deseja excluir a categoria{" "}
           <strong>{deletingCategory?.name}</strong>?
         </p>

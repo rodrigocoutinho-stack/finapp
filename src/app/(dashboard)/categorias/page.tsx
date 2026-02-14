@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { PageHeader } from "@/components/ui/page-header";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import { CategoryForm } from "@/components/categorias/category-form";
 import { CategoryList } from "@/components/categorias/category-list";
 import { useToast } from "@/contexts/toast-context";
@@ -34,20 +36,14 @@ export default function CategoriasPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Categorias</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Organize suas receitas e despesas por categoria
-          </p>
-        </div>
-        <Button onClick={() => setShowForm(true)}>Nova categoria</Button>
-      </div>
+      <PageHeader
+        title="Categorias"
+        description="Organize suas receitas e despesas por categoria"
+        action={<Button onClick={() => setShowForm(true)}>Nova categoria</Button>}
+      />
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
-        </div>
+        <TableSkeleton rows={5} cols={3} />
       ) : (
         <CategoryList categories={categories} onRefresh={fetchCategories} />
       )}

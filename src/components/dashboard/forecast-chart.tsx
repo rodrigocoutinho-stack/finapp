@@ -24,13 +24,13 @@ export function ForecastChart({
 }: ForecastChartProps) {
   const data = [
     { name: "Receitas", value: totalReceitas, color: "#22c55e" },
-    { name: "Despesas", value: totalDespesas, color: "#ef4444" },
+    { name: "Despesas", value: totalDespesas, color: "#f43f5e" },
     { name: "Resultado", value: Math.abs(resultado), color: resultado >= 0 ? "#3b82f6" : "#f97316" },
   ];
 
   if (totalReceitas === 0 && totalDespesas === 0) {
     return (
-      <p className="text-gray-500 text-center py-8 text-sm">
+      <p className="text-slate-500 text-center py-8 text-sm">
         Sem dados para projeção. Cadastre categorias e transações.
       </p>
     );
@@ -44,14 +44,14 @@ export function ForecastChart({
           type="category"
           dataKey="name"
           width={80}
-          tick={{ fontSize: 13, fill: "#4b5563" }}
+          tick={{ fontSize: 13, fill: "#475569" }}
         />
         <Tooltip
           formatter={(value) => formatCurrency(Number(value))}
           labelStyle={{ fontWeight: 600 }}
           contentStyle={{
             borderRadius: "8px",
-            border: "1px solid #e5e7eb",
+            border: "1px solid #e2e8f0",
             fontSize: "13px",
           }}
         />

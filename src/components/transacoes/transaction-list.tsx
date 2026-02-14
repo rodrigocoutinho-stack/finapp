@@ -60,7 +60,7 @@ export function TransactionList({
 
   if (transactions.length === 0) {
     return (
-      <p className="text-gray-500 text-center py-8">
+      <p className="text-slate-500 text-center py-8">
         Nenhuma transação encontrada neste mês.
       </p>
     );
@@ -68,33 +68,33 @@ export function TransactionList({
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Data</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Descrição</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Categoria</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Conta</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Valor</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Ações</th>
+              <tr className="border-b border-slate-100 bg-slate-50">
+                <th className="text-left px-4 py-3 font-medium text-slate-600">Data</th>
+                <th className="text-left px-4 py-3 font-medium text-slate-600">Descrição</th>
+                <th className="text-left px-4 py-3 font-medium text-slate-600">Categoria</th>
+                <th className="text-left px-4 py-3 font-medium text-slate-600">Conta</th>
+                <th className="text-right px-4 py-3 font-medium text-slate-600">Valor</th>
+                <th className="text-right px-4 py-3 font-medium text-slate-600">Ações</th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((t) => (
-                <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-600">{formatDate(t.date)}</td>
-                  <td className="px-4 py-3 text-gray-900">{t.description}</td>
-                  <td className="px-4 py-3 text-gray-600">
+                <tr key={t.id} className="border-b border-slate-50 hover:bg-slate-50">
+                  <td className="px-4 py-3 text-slate-600">{formatDate(t.date)}</td>
+                  <td className="px-4 py-3 text-slate-900">{t.description}</td>
+                  <td className="px-4 py-3 text-slate-600">
                     {t.categories?.name ?? "-"}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-slate-600">
                     {t.accounts?.name ?? "-"}
                   </td>
                   <td
                     className={`px-4 py-3 text-right font-medium ${
-                      t.type === "receita" ? "text-emerald-600" : "text-red-600"
+                      t.type === "receita" ? "text-emerald-600" : "text-rose-600"
                     }`}
                   >
                     {t.type === "receita" ? "+" : "-"}{" "}
@@ -150,7 +150,7 @@ export function TransactionList({
         onClose={() => setDeletingTransaction(null)}
         title="Excluir transação"
       >
-        <p className="text-gray-600 mb-6">
+        <p className="text-slate-600 mb-6">
           Tem certeza que deseja excluir a transação{" "}
           <strong>{deletingTransaction?.description}</strong>? O saldo da conta
           será ajustado automaticamente.

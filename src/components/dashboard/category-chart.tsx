@@ -28,7 +28,7 @@ const COLORS = [
 export function CategoryChart({ data }: CategoryChartProps) {
   if (data.length === 0) {
     return (
-      <p className="text-gray-500 text-center py-8 text-sm">
+      <p className="text-slate-500 text-center py-8 text-sm">
         Nenhuma despesa registrada neste mês.
       </p>
     );
@@ -42,14 +42,14 @@ export function CategoryChart({ data }: CategoryChartProps) {
           type="category"
           dataKey="name"
           width={120}
-          tick={{ fontSize: 13, fill: "#4b5563" }}
+          tick={{ fontSize: 13, fill: "#475569" }}
         />
         <Tooltip
           formatter={(value) => formatCurrency(Number(value))}
           labelStyle={{ fontWeight: 600 }}
           contentStyle={{
             borderRadius: "8px",
-            border: "1px solid #e5e7eb",
+            border: "1px solid #e2e8f0",
             fontSize: "13px",
           }}
         />

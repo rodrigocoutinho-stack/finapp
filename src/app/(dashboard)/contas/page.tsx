@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { PageHeader } from "@/components/ui/page-header";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import { AccountForm } from "@/components/contas/account-form";
 import { AccountList } from "@/components/contas/account-list";
 import { useToast } from "@/contexts/toast-context";
@@ -33,20 +35,14 @@ export default function ContasPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Contas</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Gerencie suas contas bancárias, cartões e carteiras
-          </p>
-        </div>
-        <Button onClick={() => setShowForm(true)}>Nova conta</Button>
-      </div>
+      <PageHeader
+        title="Contas"
+        description="Gerencie suas contas bancárias, cartões e carteiras"
+        action={<Button onClick={() => setShowForm(true)}>Nova conta</Button>}
+      />
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
-        </div>
+        <TableSkeleton rows={4} cols={3} />
       ) : (
         <AccountList accounts={accounts} onRefresh={fetchAccounts} />
       )}

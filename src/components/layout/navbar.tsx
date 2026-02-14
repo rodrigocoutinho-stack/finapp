@@ -26,26 +26,39 @@ export function Navbar() {
     router.push("/login");
   }
 
-  function linkClass(href: string) {
-    const active = pathname === href;
-    return `text-sm font-medium ${
+  function isActive(href: string) {
+    return pathname === href;
+  }
+
+  function desktopLinkClass(href: string) {
+    const active = isActive(href);
+    return `text-sm font-medium px-3 py-1.5 rounded-lg transition-colors ${
       active
-        ? "text-emerald-600"
-        : "text-gray-600 hover:text-gray-900"
+        ? "bg-emerald-50 text-emerald-700"
+        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+    }`;
+  }
+
+  function mobileLinkClass(href: string) {
+    const active = isActive(href);
+    return `block py-2 text-sm font-medium rounded-lg px-3 transition-colors ${
+      active
+        ? "bg-emerald-50 text-emerald-700"
+        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
     }`;
   }
 
   return (
-    <nav className="bg-white border-b border-gray-200">
+    <nav className="bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-6">
             <Link href="/" className="text-xl font-bold text-emerald-600">
               FinApp
             </Link>
-            <div className="hidden sm:flex gap-6">
+            <div className="hidden md:flex gap-1">
               {links.map((link) => (
-                <Link key={link.href} href={link.href} className={linkClass(link.href)}>
+                <Link key={link.href} href={link.href} className={desktopLinkClass(link.href)}>
                   {link.label}
                 </Link>
               ))}
@@ -55,7 +68,7 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             <button
               onClick={handleLogout}
-              className="hidden sm:block text-sm text-gray-600 hover:text-gray-900 font-medium"
+              className="hidden md:block text-sm text-slate-600 hover:text-slate-900 font-medium"
             >
               Sair
             </button>
@@ -63,7 +76,9 @@ export function Navbar() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="sm:hidden p-2 text-gray-600 hover:text-gray-900"
+              aria-label="Menu de navegação"
+              aria-expanded={mobileOpen}
+              className="md:hidden p-2 text-slate-600 hover:text-slate-900"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {mobileOpen ? (
@@ -79,12 +94,12 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="sm:hidden border-t border-gray-200 bg-white px-4 pb-4 pt-2 space-y-2">
+        <div className="md:hidden border-t border-slate-200 bg-white px-4 pb-4 pt-2 space-y-1">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`block py-2 ${linkClass(link.href)}`}
+              className={mobileLinkClass(link.href)}
               onClick={() => setMobileOpen(false)}
             >
               {link.label}
@@ -92,7 +107,7 @@ export function Navbar() {
           ))}
           <button
             onClick={handleLogout}
-            className="block w-full text-left py-2 text-sm text-gray-600 hover:text-gray-900 font-medium"
+            className="block w-full text-left py-2 px-3 text-sm text-slate-600 hover:text-slate-900 font-medium rounded-lg hover:bg-slate-50 transition-colors"
           >
             Sair
           </button>

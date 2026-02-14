@@ -301,9 +301,9 @@ export function RecurringForm({
           id="isActive"
           checked={isActive}
           onChange={(e) => setIsActive(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+          className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
         />
-        <label htmlFor="isActive" className="text-sm text-gray-700">
+        <label htmlFor="isActive" className="text-sm text-slate-700">
           Ativo
         </label>
       </div>

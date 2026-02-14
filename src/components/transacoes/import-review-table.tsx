@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { ParsedTransaction } from "@/lib/ofx-parser";
 import type { Category } from "@/types/database";
@@ -176,17 +177,13 @@ export function ImportReviewTable({
   }
 
   if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
-      </div>
-    );
+    return <TableSkeleton rows={6} cols={5} />;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-slate-900">
           2. Revise as transações
         </h2>
         <div className="flex gap-2">
@@ -204,56 +201,56 @@ export function ImportReviewTable({
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-50">
             <tr>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase w-10">
+              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase w-10">
                 <input
                   type="checkbox"
                   checked={selectedCount === rows.length}
                   onChange={() =>
                     selectedCount === rows.length ? deselectAll() : selectAll()
                   }
-                  className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                 />
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">
                 Data
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase">
                 Descrição
               </th>
-              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+              <th className="px-3 py-3 text-right text-xs font-medium text-slate-500 uppercase">
                 Valor
               </th>
-              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+              <th className="px-3 py-3 text-center text-xs font-medium text-slate-500 uppercase">
                 Tipo
               </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase min-w-[200px]">
+              <th className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase min-w-[200px]">
                 Categoria
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-slate-200">
             {rows.map((row, i) => {
               const cats = row.type === "receita" ? receitas : despesas;
               return (
                 <tr
                   key={i}
                   className={`${
-                    row.selected ? "bg-white" : "bg-gray-50 opacity-60"
-                  } hover:bg-gray-50`}
+                    row.selected ? "bg-white" : "bg-slate-50 opacity-60"
+                  } hover:bg-slate-50`}
                 >
                   <td className="px-3 py-2">
                     <input
                       type="checkbox"
                       checked={row.selected}
                       onChange={() => toggleRow(i)}
-                      className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">
+                  <td className="px-3 py-2 text-sm text-slate-900 whitespace-nowrap">
                     {formatDate(row.date)}
                     {row.isDuplicate && (
                       <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -261,14 +258,14 @@ export function ImportReviewTable({
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-sm text-gray-900 max-w-[300px] truncate">
+                  <td className="px-3 py-2 text-sm text-slate-900 max-w-[300px] truncate">
                     {row.description}
                   </td>
                   <td
                     className={`px-3 py-2 text-sm text-right whitespace-nowrap font-medium ${
                       row.type === "receita"
                         ? "text-emerald-600"
-                        : "text-red-600"
+                        : "text-rose-600"
                     }`}
                   >
                     {row.type === "receita" ? "+" : "-"}
@@ -279,7 +276,7 @@ export function ImportReviewTable({
                       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                         row.type === "receita"
                           ? "bg-emerald-100 text-emerald-800"
-                          : "bg-red-100 text-red-800"
+                          : "bg-rose-100 text-rose-800"
                       }`}
                     >
                       {row.type === "receita" ? "Receita" : "Despesa"}
@@ -289,10 +286,10 @@ export function ImportReviewTable({
                     <select
                       value={row.categoryId}
                       onChange={(e) => setCategory(i, e.target.value)}
-                      className={`block w-full rounded-lg border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                      className={`block w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
                         row.selected && !row.categoryId
-                          ? "border-red-300"
-                          : "border-gray-300"
+                          ? "border-red-300 text-red-900"
+                          : "border-slate-300 text-slate-900"
                       }`}
                     >
                       <option value="">Selecione...</option>
@@ -310,8 +307,8 @@ export function ImportReviewTable({
         </table>
       </div>
 
-      <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-gray-200 px-4 py-3">
-        <div className="text-sm text-gray-600">
+      <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-3">
+        <div className="text-sm text-slate-600">
           <span className="font-medium">{selectedCount}</span> de{" "}
           <span className="font-medium">{rows.length}</span> selecionadas
           {duplicateCount > 0 && (

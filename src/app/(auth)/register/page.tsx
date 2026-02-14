@@ -54,13 +54,13 @@ export default function RegisterPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Verifique seu e-mail</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Verifique seu e-mail</h1>
         </div>
-        <p className="text-gray-600 mb-6">
+        <p className="text-slate-600 mb-6">
           Enviamos um link de confirmação para <strong>{email}</strong>.
           Clique no link para ativar sua conta.
         </p>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-slate-500 mb-6">
           Não recebeu o e-mail? Verifique sua caixa de spam.
         </p>
         <Link
@@ -77,7 +77,7 @@ export default function RegisterPage() {
     <div className="w-full max-w-sm">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-emerald-600">FinApp</h1>
-        <p className="text-gray-600 mt-2">Crie sua conta</p>
+        <p className="text-slate-600 mt-2">Crie sua conta</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -123,7 +123,7 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-600 mt-6">
+      <p className="text-center text-sm text-slate-600 mt-6">
         Já tem conta?{" "}
         <Link href="/login" className="text-emerald-600 hover:underline font-medium">
           Entrar

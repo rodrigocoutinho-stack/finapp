@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { PageHeader } from "@/components/ui/page-header";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import { RecurringForm } from "@/components/recorrentes/recurring-form";
 import { RecurringList } from "@/components/recorrentes/recurring-list";
 import { useToast } from "@/contexts/toast-context";
@@ -47,20 +49,14 @@ export default function RecorrentesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Transações Planejadas</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Gerencie recorrentes, pontuais e despesas com período definido
-          </p>
-        </div>
-        <Button onClick={() => setShowForm(true)}>Nova transação</Button>
-      </div>
+      <PageHeader
+        title="Transações Planejadas"
+        description="Gerencie recorrentes, pontuais e despesas com período definido"
+        action={<Button onClick={() => setShowForm(true)}>Nova transação</Button>}
+      />
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
-        </div>
+        <TableSkeleton rows={5} cols={6} />
       ) : (
         <RecurringList
           recurrings={recurrings}

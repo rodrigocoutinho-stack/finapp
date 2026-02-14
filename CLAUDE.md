@@ -22,6 +22,36 @@ FinApp - Gestão Financeira Pessoal
 
 ## Últimas Alterações (13/02/2026)
 
+### Redesign UX — Fase 1: Foundation
+- **Paleta neutra**: Migração completa `gray-*` → `slate-*` em 38 arquivos (240 ocorrências)
+- **Paleta despesas**: Migração `red-*` → `rose-*` para cores de despesas/receitas negativas
+  - Mantém `red-*` para erros, validação e botões de exclusão
+  - Hex hardcoded em charts atualizados (Recharts)
+- **Novos componentes UI** (5 arquivos):
+  - `src/components/ui/card.tsx` — Wrapper com border/shadow/padding
+  - `src/components/ui/badge.tsx` — Labels coloridos (7 variantes)
+  - `src/components/ui/page-header.tsx` — Título + descrição + action button
+  - `src/components/ui/empty-state.tsx` — Ícone + mensagem + CTA opcional
+  - `src/components/ui/skeleton.tsx` — Skeleton, TableSkeleton, CardSkeleton, CardsSkeleton
+- **PageHeader**: Aplicado em 7 páginas (contas, categorias, transações, recorrentes, investimentos, fluxo-previsto, importar)
+- **EmptyState**: Aplicado em 3 listas (account-list, recurring-list, investment-list)
+- **Skeleton loaders**: Substituiu spinners em 12 arquivos (dashboard usa CardsSkeleton + TableSkeleton)
+- **tabular-nums**: CSS global `font-variant-numeric: tabular-nums` em `td` e `.tabular-nums`
+  - Aplicado em summary-cards, investment-summary e dashboard
+- **Whitespace**: `max-w-7xl` → `max-w-6xl`, `py-8` → `py-10`, `p-5` → `p-6`, `gap-4` → `gap-5`, `space-y-8` → `space-y-10`
+
+### Design QA — Acessibilidade e UX
+- **`src/components/ui/modal.tsx`** — ARIA completo: `role="dialog"`, `aria-modal`, `aria-labelledby`
+  - Focus trap (Tab/Shift+Tab cycling), auto-focus, focus restore on close
+- **`src/components/layout/navbar.tsx`** — Breakpoints `sm` → `md`, active link pill, `aria-expanded`
+- **`src/components/dashboard/month-picker.tsx`** — `aria-label` nos botões de navegação
+- **`src/components/dashboard/forecast-table.tsx`** — Keyboard support em linhas colapsáveis
+- **`src/components/dashboard/daily-flow-table.tsx`** — Keyboard support em linhas colapsáveis
+- **`src/components/recorrentes/recurring-list.tsx`** — Toggle: `role="switch"`, `aria-checked`
+- **`src/components/transacoes/import-review-table.tsx`** — Select styling unificado
+- **`src/contexts/toast-context.tsx`** — Error toast 8s, exit animation 500ms antes
+- **`src/components/ui/toast.tsx`** — Botão dismiss com `aria-label`
+
 ### Sistema de Toast — Feedback visual para operações CRUD
 - **`src/contexts/toast-context.tsx`** — Context + Provider + hook `useToast()` (NOVO)
   - `addToast(message, variant?)` com variantes: success, error, info
@@ -213,7 +243,7 @@ src/
 │       ├── investimentos/page.tsx # NOVO
 │       └── recorrentes/page.tsx
 ├── components/
-│   ├── ui/                       # Button, Input, Select, Modal
+│   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
 │   ├── layout/                   # Navbar
 │   ├── dashboard/                # SummaryCards, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary
 │   ├── contas/

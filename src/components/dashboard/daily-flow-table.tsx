@@ -26,7 +26,7 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
 
   if (days.length === 0) {
     return (
-      <p className="text-gray-500 text-center py-8 text-sm">
+      <p className="text-slate-500 text-center py-8 text-sm">
         Sem dados para exibir.
       </p>
     );
@@ -37,13 +37,13 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
 
   function cellBg(day: typeof days[0], isHeader = false): string {
     if (day.isToday) return isHeader ? "bg-amber-100" : "bg-amber-50/60";
-    if (day.isWeekend) return isHeader ? "bg-gray-100" : "bg-gray-50/50";
+    if (day.isWeekend) return isHeader ? "bg-slate-100" : "bg-slate-50/50";
     return "";
   }
 
   function balanceColor(cents: number): string {
     if (cents < 0) return "text-orange-600 font-semibold";
-    return "text-gray-800";
+    return "text-slate-800";
   }
 
   function formatCompact(cents: number): string {
@@ -57,15 +57,15 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
         <table className="text-xs border-collapse">
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 bg-white text-left py-2 pr-2 font-medium text-gray-600 min-w-[160px] border-b border-gray-200">
+              <th className="sticky left-0 z-10 bg-white text-left py-2 pr-2 font-medium text-slate-600 min-w-[160px] border-b border-slate-200">
                 &nbsp;
               </th>
               {days.map((day) => (
                 <th
                   key={day.day}
                   ref={day.isToday ? todayRef : undefined}
-                  className={`text-center py-2 px-1 font-medium min-w-[80px] border-b border-gray-200 ${cellBg(day, true)} ${
-                    day.isToday ? "text-amber-800" : "text-gray-600"
+                  className={`text-center py-2 px-1 font-medium min-w-[80px] border-b border-slate-200 ${cellBg(day, true)} ${
+                    day.isToday ? "text-amber-800" : "text-slate-600"
                   }`}
                 >
                   <div className="text-[10px] uppercase">{day.weekday}</div>
@@ -76,8 +76,8 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
           </thead>
           <tbody>
             {/* Saldo Inicial */}
-            <tr className="border-b border-gray-100">
-              <td className="sticky left-0 z-10 bg-white py-1.5 pr-2 font-semibold text-gray-700">
+            <tr className="border-b border-slate-100">
+              <td className="sticky left-0 z-10 bg-white py-1.5 pr-2 font-semibold text-slate-700">
                 Saldo Inicial
               </td>
               {days.map((day) => (
@@ -94,8 +94,17 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
             {hasReceitas && (
               <>
                 <tr
-                  className="cursor-pointer hover:bg-emerald-50/50 transition-colors border-b border-gray-100"
+                  className="cursor-pointer hover:bg-emerald-50/50 transition-colors border-b border-slate-100"
+                  tabIndex={0}
+                  role="button"
+                  aria-expanded={showReceitas}
                   onClick={() => setShowReceitas(!showReceitas)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setShowReceitas(!showReceitas);
+                    }
+                  }}
                 >
                   <td className="sticky left-0 z-10 bg-white py-1.5 pr-2 font-semibold text-emerald-700">
                     <span className="flex items-center gap-1">
@@ -117,9 +126,9 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
                   receitas.map((cat) => (
                     <tr
                       key={cat.id}
-                      className="hover:bg-gray-50 transition-colors border-b border-gray-50"
+                      className="hover:bg-slate-50 transition-colors border-b border-slate-50"
                     >
-                      <td className="sticky left-0 z-10 bg-white py-1 pr-2 pl-5 text-gray-600 truncate max-w-[160px]">
+                      <td className="sticky left-0 z-10 bg-white py-1 pr-2 pl-5 text-slate-600 truncate max-w-[160px]">
                         {cat.name}
                       </td>
                       {days.map((day) => {
@@ -136,7 +145,7 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
                           <td
                             key={day.day}
                             className={`text-right py-1 px-1 ${cellBg(day)} ${
-                              isPlanned ? "text-blue-600 italic" : "text-gray-700"
+                              isPlanned ? "text-blue-600 italic" : "text-slate-700"
                             }`}
                           >
                             {formatCompact(entry.total)}
@@ -152,10 +161,19 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
             {hasDespesas && (
               <>
                 <tr
-                  className="cursor-pointer hover:bg-red-50/50 transition-colors border-b border-gray-100"
+                  className="cursor-pointer hover:bg-rose-50/50 transition-colors border-b border-slate-100"
+                  tabIndex={0}
+                  role="button"
+                  aria-expanded={showDespesas}
                   onClick={() => setShowDespesas(!showDespesas)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setShowDespesas(!showDespesas);
+                    }
+                  }}
                 >
-                  <td className="sticky left-0 z-10 bg-white py-1.5 pr-2 font-semibold text-red-700">
+                  <td className="sticky left-0 z-10 bg-white py-1.5 pr-2 font-semibold text-rose-700">
                     <span className="flex items-center gap-1">
                       <ChevronIcon open={showDespesas} />
                       Saída
@@ -164,7 +182,7 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
                   {days.map((day, i) => (
                     <td
                       key={day.day}
-                      className={`text-right py-1.5 px-1 font-semibold text-red-700 ${cellBg(day)}`}
+                      className={`text-right py-1.5 px-1 font-semibold text-rose-700 ${cellBg(day)}`}
                     >
                       {totalSaidas[i] > 0 ? formatCompact(totalSaidas[i]) : ""}
                     </td>
@@ -175,9 +193,9 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
                   despesas.map((cat) => (
                     <tr
                       key={cat.id}
-                      className="hover:bg-gray-50 transition-colors border-b border-gray-50"
+                      className="hover:bg-slate-50 transition-colors border-b border-slate-50"
                     >
-                      <td className="sticky left-0 z-10 bg-white py-1 pr-2 pl-5 text-gray-600 truncate max-w-[160px]">
+                      <td className="sticky left-0 z-10 bg-white py-1 pr-2 pl-5 text-slate-600 truncate max-w-[160px]">
                         {cat.name}
                       </td>
                       {days.map((day) => {
@@ -194,7 +212,7 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
                           <td
                             key={day.day}
                             className={`text-right py-1 px-1 ${cellBg(day)} ${
-                              isPlanned ? "text-blue-600 italic" : "text-gray-700"
+                              isPlanned ? "text-blue-600 italic" : "text-slate-700"
                             }`}
                           >
                             {formatCompact(entry.total)}
@@ -207,8 +225,8 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
             )}
 
             {/* Saldo Final */}
-            <tr className="border-t-2 border-gray-200">
-              <td className="sticky left-0 z-10 bg-white py-1.5 pr-2 font-semibold text-gray-700">
+            <tr className="border-t-2 border-slate-200">
+              <td className="sticky left-0 z-10 bg-white py-1.5 pr-2 font-semibold text-slate-700">
                 Saldo Final
               </td>
               {days.map((day) => (
@@ -224,10 +242,10 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
         </table>
       </div>
 
-      <div className="pt-2 border-t border-gray-100">
-        <p className="text-xs text-gray-500 flex items-center gap-4">
+      <div className="pt-2 border-t border-slate-100">
+        <p className="text-xs text-slate-500 flex items-center gap-4">
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-gray-700" /> Real
+            <span className="w-2 h-2 rounded-full bg-slate-700" /> Real
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-blue-500" />{" "}
@@ -237,7 +255,7 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
             <span className="w-3 h-3 rounded bg-amber-100 border border-amber-300" /> Hoje
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-gray-100 border border-gray-300" /> Fim de semana
+            <span className="w-3 h-3 rounded bg-slate-100 border border-slate-300" /> Fim de semana
           </span>
         </p>
       </div>

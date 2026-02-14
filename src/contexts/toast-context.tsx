@@ -15,6 +15,7 @@ interface ToastContextValue {
   toasts: Toast[];
   addToast: (message: string, variant?: ToastVariant) => void;
   removeToast: (id: number) => void;
+  dismissToast: (id: number) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -28,9 +29,22 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const dismissToast = useCallback(
+    (id: number) => {
+      setToasts((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, leaving: true } : t))
+      );
+      setTimeout(() => {
+        removeToast(id);
+      }, 300);
+    },
+    [removeToast]
+  );
+
   const addToast = useCallback(
     (message: string, variant: ToastVariant = "success") => {
       const id = nextId++;
+      const duration = variant === "error" ? 8000 : 4000;
       setToasts((prev) => [...prev, { id, message, variant, leaving: false }]);
 
       // Start exit animation 500ms before removal
@@ -38,18 +52,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         setToasts((prev) =>
           prev.map((t) => (t.id === id ? { ...t, leaving: true } : t))
         );
-      }, 3500);
+      }, duration - 500);
 
-      // Remove after 4s total
+      // Remove after duration
       setTimeout(() => {
         removeToast(id);
-      }, 4000);
+      }, duration);
     },
     [removeToast]
   );
 
   return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
+    <ToastContext.Provider value={{ toasts, addToast, removeToast, dismissToast }}>
       {children}
     </ToastContext.Provider>
   );

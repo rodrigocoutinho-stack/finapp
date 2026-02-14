@@ -18,11 +18,11 @@ export function InvestmentSummary({
 }: InvestmentSummaryProps) {
   if (!hasData) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-800 mb-3">
           Investimentos
         </h2>
-        <p className="text-gray-500 text-sm mb-3">
+        <p className="text-slate-500 text-sm mb-3">
           Nenhum investimento cadastrado.
         </p>
         <Link
@@ -38,9 +38,9 @@ export function InvestmentSummary({
   const isPositive = returnPercent >= 0;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">Investimentos</h2>
+        <h2 className="text-lg font-semibold text-slate-800">Investimentos</h2>
         <Link
           href="/investimentos"
           className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
@@ -51,20 +51,20 @@ export function InvestmentSummary({
 
       <div className="space-y-3">
         <div>
-          <p className="text-sm text-gray-500">Total investido</p>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-sm text-slate-500">Total investido</p>
+          <p className="text-2xl font-bold text-slate-900 tabular-nums">
             {formatCurrency(totalBalance)}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div>
-            <p className="text-sm text-gray-500">Retorno projetado no mês</p>
-            <p className="text-base font-semibold text-gray-800">
+            <p className="text-sm text-slate-500">Retorno projetado no mês</p>
+            <p className="text-base font-semibold text-slate-800 tabular-nums">
               {formatCurrency(projectedReturn)}
               <span
                 className={`ml-2 text-sm font-medium ${
-                  isPositive ? "text-emerald-600" : "text-red-600"
+                  isPositive ? "text-emerald-600" : "text-rose-600"
                 }`}
               >
                 ({isPositive ? "+" : ""}

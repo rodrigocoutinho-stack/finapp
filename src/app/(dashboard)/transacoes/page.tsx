@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { PageHeader } from "@/components/ui/page-header";
+import { TableSkeleton } from "@/components/ui/skeleton";
 import { TransactionForm } from "@/components/transacoes/transaction-form";
 import { TransactionList } from "@/components/transacoes/transaction-list";
 import { getMonthRange, getMonthName } from "@/lib/utils";
@@ -83,37 +85,37 @@ export default function TransacoesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Transações</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Registre e acompanhe suas movimentações financeiras
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => router.push("/transacoes/importar")}>
-            Importar OFX
-          </Button>
-          <Button onClick={() => setShowForm(true)}>Nova transação</Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Transações"
+        description="Registre e acompanhe suas movimentações financeiras"
+        action={
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => router.push("/transacoes/importar")}>
+              Importar OFX
+            </Button>
+            <Button onClick={() => setShowForm(true)}>Nova transação</Button>
+          </div>
+        }
+      />
 
       {/* Month navigator */}
       <div className="flex items-center justify-center gap-4 mb-6">
         <button
           onClick={prevMonth}
-          className="p-2 rounded-lg hover:bg-gray-200 text-gray-600"
+          aria-label="Mês anterior"
+          className="p-2 rounded-lg hover:bg-slate-200 text-slate-600"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <span className="text-lg font-semibold text-gray-900 min-w-[180px] text-center">
+        <span className="text-lg font-semibold text-slate-900 min-w-[180px] text-center">
           {getMonthName(month)} {year}
         </span>
         <button
           onClick={nextMonth}
-          className="p-2 rounded-lg hover:bg-gray-200 text-gray-600"
+          aria-label="Próximo mês"
+          className="p-2 rounded-lg hover:bg-slate-200 text-slate-600"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -122,9 +124,7 @@ export default function TransacoesPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
-        </div>
+        <TableSkeleton rows={6} cols={5} />
       ) : (
         <TransactionList
           transactions={transactions}
