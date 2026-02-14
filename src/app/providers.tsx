@@ -1,6 +1,7 @@
 "use client";
 
 import { PreferencesProvider } from "@/contexts/preferences-context";
+import { SidebarProvider } from "@/contexts/sidebar-context";
 import { ToastProvider, useToast } from "@/contexts/toast-context";
 import { ToastContainer } from "@/components/ui/toast";
 
@@ -12,10 +13,12 @@ function ToastOutlet() {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <PreferencesProvider>
-      <ToastProvider>
-        {children}
-        <ToastOutlet />
-      </ToastProvider>
+      <SidebarProvider>
+        <ToastProvider>
+          {children}
+          <ToastOutlet />
+        </ToastProvider>
+      </SidebarProvider>
     </PreferencesProvider>
   );
 }

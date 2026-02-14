@@ -10,6 +10,7 @@ import {
   Cell,
 } from "recharts";
 import { formatCurrency } from "@/lib/utils";
+import { CategoryIcon } from "@/lib/category-icons";
 
 interface CategoryData {
   name: string;
@@ -24,6 +25,22 @@ const COLORS = [
   "#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4",
   "#3b82f6", "#8b5cf6", "#ec4899", "#f43f5e", "#14b8a6",
 ];
+
+// Custom Y-axis tick with category icon
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomYTick({ x, y, payload }: any) {
+  const name = payload?.value ?? "";
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <foreignObject x={-130} y={-10} width={125} height={20}>
+        <div className="flex items-center gap-1.5 justify-end h-full">
+          <CategoryIcon name={name} className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span className="text-[13px] text-slate-600 truncate">{name}</span>
+        </div>
+      </foreignObject>
+    </g>
+  );
+}
 
 export function CategoryChart({ data }: CategoryChartProps) {
   if (data.length === 0) {
@@ -41,8 +58,8 @@ export function CategoryChart({ data }: CategoryChartProps) {
         <YAxis
           type="category"
           dataKey="name"
-          width={120}
-          tick={{ fontSize: 13, fill: "#475569" }}
+          width={135}
+          tick={<CustomYTick />}
         />
         <Tooltip
           formatter={(value) => formatCurrency(Number(value))}

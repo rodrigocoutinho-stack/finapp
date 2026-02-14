@@ -12,12 +12,14 @@ import { createClient } from "@/lib/supabase/client";
 
 interface PreferencesContextValue {
   closingDay: number;
+  fullName: string;
   loading: boolean;
   setClosingDay: (day: number) => Promise<void>;
 }
 
 const PreferencesContext = createContext<PreferencesContextValue>({
   closingDay: 1,
+  fullName: "",
   loading: true,
   setClosingDay: async () => {},
 });
@@ -25,6 +27,7 @@ const PreferencesContext = createContext<PreferencesContextValue>({
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
   const [closingDay, setClosingDayState] = useState(1);
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,12 +42,13 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
       const { data } = await supabase
         .from("profiles")
-        .select("closing_day")
+        .select("closing_day, full_name")
         .eq("id", user.id)
         .single();
 
       if (data) {
         setClosingDayState(data.closing_day);
+        setFullName(data.full_name ?? "");
       }
       setLoading(false);
     }
@@ -72,7 +76,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <PreferencesContext.Provider value={{ closingDay, loading, setClosingDay }}>
+    <PreferencesContext.Provider value={{ closingDay, fullName, loading, setClosingDay }}>
       {children}
     </PreferencesContext.Provider>
   );

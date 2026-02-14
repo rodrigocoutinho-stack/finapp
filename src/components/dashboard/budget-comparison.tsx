@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 import { getElapsedDays, getCurrentCompetencyMonth } from "@/lib/closing-day";
+import { CategoryIcon } from "@/lib/category-icons";
 import type { MonthForecast, CategoryForecast } from "@/lib/forecast";
 
 interface BudgetComparisonProps {
@@ -192,7 +193,10 @@ function CategoryRow({ cat }: { cat: CategoryForecast }) {
     <tr className="hover:bg-slate-50 transition-colors">
       <td className="py-1.5 pr-4 pl-6 text-slate-700">
         <div>
-          {cat.categoryName}
+          <span className="flex items-center gap-1.5">
+            <CategoryIcon name={cat.categoryName} className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            {cat.categoryName}
+          </span>
           {cat.forecastToDateAmount > 0 && (
             <div className="mt-1 h-1.5 w-full max-w-[120px] rounded-full bg-slate-100 overflow-hidden">
               <div

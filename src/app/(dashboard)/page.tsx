@@ -5,12 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 import { MonthPicker } from "@/components/dashboard/month-picker";
-import { DailyFlowTable } from "@/components/dashboard/daily-flow-table";
 import { InvestmentSummary } from "@/components/dashboard/investment-summary";
 import { BudgetComparison } from "@/components/dashboard/budget-comparison";
+import { GreetingHeader } from "@/components/layout/greeting-header";
 import { CardsSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
-import { calculateDailyFlow, type DailyFlowResult } from "@/lib/daily-flow";
 import { calculateForecast, type MonthForecast } from "@/lib/forecast";
 import { getMonthEndBalance } from "@/lib/investment-utils";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
@@ -42,7 +41,6 @@ export default function DashboardPage() {
   const [year, setYear] = useState(initYear);
   const [month, setMonth] = useState(initMonth);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
-  const [dailyFlow, setDailyFlow] = useState<DailyFlowResult | null>(null);
   const [currentMonthForecast, setCurrentMonthForecast] = useState<MonthForecast | null>(null);
   const [investmentData, setInvestmentData] = useState<InvestmentData>({
     totalBalance: 0,
@@ -67,21 +65,19 @@ export default function DashboardPage() {
     const { year: curYear, month: curMonth } = getCurrentCompetencyMonth(closingDay);
     const isCurrentMonthSelected = year === curYear && month === curMonth;
 
-    const [transactionsRes, flowResult, forecastResult] = await Promise.all([
+    const [transactionsRes, forecastResult] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
         .gte("date", start)
         .lte("date", end)
         .order("date", { ascending: false }),
-      calculateDailyFlow(supabase, year, month, closingDay),
       isCurrentMonthSelected
         ? calculateForecast(supabase, 0, true, closingDay)
         : Promise.resolve(null),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
-    setDailyFlow(flowResult);
     setCurrentMonthForecast(
       forecastResult?.months.find((m) => m.isCurrentMonth) ?? null
     );
@@ -200,12 +196,7 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-slate-600 text-sm mt-1">
-            Visão geral das suas finanças
-          </p>
-        </div>
+        <GreetingHeader />
       </div>
 
       <div className="mb-6">
@@ -218,82 +209,79 @@ export default function DashboardPage() {
           <TableSkeleton rows={6} cols={5} />
         </div>
       ) : (
-        <div className="space-y-10">
+        <>
           <SummaryCards totalReceitas={totalReceitas} totalDespesas={totalDespesas} />
 
-          {currentMonthForecast && (
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">
-                Previsto vs Realizado
-              </h2>
-              <BudgetComparison month={currentMonthForecast} closingDay={closingDay} />
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Main column */}
+            <div className="lg:col-span-3 space-y-6">
+              {currentMonthForecast && (
+                <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                  <h2 className="text-lg font-semibold text-slate-800 mb-4">
+                    Previsto vs Realizado
+                  </h2>
+                  <BudgetComparison month={currentMonthForecast} closingDay={closingDay} />
+                </div>
+              )}
             </div>
-          )}
 
-          {dailyFlow && (
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">
-                Fluxo Diário
-              </h2>
-              <DailyFlowTable data={dailyFlow} />
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <InvestmentSummary
-              totalBalance={investmentData.totalBalance}
-              projectedReturn={investmentData.projectedReturn}
-              returnPercent={investmentData.returnPercent}
-              hasData={investmentData.hasData}
-            />
-
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">
-                Despesas por Categoria
-              </h2>
-              <CategoryChart data={chartData} />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-800 mb-4">
-              Últimas Transações
-            </h2>
-            {recentTransactions.length === 0 ? (
-              <p className="text-slate-500 text-sm">
-                Nenhuma transação neste mês.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {recentTransactions.map((t) => (
-                  <div
-                    key={t.id}
-                    className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">
-                        {t.description}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {formatDate(t.date)} &middot;{" "}
-                        {t.categories?.name ?? "-"} &middot;{" "}
-                        {t.accounts?.name ?? "-"}
-                      </p>
-                    </div>
-                    <span
-                      className={`text-sm font-semibold tabular-nums ${
-                        t.type === "receita" ? "text-emerald-600" : "text-rose-600"
-                      }`}
-                    >
-                      {t.type === "receita" ? "+" : "-"}{" "}
-                      {formatCurrency(t.amount_cents)}
-                    </span>
-                  </div>
-                ))}
+            {/* Side column */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-slate-800 mb-4">
+                  Despesas por Categoria
+                </h2>
+                <CategoryChart data={chartData} />
               </div>
-            )}
+
+              <InvestmentSummary
+                totalBalance={investmentData.totalBalance}
+                projectedReturn={investmentData.projectedReturn}
+                returnPercent={investmentData.returnPercent}
+                hasData={investmentData.hasData}
+              />
+
+              <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-slate-800 mb-4">
+                  Últimas Transações
+                </h2>
+                {recentTransactions.length === 0 ? (
+                  <p className="text-slate-500 text-sm">
+                    Nenhuma transação neste mês.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {recentTransactions.map((t) => (
+                      <div
+                        key={t.id}
+                        className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-slate-900">
+                            {t.description}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {formatDate(t.date)} &middot;{" "}
+                            {t.categories?.name ?? "-"} &middot;{" "}
+                            {t.accounts?.name ?? "-"}
+                          </p>
+                        </div>
+                        <span
+                          className={`text-sm font-semibold tabular-nums ${
+                            t.type === "receita" ? "text-emerald-600" : "text-rose-600"
+                          }`}
+                        >
+                          {t.type === "receita" ? "+" : "-"}{" "}
+                          {formatCurrency(t.amount_cents)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

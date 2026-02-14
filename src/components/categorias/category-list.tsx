@@ -6,6 +6,7 @@ import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { CategoryForm } from "./category-form";
+import { CategoryIcon } from "@/lib/category-icons";
 import type { Category } from "@/types/database";
 
 interface CategoryListProps {
@@ -73,7 +74,10 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
                 key={cat.id}
                 className="flex items-center justify-between bg-white rounded-lg border border-slate-200 px-4 py-3"
               >
-                <span className="text-slate-900">{cat.name}</span>
+                <span className="flex items-center gap-2 text-slate-900">
+                  <CategoryIcon name={cat.name} className="w-4 h-4 text-slate-400" />
+                  {cat.name}
+                </span>
                 <div className="flex gap-2">
                   <Button
                     variant="ghost"

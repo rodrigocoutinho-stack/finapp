@@ -22,6 +22,75 @@ FinApp - Gestão Financeira Pessoal
 
 ## Últimas Alterações (14/02/2026)
 
+### Unificação Fluxo Diário + Fluxo Previsto
+- **`src/app/(dashboard)/fluxo/page.tsx`** — Página NOVA (substituiu `/fluxo-previsto`)
+  - Abas "Fluxo Diário" e "Fluxo Previsto" com toggle estilo pill
+  - Fluxo Diário: MonthPicker + DailyFlowTable (movido do dashboard)
+  - Fluxo Previsto: ForecastTable (mês atual + 3 futuros)
+  - Cada aba faz fetch independente ao alternar
+- **`src/app/(dashboard)/fluxo-previsto/`** — Diretório REMOVIDO
+- **`src/app/(dashboard)/page.tsx`** — DailyFlowTable removido
+  - Removidos imports de `DailyFlowTable`, `calculateDailyFlow`, state `dailyFlow`
+  - Coluna principal: SummaryCards + BudgetComparison (sem fluxo diário)
+- **`src/components/layout/sidebar.tsx`** — Link `/fluxo-previsto` → `/fluxo`, label "Fluxo"
+- **`src/components/layout/navbar.tsx`** — Idem (consistência)
+
+### Sidebar Collapsível
+- **`src/contexts/sidebar-context.tsx`** — Context NOVO
+  - `SidebarProvider` + `useSidebar()` hook
+  - `collapsed: boolean`, `toggleCollapsed()`, persistência em localStorage
+- **`src/components/layout/sidebar.tsx`** — Toggle collapse/expand
+  - Expandido: `w-60`, logo "FinApp", links com ícone + texto, avatar + nome
+  - Recolhido: `w-[68px]`, logo "F", só ícones centralizados, tooltips
+  - Chevron `<` / `>` para alternar, transição `duration-300`
+- **`src/app/providers.tsx`** — `SidebarProvider` adicionado
+- **`src/app/(dashboard)/layout.tsx`** — Client component, padding dinâmico `lg:pl-60` / `lg:pl-[68px]`
+
+### Redesign UX — Fase 2: 5 Ações Prioritárias
+- **`src/lib/category-icons.tsx`** — Componente NOVO
+  - `<CategoryIcon name={string} className? />` com SVG inline (Heroicons-style)
+  - ~13 ícones para categorias financeiras (salário, alimentação, transporte, moradia, saúde, educação, lazer, investimentos, freelance, assinatura, compras, presente, outros)
+  - Normalização de acentos + alias map para matching robusto (ex: "Supermercado" → alimentação)
+  - Fallback genérico (tag icon) para categorias desconhecidas
+- **`src/components/layout/user-avatar.tsx`** — Componente NOVO
+  - Avatar circular com iniciais (primeira letra do nome)
+  - `bg-emerald-100 text-emerald-700`, 3 tamanhos (sm/md/lg)
+- **`src/components/layout/greeting-header.tsx`** — Componente NOVO
+  - Saudação por hora: "Bom dia/Boa tarde/Boa noite, {primeiro nome}"
+  - Subtexto com data atual formatada em pt-BR
+- **`src/components/layout/sidebar.tsx`** — Componente NOVO (substitui Navbar)
+  - Desktop (`lg:+`): sidebar fixa `w-60 bg-slate-900`, 8 links com ícones SVG
+  - Link ativo: `bg-slate-800 text-emerald-400`
+  - Avatar + nome + "Sair" no rodapé
+  - Mobile (`< lg`): top bar `h-14` + drawer `w-72` com backdrop + transition
+  - **Collapse/expand**: botão chevron no header recolhe para `w-[68px]` (só ícones)
+  - Tooltip `title` nos links quando colapsado, logo "F" compacto
+  - Estado persistido em `localStorage` (`finapp-sidebar-collapsed`)
+  - Transição animada `duration-300` em sidebar e main padding
+- **`src/contexts/sidebar-context.tsx`** — Context NOVO
+  - `SidebarProvider` + `useSidebar()` hook
+  - `collapsed: boolean`, `toggleCollapsed()`, persistência em localStorage
+- **`src/contexts/preferences-context.tsx`** — `fullName` adicionado ao context
+  - Fetch `profiles.full_name` no mount junto com `closing_day`
+- **`src/app/providers.tsx`** — `SidebarProvider` adicionado (envolve ToastProvider)
+- **`src/app/(dashboard)/layout.tsx`** — `<Navbar />` substituído por `<Sidebar />`
+  - Client component para ler `useSidebar().collapsed`
+  - Main: `lg:pl-60` / `lg:pl-[68px]` dinâmico + `transition-all duration-300`
+- **`src/app/(dashboard)/page.tsx`** — Dashboard reestruturado
+  - `GreetingHeader` substitui título estático
+  - Layout 2 colunas: `lg:grid-cols-5` com `col-span-3` (main) / `col-span-2` (side)
+  - Main: SummaryCards → BudgetComparison → DailyFlowTable
+  - Side: CategoryChart → InvestmentSummary → Últimas Transações
+  - Mobile: stack vertical (comportamento preservado)
+- **`src/components/dashboard/summary-cards.tsx`** — Hero cards redesenhados
+  - Ícone circular colorido à esquerda (ArrowUp emerald, ArrowDown rose, Wallet blue)
+  - Background tint sutil (emerald-50, rose-50, blue-50)
+  - Label uppercase xs + valor xl bold
+- **`src/components/categorias/category-list.tsx`** — CategoryIcon antes do nome
+- **`src/components/dashboard/budget-comparison.tsx`** — CategoryIcon nas linhas de categoria
+- **`src/components/dashboard/category-chart.tsx`** — Custom YAxis tick com CategoryIcon (foreignObject)
+- **`src/components/dashboard/daily-flow-table.tsx`** — CategoryIcon nas células de nome
+
 ### Dia de Fechamento — Competência Personalizada
 - **`supabase/migrations/007_closing_day.sql`** — Migration NOVA
   - ADD COLUMN `closing_day` integer NOT NULL DEFAULT 1 CHECK (1-28) em `profiles`
@@ -300,13 +369,13 @@ src/
 │       ├── transacoes/
 │       │   ├── page.tsx
 │       │   └── importar/page.tsx # NOVO
-│       ├── fluxo-previsto/page.tsx  # NOVO (substituiu fluxo-diario)
+│       ├── fluxo/page.tsx            # NOVO (Fluxo Diário + Fluxo Previsto em abas)
 │       ├── investimentos/page.tsx # NOVO
 │       ├── configuracoes/page.tsx # NOVO
 │       └── recorrentes/page.tsx
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
-│   ├── layout/                   # Navbar
+│   ├── layout/                   # Sidebar, UserAvatar, GreetingHeader (Navbar mantido mas não usado)
 │   ├── dashboard/                # SummaryCards, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary
 │   ├── contas/
 │   ├── categorias/
@@ -321,8 +390,9 @@ src/
 │   ├── utils.ts                  # formatCurrency, toCents, formatDate, etc.
 │   ├── forecast.ts               # Lógica de projeção mensal
 │   ├── daily-flow.ts             # Lógica de fluxo diário
-│   ├── closing-day.ts            # NOVO - Matemática de competência/fechamento
-│   ├── investment-utils.ts       # NOVO - Labels, agrupamento, cálculo de saldo
+│   ├── closing-day.ts            # Matemática de competência/fechamento
+│   ├── category-icons.tsx        # NOVO - CategoryIcon SVG component + alias map
+│   ├── investment-utils.ts       # Labels, agrupamento, cálculo de saldo
 │   └── ofx-parser.ts            # Parser OFX/QFX
 └── types/
     └── database.ts               # Types do Supabase
@@ -352,16 +422,17 @@ src/
 
 ## Próximos Passos
 
-### Redesign UX — Fase 2A: Melhorias Visuais (sem risco estrutural)
-- [ ] Dashboard hero cards — redesenhar SummaryCards com ícones, variação % e visual premium
+### Redesign UX — Fase 2 (Concluído)
+- [x] Dashboard hero cards com ícones circulares e visual premium
+- [x] Sidebar fixa (desktop) + drawer (mobile) substituindo top navbar
+- [x] Layout 2 colunas no dashboard (main 60% / side 40%)
+- [x] Ícones por categoria em listas, tabelas e charts
+- [x] Greeting header com saudação por hora + avatar
+
+### Redesign UX — Fase 3: Refinamento
 - [ ] Chart upgrade — CategoryChart horizontal → donut/pie com legenda lateral
 - [ ] Form styling — inputs com melhor hierarquia visual
 - [ ] DataTable — extrair componente reutilizável para tabelas padronizadas
-
-### Redesign UX — Fase 2B: Sidebar Navigation (mudança estrutural)
-- [ ] Trocar top navbar por sidebar fixa (desktop) + drawer (mobile)
-- [ ] Adaptar layout.tsx e todas as páginas para o novo paradigma
-- [ ] Testar responsividade com sidebar (~250px de largura perdida)
 
 ### Robustez e Qualidade
 - [ ] Tratamento de erros mais completo (edge cases, falhas de rede)

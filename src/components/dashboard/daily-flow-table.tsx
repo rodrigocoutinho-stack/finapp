@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { formatCurrency } from "@/lib/utils";
+import { CategoryIcon } from "@/lib/category-icons";
 import type { DailyFlowResult } from "@/lib/daily-flow";
 
 interface DailyFlowTableProps {
@@ -128,8 +129,11 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
                       key={cat.id}
                       className="hover:bg-slate-50 transition-colors border-b border-slate-50"
                     >
-                      <td className="sticky left-0 z-10 bg-white py-1 pr-2 pl-5 text-slate-600 truncate max-w-[160px]">
-                        {cat.name}
+                      <td className="sticky left-0 z-10 bg-white py-1 pr-2 pl-5 text-slate-600 max-w-[160px]">
+                        <span className="flex items-center gap-1.5 truncate">
+                          <CategoryIcon name={cat.name} className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          {cat.name}
+                        </span>
                       </td>
                       {days.map((day) => {
                         const entry = day.byCategoryId.get(cat.id);
@@ -195,8 +199,11 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
                       key={cat.id}
                       className="hover:bg-slate-50 transition-colors border-b border-slate-50"
                     >
-                      <td className="sticky left-0 z-10 bg-white py-1 pr-2 pl-5 text-slate-600 truncate max-w-[160px]">
-                        {cat.name}
+                      <td className="sticky left-0 z-10 bg-white py-1 pr-2 pl-5 text-slate-600 max-w-[160px]">
+                        <span className="flex items-center gap-1.5 truncate">
+                          <CategoryIcon name={cat.name} className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          {cat.name}
+                        </span>
                       </td>
                       {days.map((day) => {
                         const entry = day.byCategoryId.get(cat.id);
