@@ -17,6 +17,7 @@ interface TransactionFormProps {
   transaction?: Transaction;
   accounts: Account[];
   categories: Category[];
+  defaultType?: "receita" | "despesa";
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -25,12 +26,13 @@ export function TransactionForm({
   transaction,
   accounts,
   categories,
+  defaultType,
   onSuccess,
   onCancel,
 }: TransactionFormProps) {
   const supabase = createClient();
   const [type, setType] = useState<"receita" | "despesa">(
-    transaction?.type ?? "despesa"
+    transaction?.type ?? defaultType ?? "despesa"
   );
   const [amount, setAmount] = useState(
     transaction ? (transaction.amount_cents / 100).toFixed(2).replace(".", ",") : ""

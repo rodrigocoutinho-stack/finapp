@@ -5,15 +5,15 @@ import { formatCurrency } from "@/lib/utils";
 
 interface InvestmentSummaryProps {
   totalBalance: number;
-  projectedReturn: number;
-  returnPercent: number;
+  lastReturn: number;
+  lastReturnPercent: number;
   hasData: boolean;
 }
 
 export function InvestmentSummary({
   totalBalance,
-  projectedReturn,
-  returnPercent,
+  lastReturn,
+  lastReturnPercent,
   hasData,
 }: InvestmentSummaryProps) {
   if (!hasData) {
@@ -35,7 +35,7 @@ export function InvestmentSummary({
     );
   }
 
-  const isPositive = returnPercent >= 0;
+  const isPositive = lastReturn >= 0;
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
@@ -49,29 +49,30 @@ export function InvestmentSummary({
         </Link>
       </div>
 
-      <div className="space-y-3">
+      <div className="flex items-baseline gap-6 flex-wrap">
         <div>
-          <p className="text-sm text-slate-500">Total investido</p>
-          <p className="text-2xl font-bold text-slate-900 tabular-nums">
+          <p className="text-xs text-slate-500 mb-0.5">Posição atual</p>
+          <p className="text-xl font-bold text-slate-900 tabular-nums">
             {formatCurrency(totalBalance)}
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div>
-            <p className="text-sm text-slate-500">Retorno projetado no mês</p>
-            <p className="text-base font-semibold text-slate-800 tabular-nums">
-              {formatCurrency(projectedReturn)}
-              <span
-                className={`ml-2 text-sm font-medium ${
-                  isPositive ? "text-emerald-600" : "text-rose-600"
-                }`}
-              >
-                ({isPositive ? "+" : ""}
-                {returnPercent.toFixed(2)}%)
-              </span>
-            </p>
-          </div>
+        <div>
+          <p className="text-xs text-slate-500 mb-0.5">Rendimento no mês</p>
+          <p className="text-base font-semibold tabular-nums">
+            <span className={isPositive ? "text-emerald-600" : "text-rose-600"}>
+              {isPositive ? "+" : ""}
+              {formatCurrency(lastReturn)}
+            </span>
+            <span
+              className={`ml-1.5 text-sm font-medium ${
+                isPositive ? "text-emerald-600" : "text-rose-600"
+              }`}
+            >
+              ({isPositive ? "+" : ""}
+              {lastReturnPercent.toFixed(2)}%)
+            </span>
+          </p>
         </div>
       </div>
     </div>

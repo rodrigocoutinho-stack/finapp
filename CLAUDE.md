@@ -11,7 +11,7 @@ FinApp - Gestão Financeira Pessoal
 - [x] Database schema + migrations 001-007 (RLS ativo)
 - [x] Autenticação (login, registro com confirmação por email, logout)
 - [x] CRUD Contas (banco, cartão, carteira)
-- [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção)
+- [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção — dentro de Configurações)
 - [x] CRUD Transações (filtro mensal, atualização automática de saldo)
 - [x] Transações Planejadas (recorrentes, pontuais, com período)
 - [x] Importação OFX (extrato bancário e cartão de crédito)
@@ -19,7 +19,7 @@ FinApp - Gestão Financeira Pessoal
 - [x] Dashboard (hero cards, gráfico categorias, previsto vs realizado, investimentos, últimas transações)
 - [x] Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
 - [x] Dia de fechamento (competência personalizada por usuário)
-- [x] Configurações (closing day 1-28)
+- [x] Configurações (abas Geral + Categorias, closing day 1-28)
 - [x] Redesign UX Fase 1 (paleta slate/rose, componentes UI, skeleton, toast, acessibilidade)
 - [x] Redesign UX Fase 2 (sidebar, hero cards, ícones categorias, greeting, layout 2 colunas)
 
@@ -29,6 +29,12 @@ FinApp - Gestão Financeira Pessoal
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
 ## Últimas Alterações (14/02/2026)
+
+### Categorias movidas para Configurações
+- `src/app/(dashboard)/configuracoes/page.tsx` — Reescrito com tabs "Geral" / "Categorias" (pill toggle, mesmo padrão visual do Fluxo)
+- `src/app/(dashboard)/categorias/page.tsx` — Substituído por redirect para `/configuracoes`
+- `src/components/layout/sidebar.tsx` — Link Categorias removido (sidebar 8→7 itens)
+- `src/components/layout/navbar.tsx` — Link Categorias removido (consistência)
 
 ### Redesign UX — Fase 2: 5 Ações Prioritárias + Extras
 
@@ -87,13 +93,13 @@ src/
 │       ├── page.tsx              # Dashboard principal (2 colunas)
 │       ├── layout.tsx            # Sidebar + main com padding dinâmico
 │       ├── contas/page.tsx
-│       ├── categorias/page.tsx
+│       ├── categorias/page.tsx    # Redirect → /configuracoes
 │       ├── transacoes/
 │       │   ├── page.tsx
 │       │   └── importar/page.tsx
 │       ├── fluxo/page.tsx        # Fluxo Diário + Previsto (abas)
 │       ├── investimentos/page.tsx
-│       ├── configuracoes/page.tsx
+│       ├── configuracoes/page.tsx  # Abas: Geral + Categorias
 │       └── recorrentes/page.tsx
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
@@ -149,12 +155,11 @@ src/
 |---|-------|------|--------|
 | 1 | Dashboard | `/` | Hero cards, Previsto vs Realizado, Categorias, Investimentos, Últimas Transações |
 | 2 | Contas | `/contas` | CRUD contas bancárias |
-| 3 | Categorias | `/categorias` | CRUD categorias receita/despesa |
-| 4 | Transações | `/transacoes` | CRUD transações + importação OFX |
-| 5 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
-| 6 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
-| 7 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal) |
-| 8 | Configurações | `/configuracoes` | Dia de fechamento (1-28) |
+| 3 | Transações | `/transacoes` | CRUD transações + importação OFX |
+| 4 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
+| 5 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
+| 6 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal) |
+| 7 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento) + Categorias (CRUD receita/despesa) |
 
 ## Próximos Passos
 

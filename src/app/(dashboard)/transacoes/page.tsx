@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -30,10 +30,19 @@ interface TransactionWithRelations {
 }
 
 export default function TransacoesPage() {
+  return (
+    <Suspense>
+      <TransacoesContent />
+    </Suspense>
+  );
+}
+
+function TransacoesContent() {
   const supabase = createClient();
   const { addToast } = useToast();
   const { closingDay, loading: prefsLoading } = usePreferences();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const { year: initYear, month: initMonth } = getCurrentCompetencyMonth(closingDay);
   const [year, setYear] = useState(initYear);
@@ -43,6 +52,18 @@ export default function TransacoesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [formDefaultType, setFormDefaultType] = useState<"receita" | "despesa" | undefined>();
+
+  // Auto-open form from query param (?novo=receita|despesa)
+  const novoParam = searchParams.get("novo");
+
+  useEffect(() => {
+    if ((novoParam === "receita" || novoParam === "despesa") && !loading) {
+      setFormDefaultType(novoParam);
+      setShowForm(true);
+      router.replace("/transacoes", { scroll: false });
+    }
+  }, [novoParam, loading, router]);
 
   // Sync initial year/month when closingDay loads
   useEffect(() => {
@@ -98,6 +119,11 @@ export default function TransacoesPage() {
     }
   }
 
+  function handleCloseForm() {
+    setShowForm(false);
+    setFormDefaultType(undefined);
+  }
+
   return (
     <div>
       <PageHeader
@@ -151,18 +177,19 @@ export default function TransacoesPage() {
 
       <Modal
         open={showForm}
-        onClose={() => setShowForm(false)}
+        onClose={handleCloseForm}
         title="Nova transação"
       >
         <TransactionForm
           accounts={accounts}
           categories={categories}
+          defaultType={formDefaultType}
           onSuccess={() => {
-            setShowForm(false);
+            handleCloseForm();
             fetchData();
             addToast("Transação criada com sucesso.");
           }}
-          onCancel={() => setShowForm(false)}
+          onCancel={handleCloseForm}
         />
       </Modal>
     </div>
