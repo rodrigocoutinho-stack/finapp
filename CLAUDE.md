@@ -5,7 +5,7 @@ FinApp - Gestão Financeira Pessoal
 
 ## Estado Atual (Atualizado: 14/02/2026)
 
-**MVP completo e funcional + Redesign UX Fase 2 concluído.** Todas as funcionalidades implementadas e testadas (E2E 22/22 passos aprovados, 0 erros console):
+**MVP completo e funcional + Redesign UX Fase 2 + Assistente IA.** Todas as funcionalidades implementadas e testadas (E2E 22/22 passos aprovados, 0 erros console):
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
 - [x] Database schema + migrations 001-007 (RLS ativo)
@@ -22,6 +22,7 @@ FinApp - Gestão Financeira Pessoal
 - [x] Configurações (abas Geral + Categorias, closing day 1-28)
 - [x] Redesign UX Fase 1 (paleta slate/rose, componentes UI, skeleton, toast, acessibilidade)
 - [x] Redesign UX Fase 2 (sidebar, hero cards, ícones categorias, greeting, layout 2 colunas)
+- [x] Assistente Financeiro IA (Gemini 2.5 Flash, streaming, contexto conversacional, botão copiar)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
 - [x] Migrations 001-007 executadas no SQL Editor
@@ -29,6 +30,32 @@ FinApp - Gestão Financeira Pessoal
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
 ## Últimas Alterações (14/02/2026)
+
+### Contexto Conversacional + Botão Copiar no Assistente IA
+
+**Arquivos modificados:**
+- `src/app/(dashboard)/assistente/page.tsx` — Monta array `history` (últimas 10 mensagens finalizadas) e envia no body do fetch para manter contexto multi-turno
+- `src/app/api/ai/analyze/route.ts` — Aceita campo `history`, valida (max 10, roles válidos), monta `contents` multi-turn para Gemini (dados financeiros só na 1ª mensagem)
+- `src/components/assistente/chat-message.tsx` — Botão copiar no balão assistant (clipboard → check por 2s), visível no hover (`opacity-0 group-hover:opacity-100`)
+
+### Assistente Financeiro IA (Gemini 2.5 Flash)
+
+**Novos arquivos:**
+- `src/lib/ai/system-prompt.ts` — Persona "FinAssist", regras de resposta em pt-BR, áreas de atuação (diagnóstico, orçamento, fluxo, investimentos, reserva)
+- `src/lib/ai/financial-context.ts` — `buildFinancialContext()` serializa dados financeiros do usuário em texto estruturado (~2000 tokens)
+- `src/app/api/ai/analyze/route.ts` — POST handler: autentica, busca dados via RLS, chama Gemini com streaming, retorna ReadableStream
+- `src/app/(dashboard)/assistente/page.tsx` — Chat full-height com welcome state, 4 sugestões clicáveis, streaming progressivo
+- `src/components/assistente/chat-message.tsx` — Balões user (emerald) / assistant (branco), markdown inline, loading dots
+- `src/components/assistente/chat-input.tsx` — Textarea auto-resize, Enter envia, Shift+Enter nova linha, botão enviar
+
+**Arquivos modificados:**
+- `src/components/layout/sidebar.tsx` — Link "Assistente IA" adicionado (ícone sparkles), sidebar 7→8 itens
+
+**Dependências:**
+- `@google/generative-ai` adicionado ao package.json
+
+**Configuração necessária:**
+- `.env.local` → `GEMINI_API_KEY=<chave>` (server-only, sem NEXT_PUBLIC_)
 
 ### Categorias movidas para Configurações
 - `src/app/(dashboard)/configuracoes/page.tsx` — Reescrito com tabs "Geral" / "Categorias" (pill toggle, mesmo padrão visual do Fluxo)
@@ -99,6 +126,7 @@ src/
 │       │   └── importar/page.tsx
 │       ├── fluxo/page.tsx        # Fluxo Diário + Previsto (abas)
 │       ├── investimentos/page.tsx
+│       ├── assistente/page.tsx     # Chat IA (Gemini Flash)
 │       ├── configuracoes/page.tsx  # Abas: Geral + Categorias
 │       └── recorrentes/page.tsx
 ├── components/
@@ -107,6 +135,7 @@ src/
 │   ├── dashboard/                # SummaryCards, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison
 │   ├── contas/
 │   ├── categorias/
+│   ├── assistente/               # ChatMessage, ChatInput
 │   ├── transacoes/               # TransactionForm, TransactionList, Import*
 │   ├── recorrentes/
 │   └── investimentos/            # InvestmentForm, InvestmentList, EntryForm, EntryList, InvestmentDashboard
@@ -116,6 +145,7 @@ src/
 │   └── sidebar-context.tsx       # collapsed + toggleCollapsed + SidebarProvider
 ├── lib/
 │   ├── supabase/                 # client.ts, server.ts
+│   ├── ai/                       # system-prompt.ts, financial-context.ts
 │   ├── utils.ts                  # formatCurrency, toCents, formatDate, getMonthRange, etc.
 │   ├── forecast.ts               # Lógica de projeção mensal (recurring + historical + forecast vs real)
 │   ├── daily-flow.ts             # Lógica de fluxo diário (real + planejado por dia)
@@ -159,7 +189,8 @@ src/
 | 4 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
 | 5 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
 | 6 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal) |
-| 7 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento) + Categorias (CRUD receita/despesa) |
+| 7 | Assistente IA | `/assistente` | Chat com Gemini 2.5 Flash, contexto conversacional, botão copiar, streaming |
+| 8 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento) + Categorias (CRUD receita/despesa) |
 
 ## Próximos Passos
 
@@ -186,6 +217,7 @@ src/
 - Tailwind CSS v4
 - Supabase (Auth + PostgreSQL + RLS)
 - Recharts (gráficos)
+- Google Generative AI (`@google/generative-ai`) — Gemini 2.5 Flash
 
 ## Segurança e Operação
 
