@@ -3,356 +3,77 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
-## Estado Atual (Atualizado: 09/02/2026)
+## Estado Atual (Atualizado: 14/02/2026)
 
-**MVP completo e funcional.** Todas as 8 fases implementadas:
+**MVP completo e funcional + Redesign UX Fase 2 concluído.** Todas as funcionalidades implementadas e testadas (E2E 22/22 passos aprovados, 0 erros console):
+
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations (RLS ativo)
+- [x] Database schema + migrations 001-007 (RLS ativo)
 - [x] Autenticação (login, registro com confirmação por email, logout)
 - [x] CRUD Contas (banco, cartão, carteira)
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção)
 - [x] CRUD Transações (filtro mensal, atualização automática de saldo)
-- [x] Dashboard (cards resumo, gráfico por categoria, últimas transações)
-- [x] Fluxo Previsto (projeção mensal aberta por categoria, recorrentes + histórico)
+- [x] Transações Planejadas (recorrentes, pontuais, com período)
+- [x] Importação OFX (extrato bancário e cartão de crédito)
+- [x] Investimentos (CRUD + lançamentos + quadro de evolução)
+- [x] Dashboard (hero cards, gráfico categorias, previsto vs realizado, investimentos, últimas transações)
+- [x] Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
+- [x] Dia de fechamento (competência personalizada por usuário)
+- [x] Configurações (closing day 1-28)
+- [x] Redesign UX Fase 1 (paleta slate/rose, componentes UI, skeleton, toast, acessibilidade)
+- [x] Redesign UX Fase 2 (sidebar, hero cards, ícones categorias, greeting, layout 2 colunas)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
-- [x] Migrations 001-004 executadas no SQL Editor
+- [x] Migrations 001-007 executadas no SQL Editor
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
 ## Últimas Alterações (14/02/2026)
 
+### Redesign UX — Fase 2: 5 Ações Prioritárias + Extras
+
+**Novos componentes:**
+- `src/lib/category-icons.tsx` — `<CategoryIcon>` SVG inline (~13 ícones + fallback), normalização de acentos + alias map
+- `src/components/layout/sidebar.tsx` — Sidebar fixa desktop (`w-60 bg-slate-900`) + drawer mobile (`w-72`), colapsável (`w-[68px]`)
+- `src/components/layout/user-avatar.tsx` — Avatar circular com iniciais (`emerald-100/700`)
+- `src/components/layout/greeting-header.tsx` — Saudação por hora + data formatada pt-BR
+- `src/contexts/sidebar-context.tsx` — `SidebarProvider` + `useSidebar()`, persistência localStorage
+
+**Arquivos modificados:**
+- `src/app/(dashboard)/layout.tsx` — `<Sidebar />` substitui `<Navbar />`, padding dinâmico `lg:pl-60` / `lg:pl-[68px]`
+- `src/app/(dashboard)/page.tsx` — GreetingHeader, layout 2 colunas (`lg:grid-cols-5`), DailyFlowTable removido
+- `src/app/providers.tsx` — `SidebarProvider` adicionado
+- `src/contexts/preferences-context.tsx` — `fullName` adicionado ao context
+- `src/components/dashboard/summary-cards.tsx` — Hero cards com ícones circulares coloridos
+- `src/components/categorias/category-list.tsx` — CategoryIcon antes do nome
+- `src/components/dashboard/budget-comparison.tsx` — CategoryIcon nas linhas
+- `src/components/dashboard/category-chart.tsx` — CategoryIcon no eixo Y (foreignObject)
+- `src/components/dashboard/daily-flow-table.tsx` — CategoryIcon nas células
+
 ### Unificação Fluxo Diário + Fluxo Previsto
-- **`src/app/(dashboard)/fluxo/page.tsx`** — Página NOVA (substituiu `/fluxo-previsto`)
-  - Abas "Fluxo Diário" e "Fluxo Previsto" com toggle estilo pill
-  - Fluxo Diário: MonthPicker + DailyFlowTable (movido do dashboard)
-  - Fluxo Previsto: ForecastTable (mês atual + 3 futuros)
-  - Cada aba faz fetch independente ao alternar
-- **`src/app/(dashboard)/fluxo-previsto/`** — Diretório REMOVIDO
-- **`src/app/(dashboard)/page.tsx`** — DailyFlowTable removido
-  - Removidos imports de `DailyFlowTable`, `calculateDailyFlow`, state `dailyFlow`
-  - Coluna principal: SummaryCards + BudgetComparison (sem fluxo diário)
-- **`src/components/layout/sidebar.tsx`** — Link `/fluxo-previsto` → `/fluxo`, label "Fluxo"
-- **`src/components/layout/navbar.tsx`** — Idem (consistência)
+- `src/app/(dashboard)/fluxo/page.tsx` — Página NOVA com abas "Fluxo Diário" / "Fluxo Previsto"
+- `src/app/(dashboard)/fluxo-previsto/` — Diretório REMOVIDO
 
 ### Sidebar Collapsível
-- **`src/contexts/sidebar-context.tsx`** — Context NOVO
-  - `SidebarProvider` + `useSidebar()` hook
-  - `collapsed: boolean`, `toggleCollapsed()`, persistência em localStorage
-- **`src/components/layout/sidebar.tsx`** — Toggle collapse/expand
-  - Expandido: `w-60`, logo "FinApp", links com ícone + texto, avatar + nome
-  - Recolhido: `w-[68px]`, logo "F", só ícones centralizados, tooltips
-  - Chevron `<` / `>` para alternar, transição `duration-300`
-- **`src/app/providers.tsx`** — `SidebarProvider` adicionado
-- **`src/app/(dashboard)/layout.tsx`** — Client component, padding dinâmico `lg:pl-60` / `lg:pl-[68px]`
-
-### Redesign UX — Fase 2: 5 Ações Prioritárias
-- **`src/lib/category-icons.tsx`** — Componente NOVO
-  - `<CategoryIcon name={string} className? />` com SVG inline (Heroicons-style)
-  - ~13 ícones para categorias financeiras (salário, alimentação, transporte, moradia, saúde, educação, lazer, investimentos, freelance, assinatura, compras, presente, outros)
-  - Normalização de acentos + alias map para matching robusto (ex: "Supermercado" → alimentação)
-  - Fallback genérico (tag icon) para categorias desconhecidas
-- **`src/components/layout/user-avatar.tsx`** — Componente NOVO
-  - Avatar circular com iniciais (primeira letra do nome)
-  - `bg-emerald-100 text-emerald-700`, 3 tamanhos (sm/md/lg)
-- **`src/components/layout/greeting-header.tsx`** — Componente NOVO
-  - Saudação por hora: "Bom dia/Boa tarde/Boa noite, {primeiro nome}"
-  - Subtexto com data atual formatada em pt-BR
-- **`src/components/layout/sidebar.tsx`** — Componente NOVO (substitui Navbar)
-  - Desktop (`lg:+`): sidebar fixa `w-60 bg-slate-900`, 8 links com ícones SVG
-  - Link ativo: `bg-slate-800 text-emerald-400`
-  - Avatar + nome + "Sair" no rodapé
-  - Mobile (`< lg`): top bar `h-14` + drawer `w-72` com backdrop + transition
-  - **Collapse/expand**: botão chevron no header recolhe para `w-[68px]` (só ícones)
-  - Tooltip `title` nos links quando colapsado, logo "F" compacto
-  - Estado persistido em `localStorage` (`finapp-sidebar-collapsed`)
-  - Transição animada `duration-300` em sidebar e main padding
-- **`src/contexts/sidebar-context.tsx`** — Context NOVO
-  - `SidebarProvider` + `useSidebar()` hook
-  - `collapsed: boolean`, `toggleCollapsed()`, persistência em localStorage
-- **`src/contexts/preferences-context.tsx`** — `fullName` adicionado ao context
-  - Fetch `profiles.full_name` no mount junto com `closing_day`
-- **`src/app/providers.tsx`** — `SidebarProvider` adicionado (envolve ToastProvider)
-- **`src/app/(dashboard)/layout.tsx`** — `<Navbar />` substituído por `<Sidebar />`
-  - Client component para ler `useSidebar().collapsed`
-  - Main: `lg:pl-60` / `lg:pl-[68px]` dinâmico + `transition-all duration-300`
-- **`src/app/(dashboard)/page.tsx`** — Dashboard reestruturado
-  - `GreetingHeader` substitui título estático
-  - Layout 2 colunas: `lg:grid-cols-5` com `col-span-3` (main) / `col-span-2` (side)
-  - Main: SummaryCards → BudgetComparison → DailyFlowTable
-  - Side: CategoryChart → InvestmentSummary → Últimas Transações
-  - Mobile: stack vertical (comportamento preservado)
-- **`src/components/dashboard/summary-cards.tsx`** — Hero cards redesenhados
-  - Ícone circular colorido à esquerda (ArrowUp emerald, ArrowDown rose, Wallet blue)
-  - Background tint sutil (emerald-50, rose-50, blue-50)
-  - Label uppercase xs + valor xl bold
-- **`src/components/categorias/category-list.tsx`** — CategoryIcon antes do nome
-- **`src/components/dashboard/budget-comparison.tsx`** — CategoryIcon nas linhas de categoria
-- **`src/components/dashboard/category-chart.tsx`** — Custom YAxis tick com CategoryIcon (foreignObject)
-- **`src/components/dashboard/daily-flow-table.tsx`** — CategoryIcon nas células de nome
-
-### Dia de Fechamento — Competência Personalizada
-- **`supabase/migrations/007_closing_day.sql`** — Migration NOVA
-  - ADD COLUMN `closing_day` integer NOT NULL DEFAULT 1 CHECK (1-28) em `profiles`
-  - Aditiva, segura — default 1 mantém comportamento inalterado
-  - **Executar manualmente no SQL Editor do Supabase**
-- **`src/types/database.ts`** — `closing_day: number` adicionado a profiles (Row, Insert, Update)
-- **`src/lib/closing-day.ts`** — Módulo utilitário NOVO (funções puras)
-  - `getCompetencyRange(year, month, closingDay)` — range start/end ISO
-  - `getCurrentCompetencyMonth(closingDay, today?)` — competência de "hoje"
-  - `getCompetencyDayCount(year, month, closingDay)` — dias no período
-  - `getElapsedDays(year, month, closingDay, today?)` — dias decorridos
-  - `getRecurringDateInCompetency(dayOfMonth, year, month, closingDay)` — data real da recorrente
-  - `getCompetencyDays(year, month, closingDay)` — array de dias para grid diário
-  - `getCompetencyLabel(year, month)` — string "YYYY-MM"
-- **`src/contexts/preferences-context.tsx`** — Context NOVO
-  - `PreferencesProvider` + `usePreferences()` hook
-  - Fetch `profiles.closing_day` no mount, `setClosingDay()` faz update no Supabase
-- **`src/app/providers.tsx`** — Envolvido com `PreferencesProvider` (acima de ToastProvider)
-- **`src/app/(dashboard)/configuracoes/page.tsx`** — Página NOVA
-  - Select dropdown dias 1-28, helper text explicativo, botão Salvar → toast
-- **`src/components/layout/navbar.tsx`** — Link "Config." adicionado
-- **`src/lib/utils.ts`** — `getMonthRange` aceita `closingDay` opcional, delega para `getCompetencyRange`
-- **`src/lib/forecast.ts`** — 4º parâmetro `closingDay` em `calculateForecast`
-  - Range, dias decorridos, recorrentes futuras/passadas: tudo via `closing-day.ts`
-  - `getHistoricalTransactions` usa competency ranges para lookback 3 meses
-- **`src/lib/daily-flow.ts`** — 4º parâmetro `closingDay` em `calculateDailyFlow`
-  - Grid itera `getCompetencyDays()` em vez de loop 1..daysInMonth
-  - Recurrentes agrupadas por `getRecurringDateInCompetency()` em vez de `day_of_month`
-  - Saldo abertura usa competency ranges para meses futuros
-- **`src/app/(dashboard)/page.tsx`** — `usePreferences()` + `getCurrentCompetencyMonth(closingDay)` para estado inicial
-  - Passa `closingDay` a `getMonthRange`, `calculateDailyFlow`, `calculateForecast`, `MonthPicker`, `BudgetComparison`
-- **`src/app/(dashboard)/transacoes/page.tsx`** — Idem: `usePreferences()` + `closingDay` em `getMonthRange`
-- **`src/app/(dashboard)/fluxo-previsto/page.tsx`** — `closingDay` passado a `calculateForecast`
-- **`src/components/dashboard/budget-comparison.tsx`** — Prop `closingDay`, label "dia X do período" via `getElapsedDays`
-- **`src/components/dashboard/month-picker.tsx`** — Prop `closingDay`, subtexto com range real quando closingDay > 1
-
-### Previsto vs Realizado (Orçamento)
-- **`src/lib/forecast.ts`** — Tipos e lógica expandidos
-  - `CategoryForecast`: 3 campos novos — `forecastAmount` (orçamento mês inteiro), `forecastToDateAmount` (proporcional até hoje), `realAmount` (transações reais até hoje)
-  - `MonthForecast`: 9 campos novos — `forecast*`, `forecastToDate*`, `real*` para Receitas/Despesas/Saldo
-  - Mês corrente: recurring `forecastToDate` = soma recorrentes com `day_of_month <= hoje`; historical `forecastToDate` = média × (diasPassados / diasNoMês)
-  - Meses futuros: `forecastAmount = projectedAmount`, `forecastToDate = 0`, `realAmount = 0`
-  - Condição de push ampliada para incluir categorias com forecast ou real > 0
-  - Campos existentes (`projectedAmount`, `totalReceitas`, etc.) inalterados — compatibilidade total
-- **`src/components/dashboard/budget-comparison.tsx`** — Componente NOVO
-  - Tabela Previsto vs Realizado por categoria até o dia atual
-  - Seções Receitas/Despesas colapsáveis com totais e linha de Saldo
-  - Barra de progresso inline (h-1.5) por categoria: emerald ≤ 100%, rose > 100%
-  - Cores na diferença: receitas emerald se atingiu meta, rose se abaixo; despesas inverso
-  - Título dinâmico: "Comparação proporcional até o dia {X}"
-- **`src/components/dashboard/forecast-table.tsx`** — Sub-texto no mês corrente
-  - Células de categoria, totais e saldo mostram "Real X · Prev Y" em text-[10px] slate-400
-  - Apenas na coluna do mês corrente; meses futuros inalterados
-- **`src/app/(dashboard)/page.tsx`** — Widget BudgetComparison integrado
-  - Import de `calculateForecast` e `BudgetComparison`
-  - Novo state `currentMonthForecast`
-  - Fetch paralelo de forecast quando mês selecionado = mês corrente
-  - Widget renderizado condicionalmente entre SummaryCards e DailyFlowTable
+- Toggle chevron `<` / `>`, transição `duration-300`
+- Expandido: logo "FinApp", links com ícone + texto, avatar + nome
+- Recolhido: logo "F", só ícones centralizados, tooltips
 
 ### Alterações anteriores (13/02/2026)
 
-### Redesign UX — Fase 1: Foundation
-- **Paleta neutra**: Migração completa `gray-*` → `slate-*` em 38 arquivos (240 ocorrências)
-- **Paleta despesas**: Migração `red-*` → `rose-*` para cores de despesas/receitas negativas
-  - Mantém `red-*` para erros, validação e botões de exclusão
-  - Hex hardcoded em charts atualizados (Recharts)
-- **Novos componentes UI** (5 arquivos):
-  - `src/components/ui/card.tsx` — Wrapper com border/shadow/padding
-  - `src/components/ui/badge.tsx` — Labels coloridos (7 variantes)
-  - `src/components/ui/page-header.tsx` — Título + descrição + action button
-  - `src/components/ui/empty-state.tsx` — Ícone + mensagem + CTA opcional
-  - `src/components/ui/skeleton.tsx` — Skeleton, TableSkeleton, CardSkeleton, CardsSkeleton
-- **PageHeader**: Aplicado em 7 páginas (contas, categorias, transações, recorrentes, investimentos, fluxo-previsto, importar)
-- **EmptyState**: Aplicado em 3 listas (account-list, recurring-list, investment-list)
-- **Skeleton loaders**: Substituiu spinners em 12 arquivos (dashboard usa CardsSkeleton + TableSkeleton)
-- **tabular-nums**: CSS global `font-variant-numeric: tabular-nums` em `td` e `.tabular-nums`
-  - Aplicado em summary-cards, investment-summary e dashboard
-- **Whitespace**: `max-w-7xl` → `max-w-6xl`, `py-8` → `py-10`, `p-5` → `p-6`, `gap-4` → `gap-5`, `space-y-8` → `space-y-10`
-
-### Design QA — Acessibilidade e UX
-- **`src/components/ui/modal.tsx`** — ARIA completo: `role="dialog"`, `aria-modal`, `aria-labelledby`
-  - Focus trap (Tab/Shift+Tab cycling), auto-focus, focus restore on close
-- **`src/components/layout/navbar.tsx`** — Breakpoints `sm` → `md`, active link pill, `aria-expanded`
-- **`src/components/dashboard/month-picker.tsx`** — `aria-label` nos botões de navegação
-- **`src/components/dashboard/forecast-table.tsx`** — Keyboard support em linhas colapsáveis
-- **`src/components/dashboard/daily-flow-table.tsx`** — Keyboard support em linhas colapsáveis
-- **`src/components/recorrentes/recurring-list.tsx`** — Toggle: `role="switch"`, `aria-checked`
-- **`src/components/transacoes/import-review-table.tsx`** — Select styling unificado
-- **`src/contexts/toast-context.tsx`** — Error toast 8s, exit animation 500ms antes
-- **`src/components/ui/toast.tsx`** — Botão dismiss com `aria-label`
-
-### Sistema de Toast — Feedback visual para operações CRUD
-- **`src/contexts/toast-context.tsx`** — Context + Provider + hook `useToast()` (NOVO)
-  - `addToast(message, variant?)` com variantes: success, error, info
-  - Auto-dismiss em 4s com animação de saída 500ms antes da remoção
-  - Counter module-level para IDs únicos
-- **`src/components/ui/toast.tsx`** — Componente visual do toast (NOVO)
-  - `ToastContainer` fixo bottom-4 right-4 z-[100] (acima de modais)
-  - Variantes: success (emerald-600), error (red-600), info (blue-600)
-  - Ícones SVG por variante, animação slide-in/out da direita
-  - ARIA: `role="status"` (success/info), `role="alert"` (error)
-- **`src/app/providers.tsx`** — Wrapper client com ToastProvider + ToastOutlet (NOVO)
-- **`src/app/layout.tsx`** — Envolve children com `<Providers>`
-- **5 páginas** — Toast no create:
-  - `contas/page.tsx`: "Conta criada com sucesso."
-  - `categorias/page.tsx`: "Categoria criada com sucesso."
-  - `transacoes/page.tsx`: "Transação criada com sucesso."
-  - `recorrentes/page.tsx`: "Transação planejada criada com sucesso."
-  - `investimentos/page.tsx`: "Investimento criado com sucesso."
-- **6 componentes de lista** — Toast no edit/delete:
-  - `account-list.tsx`: "Conta atualizada." / "Conta excluída."
-  - `category-list.tsx`: "Categoria atualizada." / "Categoria excluída."
-  - `transaction-list.tsx`: "Transação atualizada." / "Transação excluída."
-  - `recurring-list.tsx`: "Transação planejada atualizada." / "Transação planejada excluída." + toggle "Transação ativada/desativada."
-  - `investment-list.tsx`: "Investimento atualizado." / "Investimento excluído." + "Lançamento registrado."
-  - `entry-list.tsx`: "Lançamento excluído."
-- **`import-review-table.tsx`** — `alert()` substituído por `addToast("Erro ao importar transações.", "error")`
+- Dia de fechamento — competência personalizada (migration 007, closing-day.ts, PreferencesProvider, página Config.)
+- Previsto vs Realizado — BudgetComparison com barras de progresso por categoria
+- Redesign UX Fase 1 — paleta slate/rose, componentes UI, skeleton loaders, whitespace
+- Acessibilidade — ARIA em modais, focus trap, keyboard support, toast acessível
+- Sistema de Toast — feedback visual em todas as operações CRUD
 
 ### Alterações anteriores (12/02/2026)
 
-### Reestruturação Dashboard + Fluxo Previsto
-- **`src/lib/forecast.ts`** — Novo parâmetro `includeCurrentMonth`
-  - Quando `true`, inicia projeção no mês atual com mix real+planejado
-  - Categorias `recurring`: real até hoje + recorrentes com day_of_month > hoje
-  - Categorias `historical`: real até hoje + (média / dias_no_mês × dias_restantes)
-  - Novo campo `isCurrentMonth: boolean` em `MonthForecast`
-- **`src/components/dashboard/investment-summary.tsx`** — Widget NOVO
-  - Mostra total investido, retorno projetado no mês e variação %
-  - Link "Ver detalhes" para /investimentos
-  - Estado vazio com link para cadastrar
-- **`src/components/dashboard/forecast-table.tsx`** — Destaque mês atual
-  - Coluna do mês atual com fundo sutil verde e indicador "(atual)"
-- **`src/app/(dashboard)/fluxo-previsto/page.tsx`** — Página NOVA
-  - Chama `calculateForecast(supabase, 3, true)` incluindo mês atual
-  - Renderiza ForecastTable com mês atual + 3 futuros
-- **`src/app/(dashboard)/page.tsx`** — Dashboard reestruturado
-  - Removido ForecastTable, adicionado DailyFlowTable
-  - Widget InvestmentSummary + CategoryChart lado a lado
-  - Layout: MonthPicker → SummaryCards → DailyFlowTable → [Investimentos | Gráfico] → Últimas Transações
-  - Fetch de investimentos em useEffect separado (1x, sem depender de mês)
-- **`src/components/layout/navbar.tsx`** — Link "Fluxo Diário" substituído por "Fluxo Previsto"
-- **`src/app/(dashboard)/fluxo-diario/`** — Diretório removido (conteúdo migrou para dashboard)
-
-### Alterações anteriores (11/02/2026)
-
-### Seção de Investimentos
-- **`supabase/migrations/006_investments.sql`** — Migration (NOVO)
-  - Tabela `investments` com product, indexer, rate, maturity_date, is_active, notes
-  - Tabela `investment_entries` com type (aporte/resgate/saldo), amount_cents, date
-  - RLS ativo em ambas as tabelas, FK para accounts e profiles
-  - Índices em user_id, investment_id, date
-- **`src/types/database.ts`** — Tipos Investment e InvestmentEntry adicionados
-- **`src/lib/investment-utils.ts`** — Funções auxiliares (NOVO)
-  - Labels pt-BR para produtos, indexadores e grupos
-  - `getInvestmentGroup(product, indexer)` — agrupamento derivado (Pós-fixado, Pré-fixado, Inflação, RV, Fundos, Outros)
-  - `calculateInvestmentBalance(entries, upToDate)` — calcula saldo por último snapshot ou soma aportes - resgates
-  - `getMonthEndBalance(entries, yearMonth)` — saldo no último dia do mês
-- **`src/components/investimentos/investment-form.tsx`** — Formulário de investimento (NOVO)
-  - Campos: nome, conta vinculada, produto, indexador, taxa, vencimento, observações
-  - Suporta criação e edição
-- **`src/components/investimentos/investment-list.tsx`** — Lista de investimentos (NOVO)
-  - Cards agrupados por tipo (Pós-fixado, Pré-fixado, Inflação, RV, Fundos, Outros)
-  - Mostra último saldo, conta, taxa, vencimento
-  - Botões: Lançamentos, Editar, Excluir (com confirmação)
-  - Modal de lançamentos integrado (form + lista)
-- **`src/components/investimentos/entry-form.tsx`** — Formulário de lançamento (NOVO)
-  - Tipo (aporte/resgate/saldo), valor em R$, data, observações
-- **`src/components/investimentos/entry-list.tsx`** — Lista de lançamentos (NOVO)
-  - Tabela ordenada por data desc, badges coloridos por tipo
-  - Exclusão com confirmação via modal
-- **`src/components/investimentos/investment-dashboard.tsx`** — Quadro de evolução (NOVO)
-  - Tabela dos últimos 6 meses com linhas por grupo e sub-linhas colapsáveis
-  - Total geral por mês, formato similar ao ForecastTable
-- **`src/app/(dashboard)/investimentos/page.tsx`** — Página principal (NOVO)
-  - Duas abas: Carteira (CRUD) e Evolução (quadro mensal)
-- **`src/components/layout/navbar.tsx`** — Link "Investimentos" adicionado à navbar
-
-### Testes pendentes (Investimentos)
-- [ ] **Executar migration 006 no Supabase SQL Editor**
-- [ ] Navegar para /investimentos via navbar
-- [ ] Criar investimento com todos os campos
-- [ ] Editar investimento existente
-- [ ] Registrar aporte, resgate e saldo mensal
-- [ ] Verificar agrupamento por tipo na lista (Pós-fixado, Pré-fixado, etc.)
-- [ ] Verificar quadro de evolução com valores corretos nos últimos 6 meses
-- [ ] Excluir lançamento com confirmação
-- [ ] Excluir investimento (cascata para lançamentos)
-- [ ] Verificar que investimentos aparecem vinculados à conta correta
-
-### Página Fluxo Diário
-- **`src/lib/daily-flow.ts`** — Lógica de cálculo do fluxo diário (NOVO)
-  - Busca transações reais (dias passados) e recorrentes (dias futuros)
-  - Calcula saldo inicial do mês revertendo transações do saldo atual
-  - Agrupa valores por categoria e dia, com saldo cascateado dia a dia
-  - Suporta mês atual, meses passados e meses futuros
-- **`src/components/dashboard/daily-flow-table.tsx`** — Tabela visual do fluxo diário (NOVO)
-  - Coluna de categorias sticky à esquerda com scroll horizontal
-  - Destaque amarelo para coluna de hoje, cinza para fins de semana
-  - Valores planejados em azul/itálico, reais em preto
-  - Seções Entrada/Saída colapsáveis, saldo negativo em laranja
-  - Legenda: Real, Planejado, Hoje, Fim de semana
-- **`src/app/(dashboard)/fluxo-diario/page.tsx`** — Página com MonthPicker (NOVO)
-- **`src/components/layout/navbar.tsx`** — Link "Fluxo Diário" adicionado à navbar
-
-### Transações Futuras Pontuais + Recorrentes com Período
-- **`supabase/migrations/005_recurring_period.sql`** — Adiciona `start_month` e `end_month` (text YYYY-MM) à tabela `recurring_transactions`
-- **`src/types/database.ts`** — Campos `start_month` e `end_month` adicionados ao tipo `RecurringTransaction`
-- **`src/lib/forecast.ts`** — Filtra recorrentes por período no cálculo de projeção; adiciona flag `hasPontual` ao `CategoryForecast`
-- **`src/lib/utils.ts`** — Nova função `formatMonthLabel()` para formatar "YYYY-MM" → "abr/2026"
-- **`src/components/recorrentes/recurring-form.tsx`** — Seletor de frequência (Recorrente / Pontual / Com período), pickers de mês
-- **`src/components/recorrentes/recurring-list.tsx`** — Coluna "Período" com badges coloridos (Recorrente, Pontual, período)
-- **`src/app/(dashboard)/recorrentes/page.tsx`** — Título renomeado para "Transações Planejadas"
-- **`src/components/dashboard/forecast-table.tsx`** — Indicador losango (◆) para categorias com transações pontuais; legenda atualizada
-
-### Regras de interpretação (start_month / end_month)
-- Ambos NULL → recorrente indefinida (comportamento anterior)
-- start_month = end_month → transação pontual (1 mês)
-- Ambos preenchidos, diferentes → recorrente com período definido
-- start_month preenchido, end_month NULL → recorrente a partir de tal mês, sem fim
-
-### Alterações anteriores (10/02/2026)
-
-#### Importação de OFX — Extrato bancário e cartão de crédito
-- **`src/lib/ofx-parser.ts`** — Parser OFX/QFX custom (sem dependências externas)
-  - Suporta BANKMSGSRSV1 (conta) e CREDITCARDMSGSRSV1 (cartão)
-  - Extrai DTPOSTED, TRNAMT, MEMO/NAME de cada STMTTRN
-  - Converte valores para centavos, detecta receita/despesa pelo sinal
-  - Limite de 5MB por arquivo
-- **`src/app/(dashboard)/transacoes/importar/page.tsx`** — Página wizard de 3 passos
-  - Step 1 (Upload): seleção de conta + upload de arquivo .ofx/.qfx
-  - Step 2 (Revisão): tabela com checkbox, categoria por linha, detecção de duplicatas
-  - Step 3 (Resumo): contadores de importadas/ignoradas/duplicatas
-- **`src/components/transacoes/import-upload.tsx`** — Componente de upload
-- **`src/components/transacoes/import-review-table.tsx`** — Tabela de revisão
-  - Duplicatas detectadas por data + valor + descrição (badge amarelo)
-  - Dropdown de categoria filtrado por tipo (receita/despesa)
-  - Botões: selecionar todas, desmarcar todas, ignorar duplicatas
-  - Validação: não permite importar sem categoria definida
-  - Atualiza saldo da conta em uma única operação após import
-- **`src/components/transacoes/import-summary.tsx`** — Resumo final
-- **`src/app/(dashboard)/transacoes/page.tsx`** — Adicionado botão "Importar OFX"
-
-### Testes pendentes
-- [ ] Testar CRUD de transações recorrentes
-- [ ] Testar tipo de projeção nas categorias
-- [ ] Verificar cálculos do Fluxo Previsto (projeção mensal por categoria)
-- [ ] Testar importação OFX com arquivos de Itaú, Bradesco, Nubank
-- [ ] Verificar detecção de duplicatas na importação
-- [ ] Verificar atualização de saldo da conta após importação
-- [ ] **Executar migration 005 no Supabase SQL Editor**
-- [ ] Criar transação pontual para mês futuro → verificar que aparece só naquele mês
-- [ ] Criar recorrente com período (3 meses) → verificar projeção nos meses corretos
-- [ ] Criar recorrente sem período → verificar comportamento inalterado
-- [ ] Verificar badges de período na lista de recorrentes
-- [ ] Navegar para /fluxo-diario via navbar
-- [ ] Verificar que linhas são categorias agrupadas por tipo (receita/despesa)
-- [ ] Dias passados mostram transações reais (preto) agrupadas por categoria
-- [ ] Dias futuros mostram recorrentes no dia correto (azul/itálico)
-- [ ] Saldo cascateia corretamente dia a dia
-- [ ] Destaque de hoje (amarelo) e fins de semana (cinza)
-- [ ] Navegar mês anterior/próximo com MonthPicker
-- [ ] Scroll horizontal em tela pequena
+- Reestruturação Dashboard + Fluxo Previsto (includeCurrentMonth, InvestmentSummary widget)
+- Investimentos (migration 006, CRUD + lançamentos + quadro evolução)
+- Fluxo Diário (daily-flow.ts, DailyFlowTable)
+- Transações Planejadas com período (migration 005, start_month/end_month)
+- Importação OFX (parser custom, wizard 3 passos, detecção duplicatas)
 
 ## Estrutura do Projeto
 
@@ -363,37 +84,39 @@ src/
 │   │   ├── login/page.tsx
 │   │   └── register/page.tsx
 │   └── (dashboard)/
-│       ├── page.tsx              # Dashboard principal
+│       ├── page.tsx              # Dashboard principal (2 colunas)
+│       ├── layout.tsx            # Sidebar + main com padding dinâmico
 │       ├── contas/page.tsx
 │       ├── categorias/page.tsx
 │       ├── transacoes/
 │       │   ├── page.tsx
-│       │   └── importar/page.tsx # NOVO
-│       ├── fluxo/page.tsx            # NOVO (Fluxo Diário + Fluxo Previsto em abas)
-│       ├── investimentos/page.tsx # NOVO
-│       ├── configuracoes/page.tsx # NOVO
+│       │   └── importar/page.tsx
+│       ├── fluxo/page.tsx        # Fluxo Diário + Previsto (abas)
+│       ├── investimentos/page.tsx
+│       ├── configuracoes/page.tsx
 │       └── recorrentes/page.tsx
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
-│   ├── layout/                   # Sidebar, UserAvatar, GreetingHeader (Navbar mantido mas não usado)
-│   ├── dashboard/                # SummaryCards, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary
+│   ├── layout/                   # Sidebar, UserAvatar, GreetingHeader, Navbar (legado)
+│   ├── dashboard/                # SummaryCards, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison
 │   ├── contas/
 │   ├── categorias/
 │   ├── transacoes/               # TransactionForm, TransactionList, Import*
 │   ├── recorrentes/
-│   └── investimentos/            # NOVO - InvestmentForm, InvestmentList, EntryForm, EntryList, InvestmentDashboard
+│   └── investimentos/            # InvestmentForm, InvestmentList, EntryForm, EntryList, InvestmentDashboard
 ├── contexts/
-│   ├── toast-context.tsx         # NOVO - Context + Provider + useToast()
-│   └── preferences-context.tsx   # NOVO - closingDay + PreferencesProvider
+│   ├── toast-context.tsx         # Context + Provider + useToast()
+│   ├── preferences-context.tsx   # closingDay + fullName + PreferencesProvider
+│   └── sidebar-context.tsx       # collapsed + toggleCollapsed + SidebarProvider
 ├── lib/
 │   ├── supabase/                 # client.ts, server.ts
-│   ├── utils.ts                  # formatCurrency, toCents, formatDate, etc.
-│   ├── forecast.ts               # Lógica de projeção mensal
-│   ├── daily-flow.ts             # Lógica de fluxo diário
+│   ├── utils.ts                  # formatCurrency, toCents, formatDate, getMonthRange, etc.
+│   ├── forecast.ts               # Lógica de projeção mensal (recurring + historical + forecast vs real)
+│   ├── daily-flow.ts             # Lógica de fluxo diário (real + planejado por dia)
 │   ├── closing-day.ts            # Matemática de competência/fechamento
-│   ├── category-icons.tsx        # NOVO - CategoryIcon SVG component + alias map
+│   ├── category-icons.tsx        # CategoryIcon SVG component + alias map
 │   ├── investment-utils.ts       # Labels, agrupamento, cálculo de saldo
-│   └── ofx-parser.ts            # Parser OFX/QFX
+│   └── ofx-parser.ts             # Parser OFX/QFX
 └── types/
     └── database.ts               # Types do Supabase
 ```
@@ -403,46 +126,55 @@ src/
 ### Tabelas
 | Tabela | Descrição |
 |--------|-----------|
-| `profiles` | Perfis de usuário (extends auth.users) |
+| `profiles` | Perfis de usuário (extends auth.users), inclui `closing_day` |
 | `accounts` | Contas (banco, cartão, carteira) |
-| `categories` | Categorias com `projection_type` |
+| `categories` | Categorias com `projection_type` (recurring/historical) |
 | `transactions` | Transações (receita/despesa) |
-| `recurring_transactions` | Transações recorrentes mensais |
+| `recurring_transactions` | Transações planejadas (recorrentes, pontuais, com período) |
 | `investments` | Investimentos (CDB, Tesouro, Ações, etc.) |
 | `investment_entries` | Lançamentos de investimentos (aportes, resgates, saldos) |
 
 ### Migrations
-1. `001_initial_schema.sql` - Estrutura base
+1. `001_initial_schema.sql` - Estrutura base (profiles, accounts, categories, transactions)
 2. `002_seed_categories.sql` - Categorias padrão
-3. `003_add_projection_type.sql` - Campo projection_type
-4. `004_recurring_transactions.sql` - Tabela recorrentes
-5. `005_recurring_period.sql` - Campos start_month/end_month
+3. `003_add_projection_type.sql` - Campo projection_type em categories
+4. `004_recurring_transactions.sql` - Tabela recurring_transactions
+5. `005_recurring_period.sql` - Campos start_month/end_month em recurring_transactions
 6. `006_investments.sql` - Tabelas investments e investment_entries
 7. `007_closing_day.sql` - Campo closing_day em profiles
 
-## Próximos Passos
+## Navegação (Sidebar)
 
-### Redesign UX — Fase 2 (Concluído)
-- [x] Dashboard hero cards com ícones circulares e visual premium
-- [x] Sidebar fixa (desktop) + drawer (mobile) substituindo top navbar
-- [x] Layout 2 colunas no dashboard (main 60% / side 40%)
-- [x] Ícones por categoria em listas, tabelas e charts
-- [x] Greeting header com saudação por hora + avatar
+| # | Label | Rota | Página |
+|---|-------|------|--------|
+| 1 | Dashboard | `/` | Hero cards, Previsto vs Realizado, Categorias, Investimentos, Últimas Transações |
+| 2 | Contas | `/contas` | CRUD contas bancárias |
+| 3 | Categorias | `/categorias` | CRUD categorias receita/despesa |
+| 4 | Transações | `/transacoes` | CRUD transações + importação OFX |
+| 5 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
+| 6 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
+| 7 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal) |
+| 8 | Configurações | `/configuracoes` | Dia de fechamento (1-28) |
+
+## Próximos Passos
 
 ### Redesign UX — Fase 3: Refinamento
 - [ ] Chart upgrade — CategoryChart horizontal → donut/pie com legenda lateral
 - [ ] Form styling — inputs com melhor hierarquia visual
 - [ ] DataTable — extrair componente reutilizável para tabelas padronizadas
+- [ ] Remover navbar.tsx (legado, substituído por sidebar)
 
 ### Robustez e Qualidade
 - [ ] Tratamento de erros mais completo (edge cases, falhas de rede)
 - [ ] Validações de formulário mais rigorosas
 - [ ] Otimização de queries (evitar re-fetches desnecessários)
-- [ ] Testes (unitários e/ou e2e)
+- [ ] Testes automatizados (unitários e/ou e2e com Playwright)
 
 ### Futuro
 - [ ] Deploy na Vercel
 - [ ] Filtros avançados, exportar dados, metas de orçamento
+- [ ] Dark mode
+- [ ] PWA / mobile responsivo avançado
 
 ## Stack
 - Next.js 16 (App Router) + TypeScript
