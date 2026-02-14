@@ -5,16 +5,19 @@ export type Database = {
         Row: {
           id: string;
           full_name: string | null;
+          closing_day: number;
           created_at: string;
         };
         Insert: {
           id: string;
           full_name?: string | null;
+          closing_day?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
           full_name?: string | null;
+          closing_day?: number;
           created_at?: string;
         };
         Relationships: [];

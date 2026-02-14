@@ -83,6 +83,12 @@ export function ForecastTable({ months }: ForecastTableProps) {
                       }`}
                     >
                       {formatCurrency(m.totalReceitas)}
+                      {m.isCurrentMonth && (
+                        <div className="text-[10px] font-normal text-slate-400 mt-0.5">
+                          Real {formatCurrency(m.realReceitas)} · Prev{" "}
+                          {formatCurrency(m.forecastReceitas)}
+                        </div>
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -114,9 +120,19 @@ export function ForecastTable({ months }: ForecastTableProps) {
                               m.isCurrentMonth ? "bg-emerald-50/50" : ""
                             }`}
                           >
-                            {monthCat
-                              ? formatCurrency(monthCat.projectedAmount)
-                              : "-"}
+                            {monthCat ? (
+                              <div>
+                                {formatCurrency(monthCat.projectedAmount)}
+                                {m.isCurrentMonth && (
+                                  <div className="text-[10px] text-slate-400 mt-0.5">
+                                    Real {formatCurrency(monthCat.realAmount)} · Prev{" "}
+                                    {formatCurrency(monthCat.forecastAmount)}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              "-"
+                            )}
                           </td>
                         );
                       })}
@@ -155,6 +171,12 @@ export function ForecastTable({ months }: ForecastTableProps) {
                       }`}
                     >
                       {formatCurrency(m.totalDespesas)}
+                      {m.isCurrentMonth && (
+                        <div className="text-[10px] font-normal text-slate-400 mt-0.5">
+                          Real {formatCurrency(m.realDespesas)} · Prev{" "}
+                          {formatCurrency(m.forecastDespesas)}
+                        </div>
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -186,9 +208,19 @@ export function ForecastTable({ months }: ForecastTableProps) {
                               m.isCurrentMonth ? "bg-emerald-50/50" : ""
                             }`}
                           >
-                            {monthCat
-                              ? formatCurrency(monthCat.projectedAmount)
-                              : "-"}
+                            {monthCat ? (
+                              <div>
+                                {formatCurrency(monthCat.projectedAmount)}
+                                {m.isCurrentMonth && (
+                                  <div className="text-[10px] text-slate-400 mt-0.5">
+                                    Real {formatCurrency(monthCat.realAmount)} · Prev{" "}
+                                    {formatCurrency(monthCat.forecastAmount)}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              "-"
+                            )}
                           </td>
                         );
                       })}
@@ -209,6 +241,14 @@ export function ForecastTable({ months }: ForecastTableProps) {
                 >
                   {m.saldo >= 0 ? "+" : ""}
                   {formatCurrency(m.saldo)}
+                  {m.isCurrentMonth && (
+                    <div className="text-[10px] font-normal text-slate-400 mt-0.5">
+                      Real {m.realSaldo >= 0 ? "+" : ""}
+                      {formatCurrency(m.realSaldo)} · Prev{" "}
+                      {m.forecastSaldo >= 0 ? "+" : ""}
+                      {formatCurrency(m.forecastSaldo)}
+                    </div>
+                  )}
                 </td>
               ))}
             </tr>

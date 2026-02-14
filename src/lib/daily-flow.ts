@@ -1,5 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import {
+  getCompetencyRange,
+  getCurrentCompetencyMonth,
+  getCompetencyDays,
+  getRecurringDateInCompetency,
+  getCompetencyLabel,
+} from "@/lib/closing-day";
 
 export interface DayColumn {
   day: number;
@@ -27,8 +34,6 @@ export interface DailyFlowResult {
   totalSaidas: number[];
 }
 
-const WEEKDAYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
-
 function isRecurringActiveInMonth(
   recurring: { start_month: string | null; end_month: string | null },
   targetMonth: string
@@ -42,12 +47,11 @@ function isRecurringActiveInMonth(
 export async function calculateDailyFlow(
   supabase: SupabaseClient<Database>,
   year: number,
-  month: number
+  month: number,
+  closingDay: number = 1
 ): Promise<DailyFlowResult> {
-  const targetMonth = `${year}-${String(month + 1).padStart(2, "0")}`;
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDay = `${targetMonth}-01`;
-  const lastDay = `${targetMonth}-${String(daysInMonth).padStart(2, "0")}`;
+  const competencyLabel = getCompetencyLabel(year, month);
+  const { start: firstDay, end: lastDay } = getCompetencyRange(year, month, closingDay);
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
@@ -85,68 +89,55 @@ export async function calculateDailyFlow(
     categoryMap.set(cat.id, { name: cat.name, type: cat.type });
   }
 
-  // Calculate opening balance for the month
-  // For current month: reverse real transactions from today back to day 1
-  // openingDay1 = totalBalance - sum(receitas do mês) + sum(despesas do mês)
-  // For other months we need to account for transactions between now and that month
+  // Calculate opening balance for the competency period
+  const { year: curYear, month: curMonth } = getCurrentCompetencyMonth(closingDay, today);
+  const isCurrentMonth = year === curYear && month === curMonth;
+  const isFutureMonth =
+    year > curYear || (year === curYear && month > curMonth);
 
   let openingDay1: number;
 
-  const currentYear = today.getFullYear();
-  const currentMonth = today.getMonth();
-  const isCurrentMonth = year === currentYear && month === currentMonth;
-  const isFutureMonth =
-    year > currentYear || (year === currentYear && month > currentMonth);
-
   if (isCurrentMonth) {
-    // Reverse real transactions of this month from the current balance
-    const realReceitasThisMonth = transactions
+    // Reverse real transactions of this period from the current balance
+    const realReceitasThisPeriod = transactions
       .filter((t) => t.type === "receita")
       .reduce((sum, t) => sum + t.amount_cents, 0);
-    const realDespesasThisMonth = transactions
+    const realDespesasThisPeriod = transactions
       .filter((t) => t.type === "despesa")
       .reduce((sum, t) => sum + t.amount_cents, 0);
-    openingDay1 = totalBalance - realReceitasThisMonth + realDespesasThisMonth;
+    openingDay1 = totalBalance - realReceitasThisPeriod + realDespesasThisPeriod;
   } else if (isFutureMonth) {
-    // Start from current balance, then add projected net for each intervening month
     openingDay1 = totalBalance;
 
-    // Add recurring projections for months between now and target
-    const startM = currentMonth + 1;
-    const monthsBetween: string[] = [];
-    const tempDate = new Date(currentYear, startM, 1);
-    while (
-      tempDate.getFullYear() < year ||
-      (tempDate.getFullYear() === year && tempDate.getMonth() < month)
-    ) {
-      const mm = `${tempDate.getFullYear()}-${String(tempDate.getMonth() + 1).padStart(2, "0")}`;
-      monthsBetween.push(mm);
-      tempDate.setMonth(tempDate.getMonth() + 1);
-    }
-
-    // Also include remaining days of current month projected
-    const currentMonthStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`;
-    const todayDay = today.getDate();
-    const currentMonthDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+    // Project remaining days of current competency period
+    const currentRange = getCompetencyRange(curYear, curMonth, closingDay);
+    const currentLabel = getCompetencyLabel(curYear, curMonth);
     for (const r of recurrings) {
-      if (!isRecurringActiveInMonth(r, currentMonthStr)) continue;
-      if (r.day_of_month > todayDay && r.day_of_month <= currentMonthDays) {
+      if (!isRecurringActiveInMonth(r, currentLabel)) continue;
+      const rDate = getRecurringDateInCompetency(r.day_of_month, curYear, curMonth, closingDay);
+      if (rDate && rDate > todayStr && rDate <= currentRange.end) {
         if (r.type === "receita") openingDay1 += r.amount_cents;
         else openingDay1 -= r.amount_cents;
       }
     }
 
-    for (const mm of monthsBetween) {
+    // Project full intervening competency months
+    let intYear = curYear;
+    let intMonth = curMonth + 1;
+    while (intMonth > 11) { intMonth -= 12; intYear++; }
+
+    while (intYear < year || (intYear === year && intMonth < month)) {
+      const intLabel = getCompetencyLabel(intYear, intMonth);
       for (const r of recurrings) {
-        if (!isRecurringActiveInMonth(r, mm)) continue;
+        if (!isRecurringActiveInMonth(r, intLabel)) continue;
         if (r.type === "receita") openingDay1 += r.amount_cents;
         else openingDay1 -= r.amount_cents;
       }
+      intMonth++;
+      if (intMonth > 11) { intMonth = 0; intYear++; }
     }
   } else {
-    // Past month: start from current balance, reverse all transactions from today back to start of that month
-    // Then add back transactions before that month
-    // Simpler: totalBalance - net of all transactions from start of target month to today
+    // Past period: reverse all transactions from start of target period to today
     const { data: txSinceMonth } = await supabase
       .from("transactions")
       .select("type, amount_cents")
@@ -162,23 +153,22 @@ export async function calculateDailyFlow(
     openingDay1 = totalBalance - netSince;
   }
 
-  // Build per-day data
+  // Build per-day data using competency days
+  const competencyDays = getCompetencyDays(year, month, closingDay, today);
   const activeRecurrings = recurrings.filter((r) =>
-    isRecurringActiveInMonth(r, targetMonth)
+    isRecurringActiveInMonth(r, competencyLabel)
   );
 
-  // Group real transactions by day and category
-  const realByDayCategory = new Map<string, Map<string, number>>();
+  // Group real transactions by date (YYYY-MM-DD) and category
+  const realByDateCategory = new Map<string, Map<string, number>>();
   for (const t of transactions) {
-    const day = t.date.split("-")[2];
-    const dayKey = parseInt(day, 10).toString();
-    let catMap = realByDayCategory.get(dayKey);
+    const dateKey = t.date;
+    let catMap = realByDateCategory.get(dateKey);
     if (!catMap) {
       catMap = new Map();
-      realByDayCategory.set(dayKey, catMap);
+      realByDateCategory.set(dateKey, catMap);
     }
     const current = catMap.get(t.category_id) ?? 0;
-    // Store as signed: positive for receita, negative for despesa
     if (t.type === "receita") {
       catMap.set(t.category_id, current + t.amount_cents);
     } else {
@@ -186,14 +176,15 @@ export async function calculateDailyFlow(
     }
   }
 
-  // Group recurring by day_of_month and category
-  const plannedByDayCategory = new Map<string, Map<string, number>>();
+  // Group recurring by their actual date in this competency
+  const plannedByDateCategory = new Map<string, Map<string, number>>();
   for (const r of activeRecurrings) {
-    const dayKey = r.day_of_month.toString();
-    let catMap = plannedByDayCategory.get(dayKey);
+    const rDate = getRecurringDateInCompetency(r.day_of_month, year, month, closingDay);
+    if (!rDate) continue;
+    let catMap = plannedByDateCategory.get(rDate);
     if (!catMap) {
       catMap = new Map();
-      plannedByDayCategory.set(dayKey, catMap);
+      plannedByDateCategory.set(rDate, catMap);
     }
     const current = catMap.get(r.category_id) ?? 0;
     if (r.type === "receita") {
@@ -210,22 +201,13 @@ export async function calculateDailyFlow(
 
   let runningBalance = openingDay1;
 
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${targetMonth}-${String(d).padStart(2, "0")}`;
-    const dateObj = new Date(year, month, d);
-    const dayOfWeek = dateObj.getDay();
-    const isPast = dateStr <= todayStr;
-    const isToday = dateStr === todayStr;
-
+  for (const cDay of competencyDays) {
     const byCategoryId = new Map<string, { total: number; source: "real" | "planned" }>();
     let dayEntradas = 0;
     let daySaidas = 0;
 
-    const dayKey = d.toString();
-
-    if (isPast) {
-      // Use real transactions
-      const catMap = realByDayCategory.get(dayKey);
+    if (cDay.isPast) {
+      const catMap = realByDateCategory.get(cDay.date);
       if (catMap) {
         for (const [catId, signedAmount] of catMap) {
           byCategoryId.set(catId, {
@@ -238,8 +220,7 @@ export async function calculateDailyFlow(
         }
       }
     } else {
-      // Use planned (recurring) transactions
-      const catMap = plannedByDayCategory.get(dayKey);
+      const catMap = plannedByDateCategory.get(cDay.date);
       if (catMap) {
         for (const [catId, signedAmount] of catMap) {
           byCategoryId.set(catId, {
@@ -257,12 +238,12 @@ export async function calculateDailyFlow(
     runningBalance = runningBalance + dayEntradas - daySaidas;
 
     days.push({
-      day: d,
-      date: dateStr,
-      weekday: WEEKDAYS[dayOfWeek],
-      isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
-      isToday,
-      isPast,
+      day: cDay.dayLabel,
+      date: cDay.date,
+      weekday: cDay.weekday,
+      isWeekend: cDay.isWeekend,
+      isToday: cDay.isToday,
+      isPast: cDay.isPast,
       openingBalance,
       closingBalance: runningBalance,
       byCategoryId,

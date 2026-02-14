@@ -13,6 +13,7 @@ const links = [
   { href: "/recorrentes", label: "Recorrentes" },
   { href: "/fluxo-previsto", label: "Fluxo Previsto" },
   { href: "/investimentos", label: "Investimentos" },
+  { href: "/configuracoes", label: "Config." },
 ];
 
 export function Navbar() {

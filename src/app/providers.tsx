@@ -1,5 +1,6 @@
 "use client";
 
+import { PreferencesProvider } from "@/contexts/preferences-context";
 import { ToastProvider, useToast } from "@/contexts/toast-context";
 import { ToastContainer } from "@/components/ui/toast";
 
@@ -10,9 +11,11 @@ function ToastOutlet() {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ToastProvider>
-      {children}
-      <ToastOutlet />
-    </ToastProvider>
+    <PreferencesProvider>
+      <ToastProvider>
+        {children}
+        <ToastOutlet />
+      </ToastProvider>
+    </PreferencesProvider>
   );
 }

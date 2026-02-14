@@ -6,22 +6,26 @@ import { PageHeader } from "@/components/ui/page-header";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { ForecastTable } from "@/components/dashboard/forecast-table";
 import { calculateForecast, type ForecastResult } from "@/lib/forecast";
+import { usePreferences } from "@/contexts/preferences-context";
 
 export default function FluxoPrevistoPage() {
   const supabase = createClient();
+  const { closingDay, loading: prefsLoading } = usePreferences();
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const result = await calculateForecast(supabase, 3, true);
+    const result = await calculateForecast(supabase, 3, true, closingDay);
     setForecast(result);
     setLoading(false);
-  }, [supabase]);
+  }, [supabase, closingDay]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!prefsLoading) {
+      fetchData();
+    }
+  }, [fetchData, prefsLoading]);
 
   return (
     <div>
@@ -30,7 +34,7 @@ export default function FluxoPrevistoPage() {
         description="Projeção do mês atual e próximos meses"
       />
 
-      {loading ? (
+      {loading || prefsLoading ? (
         <TableSkeleton rows={8} cols={5} />
       ) : forecast ? (
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border border-blue-100 p-6 shadow-sm">

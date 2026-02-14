@@ -7,10 +7,14 @@ import { CategoryChart } from "@/components/dashboard/category-chart";
 import { MonthPicker } from "@/components/dashboard/month-picker";
 import { DailyFlowTable } from "@/components/dashboard/daily-flow-table";
 import { InvestmentSummary } from "@/components/dashboard/investment-summary";
+import { BudgetComparison } from "@/components/dashboard/budget-comparison";
 import { CardsSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
 import { calculateDailyFlow, type DailyFlowResult } from "@/lib/daily-flow";
+import { calculateForecast, type MonthForecast } from "@/lib/forecast";
 import { getMonthEndBalance } from "@/lib/investment-utils";
+import { getCurrentCompetencyMonth } from "@/lib/closing-day";
+import { usePreferences } from "@/contexts/preferences-context";
 import type { InvestmentEntry } from "@/types/database";
 
 interface TransactionRow {
@@ -32,11 +36,14 @@ interface InvestmentData {
 
 export default function DashboardPage() {
   const supabase = createClient();
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+  const { closingDay, loading: prefsLoading } = usePreferences();
+
+  const { year: initYear, month: initMonth } = getCurrentCompetencyMonth(closingDay);
+  const [year, setYear] = useState(initYear);
+  const [month, setMonth] = useState(initMonth);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [dailyFlow, setDailyFlow] = useState<DailyFlowResult | null>(null);
+  const [currentMonthForecast, setCurrentMonthForecast] = useState<MonthForecast | null>(null);
   const [investmentData, setInvestmentData] = useState<InvestmentData>({
     totalBalance: 0,
     projectedReturn: 0,
@@ -45,24 +52,41 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
 
+  // Sync initial year/month when closingDay loads
+  useEffect(() => {
+    if (!prefsLoading) {
+      const { year: y, month: m } = getCurrentCompetencyMonth(closingDay);
+      setYear(y);
+      setMonth(m);
+    }
+  }, [closingDay, prefsLoading]);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const { start, end } = getMonthRange(year, month);
+    const { start, end } = getMonthRange(year, month, closingDay);
+    const { year: curYear, month: curMonth } = getCurrentCompetencyMonth(closingDay);
+    const isCurrentMonthSelected = year === curYear && month === curMonth;
 
-    const [transactionsRes, flowResult] = await Promise.all([
+    const [transactionsRes, flowResult, forecastResult] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
         .gte("date", start)
         .lte("date", end)
         .order("date", { ascending: false }),
-      calculateDailyFlow(supabase, year, month),
+      calculateDailyFlow(supabase, year, month, closingDay),
+      isCurrentMonthSelected
+        ? calculateForecast(supabase, 0, true, closingDay)
+        : Promise.resolve(null),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
     setDailyFlow(flowResult);
+    setCurrentMonthForecast(
+      forecastResult?.months.find((m) => m.isCurrentMonth) ?? null
+    );
     setLoading(false);
-  }, [supabase, year, month]);
+  }, [supabase, year, month, closingDay]);
 
   // Fetch investment data once (does not depend on month)
   useEffect(() => {
@@ -105,13 +129,11 @@ export default function DashboardPage() {
 
       for (const inv of investments) {
         const invEntries = entries.filter((e) => e.investment_id === inv.id);
-        // Current balance: use all entries up to today
         totalBalance += getMonthEndBalance(invEntries, currentYM);
         totalPrevMonth += getMonthEndBalance(invEntries, prevYM);
         totalTwoMonthsAgo += getMonthEndBalance(invEntries, twoMonthsYM);
       }
 
-      // Calculate variation based on last month vs two months ago
       const variacao =
         totalTwoMonthsAgo > 0
           ? (totalPrevMonth / totalTwoMonthsAgo - 1) * 100
@@ -130,8 +152,10 @@ export default function DashboardPage() {
   }, [supabase]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!prefsLoading) {
+      fetchData();
+    }
+  }, [fetchData, prefsLoading]);
 
   function prevMonth() {
     if (month === 0) {
@@ -185,10 +209,10 @@ export default function DashboardPage() {
       </div>
 
       <div className="mb-6">
-        <MonthPicker year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
+        <MonthPicker year={year} month={month} onPrev={prevMonth} onNext={nextMonth} closingDay={closingDay} />
       </div>
 
-      {loading ? (
+      {loading || prefsLoading ? (
         <div className="space-y-10">
           <CardsSkeleton />
           <TableSkeleton rows={6} cols={5} />
@@ -196,6 +220,15 @@ export default function DashboardPage() {
       ) : (
         <div className="space-y-10">
           <SummaryCards totalReceitas={totalReceitas} totalDespesas={totalDespesas} />
+
+          {currentMonthForecast && (
+            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-800 mb-4">
+                Previsto vs Realizado
+              </h2>
+              <BudgetComparison month={currentMonthForecast} closingDay={closingDay} />
+            </div>
+          )}
 
           {dailyFlow && (
             <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">

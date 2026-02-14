@@ -1,3 +1,5 @@
+import { getCompetencyRange } from "@/lib/closing-day";
+
 /**
  * Formata centavos para moeda brasileira (R$).
  * Ex: 15050 → "R$ 150,50"
@@ -32,8 +34,12 @@ export function formatDate(date: string | Date): string {
 
 /**
  * Retorna o primeiro e último dia do mês no formato YYYY-MM-DD.
+ * Quando closingDay > 1, delega para getCompetencyRange.
  */
-export function getMonthRange(year: number, month: number) {
+export function getMonthRange(year: number, month: number, closingDay: number = 1) {
+  if (closingDay > 1) {
+    return getCompetencyRange(year, month, closingDay);
+  }
   const start = new Date(year, month, 1);
   const end = new Date(year, month + 1, 0);
   const fmt = (d: Date) => d.toISOString().split("T")[0];

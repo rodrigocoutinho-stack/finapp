@@ -20,7 +20,68 @@ FinApp - Gestão Financeira Pessoal
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Últimas Alterações (13/02/2026)
+## Últimas Alterações (14/02/2026)
+
+### Dia de Fechamento — Competência Personalizada
+- **`supabase/migrations/007_closing_day.sql`** — Migration NOVA
+  - ADD COLUMN `closing_day` integer NOT NULL DEFAULT 1 CHECK (1-28) em `profiles`
+  - Aditiva, segura — default 1 mantém comportamento inalterado
+  - **Executar manualmente no SQL Editor do Supabase**
+- **`src/types/database.ts`** — `closing_day: number` adicionado a profiles (Row, Insert, Update)
+- **`src/lib/closing-day.ts`** — Módulo utilitário NOVO (funções puras)
+  - `getCompetencyRange(year, month, closingDay)` — range start/end ISO
+  - `getCurrentCompetencyMonth(closingDay, today?)` — competência de "hoje"
+  - `getCompetencyDayCount(year, month, closingDay)` — dias no período
+  - `getElapsedDays(year, month, closingDay, today?)` — dias decorridos
+  - `getRecurringDateInCompetency(dayOfMonth, year, month, closingDay)` — data real da recorrente
+  - `getCompetencyDays(year, month, closingDay)` — array de dias para grid diário
+  - `getCompetencyLabel(year, month)` — string "YYYY-MM"
+- **`src/contexts/preferences-context.tsx`** — Context NOVO
+  - `PreferencesProvider` + `usePreferences()` hook
+  - Fetch `profiles.closing_day` no mount, `setClosingDay()` faz update no Supabase
+- **`src/app/providers.tsx`** — Envolvido com `PreferencesProvider` (acima de ToastProvider)
+- **`src/app/(dashboard)/configuracoes/page.tsx`** — Página NOVA
+  - Select dropdown dias 1-28, helper text explicativo, botão Salvar → toast
+- **`src/components/layout/navbar.tsx`** — Link "Config." adicionado
+- **`src/lib/utils.ts`** — `getMonthRange` aceita `closingDay` opcional, delega para `getCompetencyRange`
+- **`src/lib/forecast.ts`** — 4º parâmetro `closingDay` em `calculateForecast`
+  - Range, dias decorridos, recorrentes futuras/passadas: tudo via `closing-day.ts`
+  - `getHistoricalTransactions` usa competency ranges para lookback 3 meses
+- **`src/lib/daily-flow.ts`** — 4º parâmetro `closingDay` em `calculateDailyFlow`
+  - Grid itera `getCompetencyDays()` em vez de loop 1..daysInMonth
+  - Recurrentes agrupadas por `getRecurringDateInCompetency()` em vez de `day_of_month`
+  - Saldo abertura usa competency ranges para meses futuros
+- **`src/app/(dashboard)/page.tsx`** — `usePreferences()` + `getCurrentCompetencyMonth(closingDay)` para estado inicial
+  - Passa `closingDay` a `getMonthRange`, `calculateDailyFlow`, `calculateForecast`, `MonthPicker`, `BudgetComparison`
+- **`src/app/(dashboard)/transacoes/page.tsx`** — Idem: `usePreferences()` + `closingDay` em `getMonthRange`
+- **`src/app/(dashboard)/fluxo-previsto/page.tsx`** — `closingDay` passado a `calculateForecast`
+- **`src/components/dashboard/budget-comparison.tsx`** — Prop `closingDay`, label "dia X do período" via `getElapsedDays`
+- **`src/components/dashboard/month-picker.tsx`** — Prop `closingDay`, subtexto com range real quando closingDay > 1
+
+### Previsto vs Realizado (Orçamento)
+- **`src/lib/forecast.ts`** — Tipos e lógica expandidos
+  - `CategoryForecast`: 3 campos novos — `forecastAmount` (orçamento mês inteiro), `forecastToDateAmount` (proporcional até hoje), `realAmount` (transações reais até hoje)
+  - `MonthForecast`: 9 campos novos — `forecast*`, `forecastToDate*`, `real*` para Receitas/Despesas/Saldo
+  - Mês corrente: recurring `forecastToDate` = soma recorrentes com `day_of_month <= hoje`; historical `forecastToDate` = média × (diasPassados / diasNoMês)
+  - Meses futuros: `forecastAmount = projectedAmount`, `forecastToDate = 0`, `realAmount = 0`
+  - Condição de push ampliada para incluir categorias com forecast ou real > 0
+  - Campos existentes (`projectedAmount`, `totalReceitas`, etc.) inalterados — compatibilidade total
+- **`src/components/dashboard/budget-comparison.tsx`** — Componente NOVO
+  - Tabela Previsto vs Realizado por categoria até o dia atual
+  - Seções Receitas/Despesas colapsáveis com totais e linha de Saldo
+  - Barra de progresso inline (h-1.5) por categoria: emerald ≤ 100%, rose > 100%
+  - Cores na diferença: receitas emerald se atingiu meta, rose se abaixo; despesas inverso
+  - Título dinâmico: "Comparação proporcional até o dia {X}"
+- **`src/components/dashboard/forecast-table.tsx`** — Sub-texto no mês corrente
+  - Células de categoria, totais e saldo mostram "Real X · Prev Y" em text-[10px] slate-400
+  - Apenas na coluna do mês corrente; meses futuros inalterados
+- **`src/app/(dashboard)/page.tsx`** — Widget BudgetComparison integrado
+  - Import de `calculateForecast` e `BudgetComparison`
+  - Novo state `currentMonthForecast`
+  - Fetch paralelo de forecast quando mês selecionado = mês corrente
+  - Widget renderizado condicionalmente entre SummaryCards e DailyFlowTable
+
+### Alterações anteriores (13/02/2026)
 
 ### Redesign UX — Fase 1: Foundation
 - **Paleta neutra**: Migração completa `gray-*` → `slate-*` em 38 arquivos (240 ocorrências)
@@ -241,6 +302,7 @@ src/
 │       │   └── importar/page.tsx # NOVO
 │       ├── fluxo-previsto/page.tsx  # NOVO (substituiu fluxo-diario)
 │       ├── investimentos/page.tsx # NOVO
+│       ├── configuracoes/page.tsx # NOVO
 │       └── recorrentes/page.tsx
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
@@ -252,12 +314,14 @@ src/
 │   ├── recorrentes/
 │   └── investimentos/            # NOVO - InvestmentForm, InvestmentList, EntryForm, EntryList, InvestmentDashboard
 ├── contexts/
-│   └── toast-context.tsx         # NOVO - Context + Provider + useToast()
+│   ├── toast-context.tsx         # NOVO - Context + Provider + useToast()
+│   └── preferences-context.tsx   # NOVO - closingDay + PreferencesProvider
 ├── lib/
 │   ├── supabase/                 # client.ts, server.ts
 │   ├── utils.ts                  # formatCurrency, toCents, formatDate, etc.
 │   ├── forecast.ts               # Lógica de projeção mensal
 │   ├── daily-flow.ts             # Lógica de fluxo diário
+│   ├── closing-day.ts            # NOVO - Matemática de competência/fechamento
 │   ├── investment-utils.ts       # NOVO - Labels, agrupamento, cálculo de saldo
 │   └── ofx-parser.ts            # Parser OFX/QFX
 └── types/
@@ -284,16 +348,26 @@ src/
 4. `004_recurring_transactions.sql` - Tabela recorrentes
 5. `005_recurring_period.sql` - Campos start_month/end_month
 6. `006_investments.sql` - Tabelas investments e investment_entries
+7. `007_closing_day.sql` - Campo closing_day em profiles
 
 ## Próximos Passos
 
-### Fase 2: Robustez e Qualidade
+### Redesign UX — Fase 2A: Melhorias Visuais (sem risco estrutural)
+- [ ] Dashboard hero cards — redesenhar SummaryCards com ícones, variação % e visual premium
+- [ ] Chart upgrade — CategoryChart horizontal → donut/pie com legenda lateral
+- [ ] Form styling — inputs com melhor hierarquia visual
+- [ ] DataTable — extrair componente reutilizável para tabelas padronizadas
+
+### Redesign UX — Fase 2B: Sidebar Navigation (mudança estrutural)
+- [ ] Trocar top navbar por sidebar fixa (desktop) + drawer (mobile)
+- [ ] Adaptar layout.tsx e todas as páginas para o novo paradigma
+- [ ] Testar responsividade com sidebar (~250px de largura perdida)
+
+### Robustez e Qualidade
 - [ ] Tratamento de erros mais completo (edge cases, falhas de rede)
 - [ ] Validações de formulário mais rigorosas
 - [ ] Otimização de queries (evitar re-fetches desnecessários)
-- [ ] Feedback visual melhorado (toasts, confirmações)
 - [ ] Testes (unitários e/ou e2e)
-- [ ] Acessibilidade (a11y)
 
 ### Futuro
 - [ ] Deploy na Vercel

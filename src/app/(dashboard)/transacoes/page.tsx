@@ -10,6 +10,8 @@ import { TableSkeleton } from "@/components/ui/skeleton";
 import { TransactionForm } from "@/components/transacoes/transaction-form";
 import { TransactionList } from "@/components/transacoes/transaction-list";
 import { getMonthRange, getMonthName } from "@/lib/utils";
+import { getCurrentCompetencyMonth } from "@/lib/closing-day";
+import { usePreferences } from "@/contexts/preferences-context";
 import { useToast } from "@/contexts/toast-context";
 import type { Account, Category } from "@/types/database";
 
@@ -30,19 +32,30 @@ interface TransactionWithRelations {
 export default function TransacoesPage() {
   const supabase = createClient();
   const { addToast } = useToast();
+  const { closingDay, loading: prefsLoading } = usePreferences();
   const router = useRouter();
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+
+  const { year: initYear, month: initMonth } = getCurrentCompetencyMonth(closingDay);
+  const [year, setYear] = useState(initYear);
+  const [month, setMonth] = useState(initMonth);
   const [transactions, setTransactions] = useState<TransactionWithRelations[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
+  // Sync initial year/month when closingDay loads
+  useEffect(() => {
+    if (!prefsLoading) {
+      const { year: y, month: m } = getCurrentCompetencyMonth(closingDay);
+      setYear(y);
+      setMonth(m);
+    }
+  }, [closingDay, prefsLoading]);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const { start, end } = getMonthRange(year, month);
+    const { start, end } = getMonthRange(year, month, closingDay);
 
     const [txRes, accRes, catRes] = await Promise.all([
       supabase
@@ -59,11 +72,13 @@ export default function TransacoesPage() {
     setAccounts((accRes.data as Account[]) ?? []);
     setCategories((catRes.data as Category[]) ?? []);
     setLoading(false);
-  }, [supabase, year, month]);
+  }, [supabase, year, month, closingDay]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!prefsLoading) {
+      fetchData();
+    }
+  }, [fetchData, prefsLoading]);
 
   function prevMonth() {
     if (month === 0) {
@@ -123,7 +138,7 @@ export default function TransacoesPage() {
         </button>
       </div>
 
-      {loading ? (
+      {loading || prefsLoading ? (
         <TableSkeleton rows={6} cols={5} />
       ) : (
         <TransactionList
