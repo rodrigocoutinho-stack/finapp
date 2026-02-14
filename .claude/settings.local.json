@@ -45,7 +45,18 @@
       "Bash(__NEW_LINE_d8ea71f26ca268be__ cd \"C:\\\\Users\\\\rodrigo.coutinho\\\\Documents\\\\ProjetosClaude\\\\ProjetoAPPFin\")",
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_close",
-      "mcp__playwright__browser_fill_form"
+      "mcp__playwright__browser_fill_form",
+      "Bash(npx eslint:*)",
+      "Bash(find:*)",
+      "Bash(netstat:*)",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(npx supabase projects list:*)",
+      "Bash(timeout:*)",
+      "Bash(tasklist:*)",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_select_option",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_resize"
     ]
   }
 }
