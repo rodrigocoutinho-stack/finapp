@@ -9,8 +9,7 @@ export async function getIPCA12Months(): Promise<number | null> {
 
   try {
     const res = await fetch(
-      "https://api.bcb.gov.br/dados/serie/bcdata.sgs.13522/dados/ultimos/12?formato=json",
-      { next: { revalidate: 86400 } }
+      "https://api.bcb.gov.br/dados/serie/bcdata.sgs.13522/dados/ultimos/12?formato=json"
     );
 
     if (!res.ok) {
