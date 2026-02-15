@@ -42,10 +42,17 @@ export function TransactionList({
       deletingTransaction.type === "receita"
         ? -deletingTransaction.amount_cents
         : deletingTransaction.amount_cents;
-    await supabase.rpc("adjust_account_balance", {
+    const { error: rpcError } = await supabase.rpc("adjust_account_balance", {
       p_account_id: deletingTransaction.account_id,
       p_delta: delta,
     });
+
+    if (rpcError) {
+      addToast("Erro ao ajustar saldo da conta.", "error");
+      setDeleteLoading(false);
+      setDeletingTransaction(null);
+      return;
+    }
 
     await supabase.from("transactions").delete().eq("id", deletingTransaction.id);
 

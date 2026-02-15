@@ -96,10 +96,16 @@ export function TransactionForm({
         transaction.type === "receita"
           ? -transaction.amount_cents
           : transaction.amount_cents;
-      await supabase.rpc("adjust_account_balance", {
+      const { error: revertError } = await supabase.rpc("adjust_account_balance", {
         p_account_id: transaction.account_id,
         p_delta: oldDelta,
       });
+
+      if (revertError) {
+        setError("Erro ao ajustar saldo da conta.");
+        setLoading(false);
+        return;
+      }
 
       // Update transaction
       const { error } = await supabase
@@ -122,10 +128,16 @@ export function TransactionForm({
 
       // Apply the new transaction's effect on account balance atomically
       const newDelta = type === "receita" ? amountCents : -amountCents;
-      await supabase.rpc("adjust_account_balance", {
+      const { error: applyError } = await supabase.rpc("adjust_account_balance", {
         p_account_id: accountId,
         p_delta: newDelta,
       });
+
+      if (applyError) {
+        setError("Transação atualizada, mas houve erro ao ajustar o saldo.");
+        setLoading(false);
+        return;
+      }
     } else {
       // Create transaction
       const { error } = await supabase.from("transactions").insert({
@@ -146,10 +158,16 @@ export function TransactionForm({
 
       // Update account balance atomically
       const delta = type === "receita" ? amountCents : -amountCents;
-      await supabase.rpc("adjust_account_balance", {
+      const { error: balanceError } = await supabase.rpc("adjust_account_balance", {
         p_account_id: accountId,
         p_delta: delta,
       });
+
+      if (balanceError) {
+        setError("Transação criada, mas houve erro ao ajustar o saldo.");
+        setLoading(false);
+        return;
+      }
     }
 
     onSuccess();
