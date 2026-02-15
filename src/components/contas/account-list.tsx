@@ -32,12 +32,17 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
     if (!deletingAccount) return;
     setDeleteLoading(true);
 
-    await supabase.from("accounts").delete().eq("id", deletingAccount.id);
+    const { error } = await supabase.from("accounts").delete().eq("id", deletingAccount.id);
 
     setDeleteLoading(false);
     setDeletingAccount(null);
-    onRefresh();
-    addToast("Conta excluída.");
+
+    if (error) {
+      addToast("Erro ao excluir conta. Verifique se não há transações vinculadas.", "error");
+    } else {
+      onRefresh();
+      addToast("Conta excluída.");
+    }
   }
 
   if (accounts.length === 0) {

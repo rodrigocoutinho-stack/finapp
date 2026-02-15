@@ -177,18 +177,10 @@ export function ImportReviewTable({
     }, 0);
 
     if (delta !== 0) {
-      const { data: account } = await supabase
-        .from("accounts")
-        .select("balance_cents")
-        .eq("id", accountId)
-        .single();
-
-      if (account) {
-        await supabase
-          .from("accounts")
-          .update({ balance_cents: account.balance_cents + delta })
-          .eq("id", accountId);
-      }
+      await supabase.rpc("adjust_account_balance", {
+        p_account_id: accountId,
+        p_delta: delta,
+      });
     }
 
     setSaving(false);

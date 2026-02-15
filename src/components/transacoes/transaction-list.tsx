@@ -37,18 +37,15 @@ export function TransactionList({
     if (!deletingTransaction) return;
     setDeleteLoading(true);
 
-    // Revert balance
-    const account = accounts.find((a) => a.id === deletingTransaction.account_id);
-    if (account) {
-      const delta =
-        deletingTransaction.type === "receita"
-          ? -deletingTransaction.amount_cents
-          : deletingTransaction.amount_cents;
-      await supabase
-        .from("accounts")
-        .update({ balance_cents: account.balance_cents + delta })
-        .eq("id", account.id);
-    }
+    // Revert balance atomically
+    const delta =
+      deletingTransaction.type === "receita"
+        ? -deletingTransaction.amount_cents
+        : deletingTransaction.amount_cents;
+    await supabase.rpc("adjust_account_balance", {
+      p_account_id: deletingTransaction.account_id,
+      p_delta: delta,
+    });
 
     await supabase.from("transactions").delete().eq("id", deletingTransaction.id);
 

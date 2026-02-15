@@ -91,18 +91,15 @@ export function TransactionForm({
     }
 
     if (transaction) {
-      // Revert the old transaction's effect on account balance
-      const oldAccount = accounts.find((a) => a.id === transaction.account_id);
-      if (oldAccount) {
-        const oldDelta =
-          transaction.type === "receita"
-            ? -transaction.amount_cents
-            : transaction.amount_cents;
-        await supabase
-          .from("accounts")
-          .update({ balance_cents: oldAccount.balance_cents + oldDelta })
-          .eq("id", oldAccount.id);
-      }
+      // Revert the old transaction's effect on account balance atomically
+      const oldDelta =
+        transaction.type === "receita"
+          ? -transaction.amount_cents
+          : transaction.amount_cents;
+      await supabase.rpc("adjust_account_balance", {
+        p_account_id: transaction.account_id,
+        p_delta: oldDelta,
+      });
 
       // Update transaction
       const { error } = await supabase
@@ -123,22 +120,12 @@ export function TransactionForm({
         return;
       }
 
-      // Apply the new transaction's effect on account balance
-      const newAccount = accounts.find((a) => a.id === accountId);
-      if (newAccount) {
-        const adjustedBalance =
-          newAccount.id === oldAccount?.id
-            ? newAccount.balance_cents +
-              (transaction.type === "receita"
-                ? -transaction.amount_cents
-                : transaction.amount_cents)
-            : newAccount.balance_cents;
-        const newDelta = type === "receita" ? amountCents : -amountCents;
-        await supabase
-          .from("accounts")
-          .update({ balance_cents: adjustedBalance + newDelta })
-          .eq("id", newAccount.id);
-      }
+      // Apply the new transaction's effect on account balance atomically
+      const newDelta = type === "receita" ? amountCents : -amountCents;
+      await supabase.rpc("adjust_account_balance", {
+        p_account_id: accountId,
+        p_delta: newDelta,
+      });
     } else {
       // Create transaction
       const { error } = await supabase.from("transactions").insert({
@@ -157,15 +144,12 @@ export function TransactionForm({
         return;
       }
 
-      // Update account balance
-      const account = accounts.find((a) => a.id === accountId);
-      if (account) {
-        const delta = type === "receita" ? amountCents : -amountCents;
-        await supabase
-          .from("accounts")
-          .update({ balance_cents: account.balance_cents + delta })
-          .eq("id", accountId);
-      }
+      // Update account balance atomically
+      const delta = type === "receita" ? amountCents : -amountCents;
+      await supabase.rpc("adjust_account_balance", {
+        p_account_id: accountId,
+        p_delta: delta,
+      });
     }
 
     onSuccess();
