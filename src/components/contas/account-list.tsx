@@ -55,9 +55,16 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-semibold text-slate-900">{account.name}</h3>
-                <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                  {typeLabels[account.type]}
-                </span>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                    {typeLabels[account.type]}
+                  </span>
+                  {account.is_emergency_reserve && (
+                    <span className="text-xs text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                      Reserva
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <p className="text-2xl font-bold text-slate-900 mt-4">

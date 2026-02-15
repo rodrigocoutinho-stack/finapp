@@ -37,11 +37,42 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
   const saldoReal = month.realReceitas - month.realDespesas;
   const saldoDiff = saldoReal - saldoPrevisto;
 
+  // Budget alerts
+  const alertCategories = despesas.filter((c) => {
+    if (c.forecastToDateAmount <= 0) return false;
+    return c.realAmount / c.forecastToDateAmount >= 0.8;
+  });
+  const bustedCount = alertCategories.filter(
+    (c) => c.realAmount / c.forecastToDateAmount >= 1.0
+  ).length;
+  const warningCount = alertCategories.length - bustedCount;
+
   return (
     <div className="space-y-1">
       <p className="text-xs text-slate-500 mb-3">
         Comparação proporcional até o dia {elapsed} do período
       </p>
+
+      {alertCategories.length > 0 && (
+        <div className="flex items-center gap-2 mb-3 text-xs">
+          {bustedCount > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-rose-100 text-rose-700 font-medium">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+              </svg>
+              {bustedCount} estourada{bustedCount !== 1 ? "s" : ""}
+            </span>
+          )}
+          {warningCount > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 font-medium">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.007v.008H12v-.008z" />
+              </svg>
+              {warningCount} em atenção
+            </span>
+          )}
+        </div>
+      )}
 
       <table className="w-full text-sm">
         <thead>
@@ -189,6 +220,10 @@ function CategoryRow({ cat }: { cat: CategoryForecast }) {
         ? "bg-emerald-500"
         : "bg-rose-500";
 
+  const usage = cat.type === "despesa" && cat.forecastToDateAmount > 0
+    ? cat.realAmount / cat.forecastToDateAmount
+    : null;
+
   return (
     <tr className="hover:bg-slate-50 transition-colors">
       <td className="py-1.5 pr-4 pl-6 text-slate-700">
@@ -196,6 +231,16 @@ function CategoryRow({ cat }: { cat: CategoryForecast }) {
           <span className="flex items-center gap-1.5">
             <CategoryIcon name={cat.categoryName} className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             {cat.categoryName}
+            {usage !== null && usage >= 1.0 && (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">
+                Estourado
+              </span>
+            )}
+            {usage !== null && usage >= 0.8 && usage < 1.0 && (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700">
+                Atenção
+              </span>
+            )}
           </span>
           {cat.forecastToDateAmount > 0 && (
             <div className="mt-1 h-1.5 w-full max-w-[120px] rounded-full bg-slate-100 overflow-hidden">

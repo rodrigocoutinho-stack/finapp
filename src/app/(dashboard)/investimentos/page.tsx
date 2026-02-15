@@ -10,6 +10,7 @@ import { InvestmentForm } from "@/components/investimentos/investment-form";
 import { InvestmentList } from "@/components/investimentos/investment-list";
 import { InvestmentDashboard } from "@/components/investimentos/investment-dashboard";
 import { useToast } from "@/contexts/toast-context";
+import { getIPCA12Months } from "@/lib/inflation";
 import type { Investment, Account } from "@/types/database";
 
 type Tab = "carteira" | "evolucao";
@@ -22,11 +23,12 @@ export default function InvestimentosPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [tab, setTab] = useState<Tab>("carteira");
+  const [ipca12m, setIpca12m] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
 
-    const [invRes, accRes] = await Promise.all([
+    const [invRes, accRes, ipca] = await Promise.all([
       supabase
         .from("investments")
         .select("*")
@@ -35,10 +37,12 @@ export default function InvestimentosPage() {
         .from("accounts")
         .select("*")
         .order("name", { ascending: true }),
+      getIPCA12Months(),
     ]);
 
     setInvestments((invRes.data as Investment[]) ?? []);
     setAccounts((accRes.data as Account[]) ?? []);
+    setIpca12m(ipca);
     setLoading(false);
   }, [supabase]);
 
@@ -90,7 +94,7 @@ export default function InvestimentosPage() {
           onRefresh={fetchData}
         />
       ) : (
-        <InvestmentDashboard investments={investments} />
+        <InvestmentDashboard investments={investments} ipca12m={ipca12m} />
       )}
 
       <Modal

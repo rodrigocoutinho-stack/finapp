@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
+import { FinancialKPIs } from "@/components/dashboard/financial-kpis";
+import { FinancialInsights } from "@/components/dashboard/financial-insights";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 import { MonthPicker } from "@/components/dashboard/month-picker";
 import { InvestmentSummary } from "@/components/dashboard/investment-summary";
@@ -14,6 +16,7 @@ import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
 import { calculateForecast, type MonthForecast } from "@/lib/forecast";
 import { getMonthEndBalance } from "@/lib/investment-utils";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
+import { getIPCA12Months } from "@/lib/inflation";
 import { usePreferences } from "@/contexts/preferences-context";
 import type { InvestmentEntry } from "@/types/database";
 
@@ -51,6 +54,13 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
 
+  // New state for KPIs/Insights
+  const [totalAccountBalance, setTotalAccountBalance] = useState(0);
+  const [reserveBalance, setReserveBalance] = useState(0);
+  const [hasReserveAccount, setHasReserveAccount] = useState(false);
+  const [avgMonthlyExpense, setAvgMonthlyExpense] = useState(0);
+  const [ipca12m, setIpca12m] = useState<number | null>(null);
+
   // Sync initial year/month when closingDay loads
   useEffect(() => {
     if (!prefsLoading) {
@@ -66,7 +76,22 @@ export default function DashboardPage() {
     const { year: curYear, month: curMonth } = getCurrentCompetencyMonth(closingDay);
     const isCurrentMonthSelected = year === curYear && month === curMonth;
 
-    const [transactionsRes, forecastResult] = await Promise.all([
+    // Calculate past 3 months for avgMonthlyExpense
+    const pastMonthsRanges: { start: string; end: string }[] = [];
+    for (let i = 1; i <= 3; i++) {
+      let pastYear = curYear;
+      let pastMonth = curMonth - i;
+      while (pastMonth < 0) {
+        pastMonth += 12;
+        pastYear--;
+      }
+      pastMonthsRanges.push(getMonthRange(pastYear, pastMonth, closingDay));
+    }
+
+    const globalStart = pastMonthsRanges[pastMonthsRanges.length - 1]?.start ?? start;
+    const globalEnd = pastMonthsRanges[0]?.end ?? end;
+
+    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
@@ -76,19 +101,45 @@ export default function DashboardPage() {
       isCurrentMonthSelected
         ? calculateForecast(supabase, 0, true, closingDay)
         : Promise.resolve(null),
+      supabase
+        .from("accounts")
+        .select("balance_cents, is_emergency_reserve"),
+      supabase
+        .from("transactions")
+        .select("type, amount_cents")
+        .eq("type", "despesa")
+        .gte("date", globalStart)
+        .lte("date", globalEnd),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
     setCurrentMonthForecast(
       forecastResult?.months.find((m) => m.isCurrentMonth) ?? null
     );
+
+    // Accounts data
+    const accounts = (accountsRes.data ?? []) as { balance_cents: number; is_emergency_reserve: boolean }[];
+    const totalBal = accounts.reduce((sum, a) => sum + a.balance_cents, 0);
+    const reserveAccounts = accounts.filter((a) => a.is_emergency_reserve);
+    const resBal = reserveAccounts.reduce((sum, a) => sum + a.balance_cents, 0);
+
+    setTotalAccountBalance(totalBal);
+    setReserveBalance(resBal);
+    setHasReserveAccount(reserveAccounts.length > 0);
+
+    // Average monthly expense (last 3 months)
+    const pastExpenses = (pastExpensesRes.data ?? []) as { type: string; amount_cents: number }[];
+    const totalPastExpenses = pastExpenses.reduce((sum, t) => sum + t.amount_cents, 0);
+    const monthCount = pastMonthsRanges.length;
+    setAvgMonthlyExpense(monthCount > 0 ? Math.round(totalPastExpenses / monthCount) : 0);
+
     setLoading(false);
   }, [supabase, year, month, closingDay]);
 
   // Fetch investment data once (does not depend on month)
   useEffect(() => {
     async function fetchInvestments() {
-      const [investmentsRes, entriesRes] = await Promise.all([
+      const [investmentsRes, entriesRes, ipca] = await Promise.all([
         supabase
           .from("investments")
           .select("id, product, indexer")
@@ -96,10 +147,12 @@ export default function DashboardPage() {
         supabase
           .from("investment_entries")
           .select("investment_id, type, amount_cents, date"),
+        getIPCA12Months(),
       ]);
 
-      const investments = investmentsRes.data ?? [];
+      const investments = (investmentsRes.data ?? []) as { id: string; product: string; indexer: string }[];
       const entries = (entriesRes.data ?? []) as InvestmentEntry[];
+      setIpca12m(ipca);
 
       if (investments.length === 0) {
         setInvestmentData({
@@ -190,6 +243,20 @@ export default function DashboardPage() {
 
   const recentTransactions = transactions.slice(0, 5);
 
+  // KPIs calculated values
+  const savingsRate =
+    totalReceitas > 0
+      ? ((totalReceitas - totalDespesas) / totalReceitas) * 100
+      : null;
+
+  const runway =
+    avgMonthlyExpense > 0 ? totalAccountBalance / avgMonthlyExpense : null;
+
+  const reserveMonths =
+    hasReserveAccount && avgMonthlyExpense > 0
+      ? reserveBalance / avgMonthlyExpense
+      : null;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -229,6 +296,31 @@ export default function DashboardPage() {
         <>
           <SummaryCards totalReceitas={totalReceitas} totalDespesas={totalDespesas} />
 
+          {/* KPIs */}
+          <div className="mt-4">
+            <FinancialKPIs
+              totalReceitas={totalReceitas}
+              totalDespesas={totalDespesas}
+              totalBalance={totalAccountBalance}
+              avgMonthlyExpense={avgMonthlyExpense}
+              reserveBalance={reserveBalance}
+              hasReserveAccount={hasReserveAccount}
+            />
+          </div>
+
+          {/* Insights */}
+          <div className="mt-4">
+            <FinancialInsights
+              totalReceitas={totalReceitas}
+              totalDespesas={totalDespesas}
+              savingsRate={savingsRate}
+              runway={runway}
+              reserveMonths={reserveMonths}
+              forecast={currentMonthForecast}
+              hasInvestments={investmentData.hasData}
+            />
+          </div>
+
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
             {/* Left column — wider */}
             <div className="lg:col-span-3 flex flex-col gap-6">
@@ -246,6 +338,7 @@ export default function DashboardPage() {
                 lastReturn={investmentData.lastReturn}
                 lastReturnPercent={investmentData.lastReturnPercent}
                 hasData={investmentData.hasData}
+                ipca12m={ipca12m}
               />
             </div>
 

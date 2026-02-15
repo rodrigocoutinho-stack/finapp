@@ -5,31 +5,67 @@ FinApp - Gestão Financeira Pessoal
 
 ## Estado Atual (Atualizado: 14/02/2026)
 
-**MVP completo e funcional + Redesign UX Fase 2 + Assistente IA.** Todas as funcionalidades implementadas e testadas (E2E 22/22 passos aprovados, 0 erros console):
+**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins.** Todas as funcionalidades implementadas. Build OK.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations 001-007 (RLS ativo)
+- [x] Database schema + migrations 001-008 (RLS ativo)
 - [x] Autenticação (login, registro com confirmação por email, logout)
-- [x] CRUD Contas (banco, cartão, carteira)
+- [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência)
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção — dentro de Configurações)
 - [x] CRUD Transações (filtro mensal, atualização automática de saldo)
 - [x] Transações Planejadas (recorrentes, pontuais, com período)
-- [x] Importação OFX (extrato bancário e cartão de crédito)
-- [x] Investimentos (CRUD + lançamentos + quadro de evolução)
-- [x] Dashboard (hero cards, gráfico categorias, previsto vs realizado, investimentos, últimas transações)
+- [x] Importação OFX (extrato bancário e cartão de crédito, auto-categorização por regras)
+- [x] Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
+- [x] Dashboard (hero cards, KPIs financeiros, insights proativos, alertas orçamento, previsto vs realizado, investimentos, últimas transações)
 - [x] Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
 - [x] Dia de fechamento (competência personalizada por usuário)
-- [x] Configurações (abas Geral + Categorias, closing day 1-28)
+- [x] Configurações (abas Geral + Categorias + Regras de Importação, closing day 1-28)
 - [x] Redesign UX Fase 1 (paleta slate/rose, componentes UI, skeleton, toast, acessibilidade)
 - [x] Redesign UX Fase 2 (sidebar, hero cards, ícones categorias, greeting, layout 2 colunas)
 - [x] Assistente Financeiro IA (Gemini 2.5 Flash, streaming, contexto conversacional, botão copiar)
+- [x] Fase 3A Quick Wins (KPIs, alertas orçamento, insights, reserva emergência, regras categorização, retorno real)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
-- [x] Migrations 001-007 executadas no SQL Editor
+- [x] Migrations 001-008 executadas no SQL Editor
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
 ## Últimas Alterações (14/02/2026)
+
+### Fase 3A — Quick Wins (6 funcionalidades)
+
+**Migration 008:** `supabase/migrations/008_quick_wins.sql`
+- `accounts.is_emergency_reserve` (boolean) — tag de reserva de emergência
+- Tabela `category_rules` (pattern + category_id) — regras de categorização automática, com RLS
+
+**Quick Win 1 — KPIs no Dashboard:**
+- `src/components/dashboard/financial-kpis.tsx` — 3 mini-cards: Taxa de Poupança (%), Runway Financeiro (meses), Reserva de Emergência (meses)
+- Cores dinâmicas (verde/amarelo/vermelho) baseadas em thresholds
+- `src/app/(dashboard)/page.tsx` — Fetch saldo total contas, saldo reserva, média despesas 3 meses
+
+**Quick Win 2 — Alertas de Orçamento:**
+- `src/components/dashboard/budget-comparison.tsx` — Badges inline "Estourado" (>= 100%) e "Atenção" (>= 80%) por categoria despesa
+- Resumo no topo: "X estouradas, Y em atenção"
+
+**Quick Win 3 — Insights Proativos:**
+- `src/components/dashboard/financial-insights.tsx` — Motor de 8 insights priorizados, exibe max 2
+- Cards com borda colorida (alerta/warning/positivo), botão dispensar, ícones contextais
+
+**Quick Win 4 — Reserva de Emergência:**
+- `src/components/contas/account-form.tsx` — Checkbox "Conta de reserva de emergência"
+- `src/components/contas/account-list.tsx` — Badge "Reserva" (emerald) nos cards
+- `src/types/database.ts` — `is_emergency_reserve` em Account
+
+**Quick Win 5 — Regras de Categorização Automática:**
+- `src/components/categorias/category-rules.tsx` — CRUD de regras (padrão → categoria), form inline
+- `src/app/(dashboard)/configuracoes/page.tsx` — Terceira aba "Regras de Importação"
+- `src/components/transacoes/import-review-table.tsx` — Auto-categorização por regras no import OFX, badge "Auto"
+
+**Quick Win 6 — Retorno Real de Investimentos:**
+- `src/lib/inflation.ts` — `getIPCA12Months()` via API BCB (série 13522), cache em variável
+- `src/components/dashboard/investment-summary.tsx` — Retorno real mensal abaixo do nominal
+- `src/components/investimentos/investment-dashboard.tsx` — Retorno real na linha Total
+- `src/app/(dashboard)/investimentos/page.tsx` — Fetch IPCA e passa para InvestmentDashboard
 
 ### Contexto Conversacional + Botão Copiar no Assistente IA
 
@@ -132,7 +168,7 @@ src/
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
 │   ├── layout/                   # Sidebar, UserAvatar, GreetingHeader, Navbar (legado)
-│   ├── dashboard/                # SummaryCards, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison
+│   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison
 │   ├── contas/
 │   ├── categorias/
 │   ├── assistente/               # ChatMessage, ChatInput
@@ -146,6 +182,7 @@ src/
 ├── lib/
 │   ├── supabase/                 # client.ts, server.ts
 │   ├── ai/                       # system-prompt.ts, financial-context.ts
+│   ├── inflation.ts              # getIPCA12Months (API BCB), calcRealReturn
 │   ├── utils.ts                  # formatCurrency, toCents, formatDate, getMonthRange, etc.
 │   ├── forecast.ts               # Lógica de projeção mensal (recurring + historical + forecast vs real)
 │   ├── daily-flow.ts             # Lógica de fluxo diário (real + planejado por dia)
@@ -169,6 +206,7 @@ src/
 | `recurring_transactions` | Transações planejadas (recorrentes, pontuais, com período) |
 | `investments` | Investimentos (CDB, Tesouro, Ações, etc.) |
 | `investment_entries` | Lançamentos de investimentos (aportes, resgates, saldos) |
+| `category_rules` | Regras de categorização automática (pattern → category) |
 
 ### Migrations
 1. `001_initial_schema.sql` - Estrutura base (profiles, accounts, categories, transactions)
@@ -178,19 +216,20 @@ src/
 5. `005_recurring_period.sql` - Campos start_month/end_month em recurring_transactions
 6. `006_investments.sql` - Tabelas investments e investment_entries
 7. `007_closing_day.sql` - Campo closing_day em profiles
+8. `008_quick_wins.sql` - is_emergency_reserve em accounts + tabela category_rules
 
 ## Navegação (Sidebar)
 
 | # | Label | Rota | Página |
 |---|-------|------|--------|
-| 1 | Dashboard | `/` | Hero cards, Previsto vs Realizado, Categorias, Investimentos, Últimas Transações |
-| 2 | Contas | `/contas` | CRUD contas bancárias |
-| 3 | Transações | `/transacoes` | CRUD transações + importação OFX |
+| 1 | Dashboard | `/` | Hero cards, KPIs (poupança/runway/reserva), Insights, Previsto vs Realizado (com alertas), Categorias, Investimentos (com retorno real), Últimas Transações |
+| 2 | Contas | `/contas` | CRUD contas bancárias (tag reserva de emergência) |
+| 3 | Transações | `/transacoes` | CRUD transações + importação OFX (auto-categorização por regras) |
 | 4 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
 | 5 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
-| 6 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal) |
+| 6 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal + retorno real IPCA) |
 | 7 | Assistente IA | `/assistente` | Chat com Gemini 2.5 Flash, contexto conversacional, botão copiar, streaming |
-| 8 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento) + Categorias (CRUD receita/despesa) |
+| 8 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento) + Categorias (CRUD receita/despesa) + Regras de Importação |
 
 ## Próximos Passos
 

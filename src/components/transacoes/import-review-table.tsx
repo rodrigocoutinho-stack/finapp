@@ -13,6 +13,7 @@ interface ReviewRow extends ParsedTransaction {
   selected: boolean;
   categoryId: string;
   isDuplicate: boolean;
+  autoCategorizied: boolean;
 }
 
 interface ImportResult {
@@ -52,9 +53,9 @@ export function ImportReviewTable({
     [categories]
   );
 
-  // Detect duplicates on mount
+  // Detect duplicates and apply auto-categorization rules on mount
   useEffect(() => {
-    async function checkDuplicates() {
+    async function checkDuplicatesAndRules() {
       setLoading(true);
       const supabase = createClient();
 
@@ -62,27 +63,49 @@ export function ImportReviewTable({
       const minDate = dates.reduce((a, b) => (a < b ? a : b));
       const maxDate = dates.reduce((a, b) => (a > b ? a : b));
 
-      const { data: existing } = await supabase
-        .from("transactions")
-        .select("date, amount_cents, description")
-        .eq("account_id", accountId)
-        .gte("date", minDate)
-        .lte("date", maxDate);
+      const [existingRes, rulesRes] = await Promise.all([
+        supabase
+          .from("transactions")
+          .select("date, amount_cents, description")
+          .eq("account_id", accountId)
+          .gte("date", minDate)
+          .lte("date", maxDate),
+        supabase
+          .from("category_rules")
+          .select("pattern, category_id"),
+      ]);
 
       const existingSet = new Set(
-        (existing ?? []).map(
-          (e) => `${e.date}|${e.amount_cents}|${e.description.toLowerCase()}`
+        (existingRes.data ?? []).map(
+          (e: { date: string; amount_cents: number; description: string }) =>
+            `${e.date}|${e.amount_cents}|${e.description.toLowerCase()}`
         )
       );
+
+      const rules = (rulesRes.data ?? []) as { pattern: string; category_id: string }[];
 
       const reviewRows: ReviewRow[] = transactions.map((t) => {
         const key = `${t.date}|${t.amount_cents}|${t.description.toLowerCase()}`;
         const isDuplicate = existingSet.has(key);
+
+        // Auto-categorize using rules
+        let matchedCategoryId = "";
+        let autoCategorizied = false;
+        const descLower = t.description.toLowerCase();
+        for (const rule of rules) {
+          if (descLower.includes(rule.pattern.toLowerCase())) {
+            matchedCategoryId = rule.category_id;
+            autoCategorizied = true;
+            break;
+          }
+        }
+
         return {
           ...t,
           selected: !isDuplicate,
-          categoryId: "",
+          categoryId: matchedCategoryId,
           isDuplicate,
+          autoCategorizied,
         };
       });
 
@@ -90,7 +113,7 @@ export function ImportReviewTable({
       setLoading(false);
     }
 
-    checkDuplicates();
+    checkDuplicatesAndRules();
   }, [transactions, accountId]);
 
   function toggleRow(index: number) {
@@ -283,22 +306,29 @@ export function ImportReviewTable({
                     </span>
                   </td>
                   <td className="px-3 py-2">
-                    <select
-                      value={row.categoryId}
-                      onChange={(e) => setCategory(i, e.target.value)}
-                      className={`block w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
-                        row.selected && !row.categoryId
-                          ? "border-red-300 text-red-900"
-                          : "border-slate-300 text-slate-900"
-                      }`}
-                    >
-                      <option value="">Selecione...</option>
-                      {cats.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex items-center gap-1.5">
+                      <select
+                        value={row.categoryId}
+                        onChange={(e) => setCategory(i, e.target.value)}
+                        className={`block w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+                          row.selected && !row.categoryId
+                            ? "border-red-300 text-red-900"
+                            : "border-slate-300 text-slate-900"
+                        }`}
+                      >
+                        <option value="">Selecione...</option>
+                        {cats.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                      {row.autoCategorizied && row.categoryId && (
+                        <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700">
+                          Auto
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );

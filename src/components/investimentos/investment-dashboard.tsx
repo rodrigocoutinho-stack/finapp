@@ -15,6 +15,7 @@ import type { Investment, InvestmentEntry } from "@/types/database";
 
 interface InvestmentDashboardProps {
   investments: Investment[];
+  ipca12m?: number | null;
 }
 
 function getMonthColumns(count: number): string[] {
@@ -35,7 +36,7 @@ function formatMonthShort(ym: string): string {
   return `${names[parseInt(month, 10) - 1]}/${year}`;
 }
 
-export function InvestmentDashboard({ investments }: InvestmentDashboardProps) {
+export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboardProps) {
   const supabase = createClient();
   const [allEntries, setAllEntries] = useState<InvestmentEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,11 +153,27 @@ export function InvestmentDashboard({ investments }: InvestmentDashboardProps) {
           {/* Total geral */}
           <tr className="border-t-2 border-slate-200">
             <td className="py-3 pr-4 font-semibold text-slate-800">Total</td>
-            {months.map((m) => (
-              <td key={m} className="text-right py-3 px-3 font-bold text-blue-600">
-                {formatCurrency(getGrandTotal(m))}
-              </td>
-            ))}
+            {months.map((m, idx) => {
+              const total = getGrandTotal(m);
+              const prevTotal = idx > 0 ? getGrandTotal(months[idx - 1]) : 0;
+              const nominalPct = prevTotal > 0 ? ((total / prevTotal) - 1) * 100 : 0;
+              const showReal = ipca12m !== null && ipca12m !== undefined && nominalPct !== 0;
+              const realPct = showReal
+                ? ((1 + nominalPct / 100) / (1 + ipca12m! / 1200) - 1) * 100
+                : 0;
+              return (
+                <td key={m} className="text-right py-3 px-3">
+                  <span className="font-bold text-blue-600">
+                    {formatCurrency(total)}
+                  </span>
+                  {showReal && idx > 0 && (
+                    <span className="block text-[10px] text-slate-400 tabular-nums">
+                      real: {realPct >= 0 ? "+" : ""}{realPct.toFixed(2)}%
+                    </span>
+                  )}
+                </td>
+              );
+            })}
           </tr>
         </tbody>
       </table>

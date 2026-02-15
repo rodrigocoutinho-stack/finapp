@@ -8,11 +8,12 @@ import { Modal } from "@/components/ui/modal";
 import { CardSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { CategoryForm } from "@/components/categorias/category-form";
 import { CategoryList } from "@/components/categorias/category-list";
+import { CategoryRules } from "@/components/categorias/category-rules";
 import { usePreferences } from "@/contexts/preferences-context";
 import { useToast } from "@/contexts/toast-context";
 import type { Category } from "@/types/database";
 
-type Tab = "geral" | "categorias";
+type Tab = "geral" | "categorias" | "regras";
 
 export default function ConfiguracoesPage() {
   const supabase = createClient();
@@ -64,6 +65,7 @@ export default function ConfiguracoesPage() {
   const tabs: { key: Tab; label: string }[] = [
     { key: "geral", label: "Geral" },
     { key: "categorias", label: "Categorias" },
+    { key: "regras", label: "Regras de Importação" },
   ];
 
   return (
@@ -73,7 +75,9 @@ export default function ConfiguracoesPage() {
         description={
           tab === "geral"
             ? "Personalize o funcionamento do app"
-            : "Organize suas receitas e despesas por categoria"
+            : tab === "categorias"
+              ? "Organize suas receitas e despesas por categoria"
+              : "Regras para categorizar automaticamente importações OFX"
         }
         action={
           tab === "categorias" ? (
@@ -170,6 +174,9 @@ export default function ConfiguracoesPage() {
           </Modal>
         </>
       )}
+
+      {/* Tab: Regras de Importação */}
+      {tab === "regras" && <CategoryRules />}
     </div>
   );
 }

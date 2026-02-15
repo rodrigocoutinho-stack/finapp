@@ -29,6 +29,7 @@ export type Database = {
           name: string;
           type: "banco" | "cartao" | "carteira";
           balance_cents: number;
+          is_emergency_reserve: boolean;
           created_at: string;
         };
         Insert: {
@@ -37,6 +38,7 @@ export type Database = {
           name: string;
           type: "banco" | "cartao" | "carteira";
           balance_cents?: number;
+          is_emergency_reserve?: boolean;
           created_at?: string;
         };
         Update: {
@@ -45,6 +47,7 @@ export type Database = {
           name?: string;
           type?: "banco" | "cartao" | "carteira";
           balance_cents?: number;
+          is_emergency_reserve?: boolean;
           created_at?: string;
         };
         Relationships: [
@@ -322,6 +325,45 @@ export type Database = {
           },
         ];
       };
+      category_rules: {
+        Row: {
+          id: string;
+          user_id: string;
+          pattern: string;
+          category_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          pattern: string;
+          category_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          pattern?: string;
+          category_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "category_rules_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "category_rules_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -337,3 +379,4 @@ export type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
 export type RecurringTransaction = Database["public"]["Tables"]["recurring_transactions"]["Row"];
 export type Investment = Database["public"]["Tables"]["investments"]["Row"];
 export type InvestmentEntry = Database["public"]["Tables"]["investment_entries"]["Row"];
+export type CategoryRule = Database["public"]["Tables"]["category_rules"]["Row"];

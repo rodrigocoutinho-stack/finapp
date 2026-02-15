@@ -23,6 +23,7 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
   const supabase = createClient();
   const [name, setName] = useState(account?.name ?? "");
   const [type, setType] = useState(account?.type ?? "banco");
+  const [isEmergencyReserve, setIsEmergencyReserve] = useState(account?.is_emergency_reserve ?? false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -44,7 +45,7 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
     if (account) {
       const { error } = await supabase
         .from("accounts")
-        .update({ name, type })
+        .update({ name, type, is_emergency_reserve: isEmergencyReserve })
         .eq("id", account.id);
 
       if (error) {
@@ -55,7 +56,7 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
     } else {
       const { error } = await supabase
         .from("accounts")
-        .insert({ user_id: user.id, name, type });
+        .insert({ user_id: user.id, name, type, is_emergency_reserve: isEmergencyReserve });
 
       if (error) {
         setError("Erro ao criar conta.");
@@ -91,6 +92,16 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
         onChange={(e) => setType(e.target.value as Account["type"])}
         options={accountTypeOptions}
       />
+
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={isEmergencyReserve}
+          onChange={(e) => setIsEmergencyReserve(e.target.checked)}
+          className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+        />
+        <span className="text-sm text-slate-700">Conta de reserva de emergência</span>
+      </label>
 
       <div className="flex gap-3 justify-end pt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
