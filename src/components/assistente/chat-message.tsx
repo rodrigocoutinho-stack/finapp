@@ -93,6 +93,15 @@ function applyInline(text: string): React.ReactNode {
 }
 
 export function ChatMessage({ role, content, loading }: ChatMessageProps) {
+  const [copied, setCopied] = useState(false);
+  const isLoading = loading && !content;
+
+  function handleCopy() {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   if (role === "user") {
     return (
       <div className="flex justify-end mb-3">
@@ -101,15 +110,6 @@ export function ChatMessage({ role, content, loading }: ChatMessageProps) {
         </div>
       </div>
     );
-  }
-
-  const [copied, setCopied] = useState(false);
-  const isLoading = loading && !content;
-
-  function handleCopy() {
-    navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   }
 
   return (

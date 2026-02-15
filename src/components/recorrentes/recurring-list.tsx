@@ -51,6 +51,7 @@ export function RecurringList({
   const [editingRecurring, setEditingRecurring] = useState<RecurringWithRelations | null>(null);
   const [deletingRecurring, setDeletingRecurring] = useState<RecurringWithRelations | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   async function handleDelete() {
     if (!deletingRecurring) return;
@@ -65,10 +66,12 @@ export function RecurringList({
   }
 
   async function handleToggleActive(recurring: RecurringWithRelations) {
+    setTogglingId(recurring.id);
     await supabase
       .from("recurring_transactions")
       .update({ is_active: !recurring.is_active })
       .eq("id", recurring.id);
+    setTogglingId(null);
     onRefresh();
     addToast(recurring.is_active ? "Transação desativada." : "Transação ativada.");
   }
@@ -130,6 +133,7 @@ export function RecurringList({
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => handleToggleActive(r)}
+                      disabled={togglingId === r.id}
                       role="switch"
                       aria-checked={r.is_active}
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import type { Category, CategoryRule } from "@/types/database";
@@ -25,6 +26,8 @@ export function CategoryRules() {
   const [pattern, setPattern] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deletingRuleId, setDeletingRuleId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -81,11 +84,17 @@ export function CategoryRules() {
     setSaving(false);
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete() {
+    if (!deletingRuleId) return;
+    setDeleteLoading(true);
+
     const { error } = await supabase
       .from("category_rules")
       .delete()
-      .eq("id", id);
+      .eq("id", deletingRuleId);
+
+    setDeleteLoading(false);
+    setDeletingRuleId(null);
 
     if (error) {
       addToast("Erro ao excluir regra.", "error");
@@ -208,12 +217,13 @@ export function CategoryRules() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => handleDelete(rule.id)}
-                      className="text-xs text-red-600 hover:text-red-700 font-medium"
+                    <Button
+                      variant="ghost"
+                      className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => setDeletingRuleId(rule.id)}
                     >
                       Excluir
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -221,6 +231,24 @@ export function CategoryRules() {
           </table>
         </div>
       )}
+
+      <Modal
+        open={!!deletingRuleId}
+        onClose={() => setDeletingRuleId(null)}
+        title="Excluir regra"
+      >
+        <p className="text-slate-600 mb-6">
+          Tem certeza que deseja excluir esta regra de categorização?
+        </p>
+        <div className="flex gap-3 justify-end">
+          <Button variant="secondary" onClick={() => setDeletingRuleId(null)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" loading={deleteLoading} onClick={handleDelete}>
+            Excluir
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
