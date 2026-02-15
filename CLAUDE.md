@@ -3,12 +3,12 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
-## Estado Atual (Atualizado: 14/02/2026)
+## Estado Atual (Atualizado: 15/02/2026)
 
-**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins.** Todas as funcionalidades implementadas. Build OK.
+**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations 001-008 (RLS ativo)
+- [x] Database schema + migrations 001-009 (RLS ativo)
 - [x] Autenticação (login, registro com confirmação por email, logout)
 - [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência)
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção — dentro de Configurações)
@@ -26,11 +26,42 @@ FinApp - Gestão Financeira Pessoal
 - [x] Fase 3A Quick Wins (KPIs, alertas orçamento, insights, reserva emergência, regras categorização, retorno real)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
-- [x] Migrations 001-008 executadas no SQL Editor
+- [x] Migrations 001-009 executadas no SQL Editor
+
+**Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
+- [x] `GEMINI_API_KEY` configurada nas Environment Variables
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Últimas Alterações (14/02/2026)
+## Últimas Alterações (15/02/2026)
+
+### Revisão de Código + Correções de Qualidade
+
+**Migration 009:** `supabase/migrations/009_adjust_balance_rpc.sql`
+- Função RPC atômica `adjust_account_balance(p_account_id, p_delta)` — elimina race condition no padrão read-then-write de saldo
+- `SECURITY DEFINER` com filtro `user_id = auth.uid()`
+
+**Correções de alta severidade:**
+- `src/components/transacoes/transaction-form.tsx` — 3 pontos de atualização de saldo migrados para RPC atômico + tratamento de erro em cada chamada
+- `src/components/transacoes/transaction-list.tsx` — Saldo revertido via RPC atômico no delete + tratamento de erro (aborta antes de excluir se RPC falhar)
+- `src/components/transacoes/import-review-table.tsx` — Saldo atualizado via RPC atômico na importação OFX
+- `src/components/contas/account-list.tsx` — Erro na exclusão de conta agora capturado e exibido via toast
+- `src/types/database.ts` — Tipo `Functions` adicionado para `adjust_account_balance`
+
+**Correções de média severidade:**
+- `src/components/transacoes/transaction-form.tsx` — Erro das 3 chamadas RPC capturado com mensagens contextuais
+- `src/components/transacoes/transaction-list.tsx` — Erro da RPC no delete capturado, aborta antes de excluir
+
+**Correções de qualidade (lint + UX):**
+- `src/components/assistente/chat-message.tsx` — `useState` movido antes do early return (violação rules-of-hooks)
+- `src/components/categorias/category-rules.tsx` — Loading state na exclusão + modal de confirmação (era delete direto)
+- `src/components/recorrentes/recurring-list.tsx` — Loading state no toggle ativo/inativo + botão disabled durante operação
+
+**Deploy Vercel:**
+- `GEMINI_API_KEY` configurada nas Environment Variables do Vercel
+- App live em `finapp-kohl.vercel.app`
+
+### Alterações anteriores (14/02/2026)
 
 ### Fase 3A — Quick Wins (6 funcionalidades)
 
@@ -217,6 +248,7 @@ src/
 6. `006_investments.sql` - Tabelas investments e investment_entries
 7. `007_closing_day.sql` - Campo closing_day em profiles
 8. `008_quick_wins.sql` - is_emergency_reserve em accounts + tabela category_rules
+9. `009_adjust_balance_rpc.sql` - Função RPC atômica adjust_account_balance
 
 ## Navegação (Sidebar)
 
@@ -240,13 +272,16 @@ src/
 - [ ] Remover navbar.tsx (legado, substituído por sidebar)
 
 ### Robustez e Qualidade
-- [ ] Tratamento de erros mais completo (edge cases, falhas de rede)
+- [x] Tratamento de erros nas operações de saldo (RPC atômico + captura de erro)
+- [x] Loading states em todas as operações assíncronas
+- [x] Confirmação modal em todas as exclusões
+- [x] Lint limpo (rules-of-hooks corrigido)
 - [ ] Validações de formulário mais rigorosas
 - [ ] Otimização de queries (evitar re-fetches desnecessários)
 - [ ] Testes automatizados (unitários e/ou e2e com Playwright)
 
 ### Futuro
-- [ ] Deploy na Vercel
+- [x] Deploy na Vercel (finapp-kohl.vercel.app)
 - [ ] Filtros avançados, exportar dados, metas de orçamento
 - [ ] Dark mode
 - [ ] PWA / mobile responsivo avançado
