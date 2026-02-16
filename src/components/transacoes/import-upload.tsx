@@ -8,9 +8,10 @@ import type { Account } from "@/types/database";
 interface ImportUploadProps {
   accounts: Account[];
   onParsed: (result: OFXParseResult, accountId: string) => void;
+  onCSVLoaded: (content: string, accountId: string) => void;
 }
 
-export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
+export function ImportUpload({ accounts, onParsed, onCSVLoaded }: ImportUploadProps) {
   const [accountId, setAccountId] = useState("");
   const [parsing, setParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,8 +33,11 @@ export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
     }
 
     const ext = file.name.toLowerCase();
-    if (!ext.endsWith(".ofx") && !ext.endsWith(".qfx")) {
-      setError("Formato inválido. Selecione um arquivo .ofx ou .qfx.");
+    const isOFX = ext.endsWith(".ofx") || ext.endsWith(".qfx");
+    const isCSV = ext.endsWith(".csv");
+
+    if (!isOFX && !isCSV) {
+      setError("Formato inv\u00e1lido. Selecione um arquivo .ofx, .qfx ou .csv.");
       if (fileRef.current) fileRef.current.value = "";
       return;
     }
@@ -49,6 +53,12 @@ export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
 
     try {
       const content = await file.text();
+
+      if (isCSV) {
+        onCSVLoaded(content, accountId);
+        return;
+      }
+
       const result = parseOFX(content);
 
       if (!result.success) {
@@ -60,7 +70,7 @@ export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
 
       onParsed(result, accountId);
     } catch {
-      setError("Erro ao ler o arquivo. Verifique se é um OFX válido.");
+      setError("Erro ao ler o arquivo. Verifique se o formato \u00e9 v\u00e1lido.");
     } finally {
       setParsing(false);
     }
@@ -74,7 +84,7 @@ export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
             1. Selecione a conta e o arquivo
           </h2>
           <p className="text-sm text-slate-500 mt-1">
-            Escolha a conta de destino e envie o extrato OFX/QFX do seu banco.
+            Escolha a conta de destino e envie o extrato do seu banco (OFX, QFX ou CSV).
           </p>
         </div>
 
@@ -89,12 +99,12 @@ export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
-            Arquivo OFX/QFX
+            Arquivo OFX/QFX/CSV
           </label>
           <input
             ref={fileRef}
             type="file"
-            accept=".ofx,.qfx"
+            accept=".ofx,.qfx,.csv"
             onChange={handleFileChange}
             disabled={parsing}
             className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 disabled:opacity-50"
@@ -115,9 +125,10 @@ export function ImportUpload({ accounts, onParsed }: ImportUploadProps) {
         )}
 
         <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-500 space-y-1">
-          <p><strong>Formatos aceitos:</strong> .ofx, .qfx</p>
+          <p><strong>Formatos aceitos:</strong> .ofx, .qfx, .csv</p>
           <p><strong>Limite:</strong> 5MB por arquivo</p>
-          <p><strong>Bancos testados:</strong> Itaú, Bradesco, Nubank e outros</p>
+          <p><strong>CSV:</strong> o arquivo deve ter cabe\u00e7alho na primeira linha</p>
+          <p><strong>Bancos testados:</strong> Ita\u00fa, Bradesco, Nubank e outros</p>
         </div>
       </div>
     </div>

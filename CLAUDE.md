@@ -5,7 +5,7 @@ FinApp - Gestão Financeira Pessoal
 
 ## Estado Atual (Atualizado: 15/02/2026)
 
-**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
 - [x] Database schema + migrations 001-009 (RLS ativo)
@@ -14,7 +14,7 @@ FinApp - Gestão Financeira Pessoal
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção — dentro de Configurações)
 - [x] CRUD Transações (filtro mensal, atualização automática de saldo)
 - [x] Transações Planejadas (recorrentes, pontuais, com período)
-- [x] Importação OFX (extrato bancário e cartão de crédito, auto-categorização por regras)
+- [x] Importação OFX/CSV (extrato bancário, cartão de crédito, CSV com mapeamento de colunas, auto-categorização por regras)
 - [x] Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
 - [x] Dashboard (hero cards, KPIs financeiros, insights proativos, alertas orçamento, previsto vs realizado, investimentos, últimas transações)
 - [x] Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
@@ -34,6 +34,21 @@ FinApp - Gestão Financeira Pessoal
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
 ## Últimas Alterações (15/02/2026)
+
+### Importação CSV com Mapeamento de Colunas
+
+**Novos arquivos:**
+- `src/lib/csv-parser.ts` — Parser CSV com detecção automática de delimitador (`;`, `,`, TAB), parsing de valores BR (`1.234,56`) e US (`1234.56`), parsing de datas multi-formato (DD/MM/YYYY, YYYY-MM-DD), inferência de tipo por sinal ou coluna
+- `src/components/transacoes/import-csv-mapping.tsx` — UI de mapeamento com preview de tabela (headers + 5 primeiras linhas), 3 dropdowns obrigatórios (data, valor, descrição) + 1 opcional (tipo), auto-detecção de colunas por nome de header
+
+**Arquivos modificados:**
+- `src/components/transacoes/import-upload.tsx` — Aceita `.csv` além de `.ofx/.qfx`, detecta tipo por extensão, novo callback `onCSVLoaded`
+- `src/app/(dashboard)/transacoes/importar/page.tsx` — Wizard com step dinâmico: OFX (3 steps) vs CSV (4 steps com mapeamento), navegação back inteligente entre flows
+
+**Fluxo CSV:** Upload → Mapeamento de Colunas → Revisão → Resumo
+**Fluxo OFX (inalterado):** Upload → Revisão → Resumo
+
+### Alterações anteriores (15/02/2026)
 
 ### Revisão de Código + Correções de Qualidade
 
@@ -256,7 +271,7 @@ src/
 |---|-------|------|--------|
 | 1 | Dashboard | `/` | Hero cards, KPIs (poupança/runway/reserva), Insights, Previsto vs Realizado (com alertas), Categorias, Investimentos (com retorno real), Últimas Transações |
 | 2 | Contas | `/contas` | CRUD contas bancárias (tag reserva de emergência) |
-| 3 | Transações | `/transacoes` | CRUD transações + importação OFX (auto-categorização por regras) |
+| 3 | Transações | `/transacoes` | CRUD transações + importação OFX/CSV (mapeamento de colunas, auto-categorização por regras) |
 | 4 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
 | 5 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
 | 6 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal + retorno real IPCA) |

@@ -6,12 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/ui/page-header";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { ImportUpload } from "@/components/transacoes/import-upload";
+import { ImportCSVMapping } from "@/components/transacoes/import-csv-mapping";
 import { ImportReviewTable } from "@/components/transacoes/import-review-table";
 import { ImportSummary } from "@/components/transacoes/import-summary";
 import type { OFXParseResult, ParsedTransaction } from "@/lib/ofx-parser";
 import type { Account, Category } from "@/types/database";
 
-type Step = "upload" | "review" | "summary";
+type Step = "upload" | "csv-mapping" | "review" | "summary";
 
 interface ImportResult {
   imported: number;
@@ -33,6 +34,9 @@ export default function ImportarPage() {
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [parseWarnings, setParseWarnings] = useState<string[]>([]);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+
+  // CSV-specific state
+  const [csvContent, setCSVContent] = useState<string>("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -62,6 +66,19 @@ export default function ImportarPage() {
     setParsedTransactions(result.transactions);
     setSelectedAccountId(accountId);
     setParseWarnings(result.errors);
+    setCSVContent("");
+    setStep("review");
+  }
+
+  function handleCSVLoaded(content: string, accountId: string) {
+    setCSVContent(content);
+    setSelectedAccountId(accountId);
+    setStep("csv-mapping");
+  }
+
+  function handleCSVMapped(transactions: ParsedTransaction[], warnings: string[]) {
+    setParsedTransactions(transactions);
+    setParseWarnings(warnings);
     setStep("review");
   }
 
@@ -71,35 +88,57 @@ export default function ImportarPage() {
   }
 
   function handleBack() {
-    setParsedTransactions([]);
-    setSelectedAccountId("");
-    setParseWarnings([]);
-    setStep("upload");
+    if (step === "csv-mapping") {
+      setCSVContent("");
+      setSelectedAccountId("");
+      setStep("upload");
+    } else if (step === "review") {
+      if (csvContent) {
+        // CSV flow: go back to mapping
+        setParsedTransactions([]);
+        setParseWarnings([]);
+        setStep("csv-mapping");
+      } else {
+        // OFX flow: go back to upload
+        setParsedTransactions([]);
+        setSelectedAccountId("");
+        setParseWarnings([]);
+        setStep("upload");
+      }
+    }
   }
 
   if (loading) {
     return <TableSkeleton rows={4} cols={3} />;
   }
 
-  // Step indicators
-  const steps = [
-    { key: "upload", label: "Upload" },
-    { key: "review", label: "Revisão" },
-    { key: "summary", label: "Resumo" },
-  ];
+  // Dynamic step indicators based on flow type
+  const isCSVFlow = !!csvContent;
+  const steps = isCSVFlow
+    ? [
+        { key: "upload", label: "Upload" },
+        { key: "csv-mapping", label: "Mapeamento" },
+        { key: "review", label: "Revis\u00e3o" },
+        { key: "summary", label: "Resumo" },
+      ]
+    : [
+        { key: "upload", label: "Upload" },
+        { key: "review", label: "Revis\u00e3o" },
+        { key: "summary", label: "Resumo" },
+      ];
   const currentIndex = steps.findIndex((s) => s.key === step);
 
   return (
     <div>
       <PageHeader
-        title="Importar OFX"
-        description="Importe transações do extrato bancário ou cartão de crédito."
+        title="Importar Transa\u00e7\u00f5es"
+        description="Importe transa\u00e7\u00f5es de extratos banc\u00e1rios (OFX/QFX) ou planilhas (CSV)."
         action={
           <button
             onClick={() => router.push("/transacoes")}
             className="text-sm text-slate-500 hover:text-slate-900"
           >
-            Voltar para Transações
+            Voltar para Transa\u00e7\u00f5es
           </button>
         }
       />
@@ -150,7 +189,19 @@ export default function ImportarPage() {
       )}
 
       {step === "upload" && (
-        <ImportUpload accounts={accounts} onParsed={handleParsed} />
+        <ImportUpload
+          accounts={accounts}
+          onParsed={handleParsed}
+          onCSVLoaded={handleCSVLoaded}
+        />
+      )}
+
+      {step === "csv-mapping" && (
+        <ImportCSVMapping
+          csvContent={csvContent}
+          onMapped={handleCSVMapped}
+          onBack={handleBack}
+        />
       )}
 
       {step === "review" && (
