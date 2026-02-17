@@ -202,6 +202,24 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("PDF import error:", err);
     const message = err instanceof Error ? err.message : "Erro desconhecido";
+
+    // Detect password-protected or unreadable PDFs
+    if (
+      message.includes("no pages") ||
+      message.includes("could not be opened") ||
+      message.includes("password") ||
+      message.includes("encrypted")
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Não foi possível ler o PDF. Ele pode estar protegido por senha. " +
+            "Abra o arquivo, salve uma cópia sem senha e tente novamente.",
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: `Erro ao processar PDF: ${message}` },
       { status: 500 }
