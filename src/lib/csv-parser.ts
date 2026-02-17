@@ -18,6 +18,7 @@ export interface CSVPreview {
   rows: string[][];
   totalRows: number;
   delimiter: string;
+  headerRowIndex: number;
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -65,8 +66,63 @@ function splitCSVLine(line: string, delimiter: string): string[] {
   return fields;
 }
 
+/** Known header patterns for auto-detecting the header row. */
+const HEADER_PATTERNS = [
+  "data", "date", "dt", "dia",
+  "valor", "amount", "value", "vlr",
+  "descricao", "descri\u00e7\u00e3o", "description", "memo", "historico", "hist\u00f3rico",
+  "tipo", "type", "natureza",
+  "saldo", "balance",
+  "lancamento", "lan\u00e7amento",
+];
+
 /**
- * Previews a CSV file: detects delimiter, extracts headers and first 5 data rows.
+ * Detects the header row index by scanning lines for known header patterns.
+ * Returns the index of the first line that has >= 3 fields and at least one
+ * field matching a known header pattern. Falls back to the first line with >= 3 fields,
+ * then to line 0.
+ */
+function detectHeaderRow(lines: string[]): { index: number; delimiter: string } {
+  let firstMultiColLine = -1;
+  let firstMultiColDelimiter = ",";
+
+  for (let i = 0; i < Math.min(lines.length, 20); i++) {
+    const delimiter = detectDelimiter(lines[i]);
+    const fields = splitCSVLine(lines[i], delimiter);
+
+    if (fields.length < 3) continue;
+
+    if (firstMultiColLine === -1) {
+      firstMultiColLine = i;
+      firstMultiColDelimiter = delimiter;
+    }
+
+    // Check if any field matches a known header pattern
+    const normalized = fields.map((f) =>
+      f.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()
+    );
+
+    const hasHeaderMatch = normalized.some((field) =>
+      HEADER_PATTERNS.some((pattern) => {
+        const normalizedPattern = pattern.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return field.includes(normalizedPattern);
+      })
+    );
+
+    if (hasHeaderMatch) {
+      return { index: i, delimiter };
+    }
+  }
+
+  if (firstMultiColLine !== -1) {
+    return { index: firstMultiColLine, delimiter: firstMultiColDelimiter };
+  }
+
+  return { index: 0, delimiter: detectDelimiter(lines[0] || "") };
+}
+
+/**
+ * Previews a CSV file: auto-detects header row, delimiter, extracts headers and first 5 data rows.
  */
 export function previewCSV(content: string): CSVPreview {
   const lines = content
@@ -75,12 +131,12 @@ export function previewCSV(content: string): CSVPreview {
     .filter((l) => l.length > 0);
 
   if (lines.length === 0) {
-    return { headers: [], rows: [], totalRows: 0, delimiter: "," };
+    return { headers: [], rows: [], totalRows: 0, delimiter: ",", headerRowIndex: 0 };
   }
 
-  const delimiter = detectDelimiter(lines[0]);
-  const headers = splitCSVLine(lines[0], delimiter);
-  const dataLines = lines.slice(1);
+  const { index: headerRowIndex, delimiter } = detectHeaderRow(lines);
+  const headers = splitCSVLine(lines[headerRowIndex], delimiter);
+  const dataLines = lines.slice(headerRowIndex + 1);
   const previewRows = dataLines.slice(0, 5).map((line) => splitCSVLine(line, delimiter));
 
   return {
@@ -88,6 +144,7 @@ export function previewCSV(content: string): CSVPreview {
     rows: previewRows,
     totalRows: dataLines.length,
     delimiter,
+    headerRowIndex,
   };
 }
 
@@ -216,8 +273,9 @@ function parseType(raw: string): "receita" | "despesa" | null {
 
 /**
  * Parses CSV content using the provided column mapping.
+ * headerRowIndex indicates which line (after filtering empties) is the header.
  */
-export function parseCSV(content: string, mapping: CSVColumnMapping): CSVParseResult {
+export function parseCSV(content: string, mapping: CSVColumnMapping, headerRowIndex = 0): CSVParseResult {
   const errors: string[] = [];
 
   if (!content || content.length === 0) {
@@ -233,16 +291,16 @@ export function parseCSV(content: string, mapping: CSVColumnMapping): CSVParseRe
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
 
-  if (lines.length < 2) {
+  if (lines.length < headerRowIndex + 2) {
     return {
       success: false,
       transactions: [],
-      errors: ["Arquivo deve ter pelo menos um cabe\u00e7alho e uma linha de dados."],
+      errors: ["Arquivo deve ter pelo menos um cabeçalho e uma linha de dados."],
     };
   }
 
-  const delimiter = detectDelimiter(lines[0]);
-  const dataLines = lines.slice(1); // Skip header
+  const delimiter = detectDelimiter(lines[headerRowIndex]);
+  const dataLines = lines.slice(headerRowIndex + 1); // Skip metadata + header
   const transactions: ParsedTransaction[] = [];
 
   for (let i = 0; i < dataLines.length; i++) {

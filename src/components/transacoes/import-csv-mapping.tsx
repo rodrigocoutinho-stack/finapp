@@ -86,7 +86,7 @@ export function ImportCSVMapping({
         mapping.type = typeCol;
       }
 
-      const result = parseCSV(csvContent, mapping);
+      const result = parseCSV(csvContent, mapping, preview.headerRowIndex);
 
       if (!result.success) {
         setError(result.errors.join(" "));
@@ -142,6 +142,12 @@ export function ImportCSVMapping({
               </span>
             )}
           </p>
+          {preview.headerRowIndex > 0 && (
+            <p className="text-xs text-amber-600 mt-1">
+              {preview.headerRowIndex} linha{preview.headerRowIndex !== 1 ? "s" : ""} de
+              metadados detectada{preview.headerRowIndex !== 1 ? "s" : ""} e ignorada{preview.headerRowIndex !== 1 ? "s" : ""} antes do cabeçalho.
+            </p>
+          )}
         </div>
 
         {/* Preview table */}
