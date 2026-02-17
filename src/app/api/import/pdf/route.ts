@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import type { ParsedTransaction } from "@/lib/ofx-parser";
 
-const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB in base64 chars (~7.5MB file)
+const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
 
 const EXTRACTION_PROMPT = `Você é um extrator de dados de faturas e extratos bancários brasileiros.
 
@@ -121,30 +121,34 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: { pdf_base64?: string };
+  let formData: FormData;
   try {
-    body = await request.json();
+    formData = await request.formData();
   } catch {
     return NextResponse.json(
-      { error: "Corpo da requisição inválido." },
+      { error: "Corpo da requisição inválido. Envie o PDF via FormData." },
       { status: 400 }
     );
   }
 
-  const pdfBase64 = body.pdf_base64;
-  if (!pdfBase64 || typeof pdfBase64 !== "string" || pdfBase64.length === 0) {
+  const pdfFile = formData.get("pdf");
+  if (!pdfFile || !(pdfFile instanceof File)) {
     return NextResponse.json(
       { error: "PDF não enviado." },
       { status: 400 }
     );
   }
 
-  if (pdfBase64.length > MAX_PDF_SIZE) {
+  if (pdfFile.size > MAX_PDF_SIZE) {
     return NextResponse.json(
       { error: "PDF excede o limite de 10MB." },
       { status: 400 }
     );
   }
+
+  // Convert file to base64 on the server (avoids JSON body size limits)
+  const arrayBuffer = await pdfFile.arrayBuffer();
+  const pdfBase64 = Buffer.from(arrayBuffer).toString("base64");
 
   // Authenticate
   const supabase = await createClient();
