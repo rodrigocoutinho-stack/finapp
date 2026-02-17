@@ -9,9 +9,10 @@ interface ImportUploadProps {
   accounts: Account[];
   onParsed: (result: OFXParseResult, accountId: string) => void;
   onCSVLoaded: (content: string, accountId: string) => void;
+  onPDFLoaded: (file: File, accountId: string) => void;
 }
 
-export function ImportUpload({ accounts, onParsed, onCSVLoaded }: ImportUploadProps) {
+export function ImportUpload({ accounts, onParsed, onCSVLoaded, onPDFLoaded }: ImportUploadProps) {
   const [accountId, setAccountId] = useState("");
   const [parsing, setParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,15 +36,18 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded }: ImportUploadPr
     const ext = file.name.toLowerCase();
     const isOFX = ext.endsWith(".ofx") || ext.endsWith(".qfx");
     const isCSV = ext.endsWith(".csv");
+    const isPDF = ext.endsWith(".pdf");
 
-    if (!isOFX && !isCSV) {
-      setError("Formato inv\u00e1lido. Selecione um arquivo .ofx, .qfx ou .csv.");
+    if (!isOFX && !isCSV && !isPDF) {
+      setError("Formato inválido. Selecione um arquivo .ofx, .qfx, .csv ou .pdf.");
       if (fileRef.current) fileRef.current.value = "";
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Arquivo excede o limite de 5MB.");
+    const sizeLimit = isPDF ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+    const sizeLimitLabel = isPDF ? "10MB" : "5MB";
+    if (file.size > sizeLimit) {
+      setError(`Arquivo excede o limite de ${sizeLimitLabel}.`);
       if (fileRef.current) fileRef.current.value = "";
       return;
     }
@@ -52,6 +56,11 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded }: ImportUploadPr
     setParsing(true);
 
     try {
+      if (isPDF) {
+        onPDFLoaded(file, accountId);
+        return;
+      }
+
       const content = await file.text();
 
       if (isCSV) {
@@ -84,7 +93,7 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded }: ImportUploadPr
             1. Selecione a conta e o arquivo
           </h2>
           <p className="text-sm text-slate-500 mt-1">
-            Escolha a conta de destino e envie o extrato do seu banco (OFX, QFX ou CSV).
+            Escolha a conta de destino e envie o extrato do seu banco (OFX, QFX, CSV ou PDF).
           </p>
         </div>
 
@@ -99,12 +108,12 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded }: ImportUploadPr
 
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
-            Arquivo OFX/QFX/CSV
+            Arquivo OFX/QFX/CSV/PDF
           </label>
           <input
             ref={fileRef}
             type="file"
-            accept=".ofx,.qfx,.csv"
+            accept=".ofx,.qfx,.csv,.pdf"
             onChange={handleFileChange}
             disabled={parsing}
             className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 disabled:opacity-50"
@@ -125,10 +134,11 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded }: ImportUploadPr
         )}
 
         <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-500 space-y-1">
-          <p><strong>Formatos aceitos:</strong> .ofx, .qfx, .csv</p>
-          <p><strong>Limite:</strong> 5MB por arquivo</p>
-          <p><strong>CSV:</strong> o arquivo deve ter cabe\u00e7alho na primeira linha</p>
-          <p><strong>Bancos testados:</strong> Ita\u00fa, Bradesco, Nubank e outros</p>
+          <p><strong>Formatos aceitos:</strong> .ofx, .qfx, .csv, .pdf</p>
+          <p><strong>Limite:</strong> 5MB (OFX/CSV) ou 10MB (PDF)</p>
+          <p><strong>CSV:</strong> o arquivo deve ter cabeçalho na primeira linha</p>
+          <p><strong>PDF:</strong> faturas de cartão e extratos — extração via IA</p>
+          <p><strong>Bancos testados:</strong> Itaú, Bradesco, Nubank e outros</p>
         </div>
       </div>
     </div>

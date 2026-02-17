@@ -9,6 +9,7 @@ import { ImportUpload } from "@/components/transacoes/import-upload";
 import { ImportCSVMapping } from "@/components/transacoes/import-csv-mapping";
 import { ImportReviewTable } from "@/components/transacoes/import-review-table";
 import { ImportSummary } from "@/components/transacoes/import-summary";
+import { parsePDFImport } from "@/lib/pdf-import";
 import type { OFXParseResult, ParsedTransaction } from "@/lib/ofx-parser";
 import type { Account, Category } from "@/types/database";
 
@@ -37,6 +38,9 @@ export default function ImportarPage() {
 
   // CSV-specific state
   const [csvContent, setCSVContent] = useState<string>("");
+
+  // PDF-specific state
+  const [pdfProcessing, setPdfProcessing] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -82,6 +86,32 @@ export default function ImportarPage() {
     setStep("review");
   }
 
+  async function handlePDFLoaded(file: File, accountId: string) {
+    setSelectedAccountId(accountId);
+    setPdfProcessing(true);
+    setParseWarnings([]);
+
+    try {
+      const result = await parsePDFImport(file);
+
+      if (!result.success) {
+        setParseWarnings(result.errors);
+        setPdfProcessing(false);
+        setStep("upload");
+        return;
+      }
+
+      setParsedTransactions(result.transactions);
+      setParseWarnings(result.errors);
+      setStep("review");
+    } catch {
+      setParseWarnings(["Erro ao processar PDF. Tente novamente."]);
+      setStep("upload");
+    } finally {
+      setPdfProcessing(false);
+    }
+  }
+
   function handleImported(result: ImportResult) {
     setImportResult(result);
     setStep("summary");
@@ -99,7 +129,7 @@ export default function ImportarPage() {
         setParseWarnings([]);
         setStep("csv-mapping");
       } else {
-        // OFX flow: go back to upload
+        // OFX/PDF flow: go back to upload
         setParsedTransactions([]);
         setSelectedAccountId("");
         setParseWarnings([]);
@@ -132,7 +162,7 @@ export default function ImportarPage() {
     <div>
       <PageHeader
         title="Importar Transa\u00e7\u00f5es"
-        description="Importe transa\u00e7\u00f5es de extratos banc\u00e1rios (OFX/QFX) ou planilhas (CSV)."
+        description="Importe transações de extratos bancários (OFX/QFX), planilhas (CSV) ou faturas em PDF."
         action={
           <button
             onClick={() => router.push("/transacoes")}
@@ -177,7 +207,7 @@ export default function ImportarPage() {
       </div>
 
       {/* Parse warnings */}
-      {step === "review" && parseWarnings.length > 0 && (
+      {(step === "review" || (step === "upload" && !pdfProcessing)) && parseWarnings.length > 0 && (
         <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-700">
           <strong>Avisos do parsing:</strong>
           <ul className="list-disc list-inside mt-1">
@@ -188,12 +218,29 @@ export default function ImportarPage() {
         </div>
       )}
 
-      {step === "upload" && (
+      {step === "upload" && !pdfProcessing && (
         <ImportUpload
           accounts={accounts}
           onParsed={handleParsed}
           onCSVLoaded={handleCSVLoaded}
+          onPDFLoaded={handlePDFLoaded}
         />
+      )}
+
+      {pdfProcessing && (
+        <div className="max-w-lg mx-auto">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">Extraindo transações com IA...</h3>
+              <p className="text-sm text-slate-500 mt-1">
+                Analisando o PDF com inteligência artificial. Isso pode levar alguns segundos.
+              </p>
+            </div>
+          </div>
+        </div>
       )}
 
       {step === "csv-mapping" && (

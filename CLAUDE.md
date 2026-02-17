@@ -3,9 +3,9 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
-## Estado Atual (Atualizado: 15/02/2026)
+## Estado Atual (Atualizado: 17/02/2026)
 
-**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
 - [x] Database schema + migrations 001-009 (RLS ativo)
@@ -14,7 +14,7 @@ FinApp - Gestão Financeira Pessoal
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção — dentro de Configurações)
 - [x] CRUD Transações (filtro mensal, atualização automática de saldo)
 - [x] Transações Planejadas (recorrentes, pontuais, com período)
-- [x] Importação OFX/CSV (extrato bancário, cartão de crédito, CSV com mapeamento de colunas, auto-categorização por regras)
+- [x] Importação OFX/CSV/PDF (extrato bancário, cartão de crédito, CSV com mapeamento de colunas, PDF via IA Gemini, auto-categorização por regras)
 - [x] Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
 - [x] Dashboard (hero cards, KPIs financeiros, insights proativos, alertas orçamento, previsto vs realizado, investimentos, últimas transações)
 - [x] Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
@@ -33,7 +33,29 @@ FinApp - Gestão Financeira Pessoal
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Últimas Alterações (15/02/2026)
+## Últimas Alterações (17/02/2026)
+
+### Importação de PDF via IA (Faturas de Cartão)
+
+**Novos arquivos:**
+- `src/app/api/import/pdf/route.ts` — API Route POST que recebe PDF em base64, autentica usuário, envia ao Gemini como `inlineData` com prompt de extração, parseia resposta JSON, valida cada transação e retorna `{ success, transactions, errors }` (mesmo shape de `OFXParseResult`)
+- `src/lib/pdf-import.ts` — Helper client `parsePDFImport(file)` que converte File → base64 via FileReader, faz fetch POST para `/api/import/pdf`, retorna resultado tipado
+
+**Arquivos modificados:**
+- `src/components/transacoes/import-upload.tsx` — Aceita `.pdf` no filtro de arquivo, limite dinâmico (10MB PDF / 5MB outros), nova prop `onPDFLoaded(file, accountId)`, textos atualizados
+- `src/app/(dashboard)/transacoes/importar/page.tsx` — Handler `handlePDFLoaded` com loading overlay ("Extraindo transações com IA..."), integração com `parsePDFImport`, warnings exibidos no step upload em caso de falha, descrição do page header atualizada
+
+**Fluxo PDF (novo):** Upload → Processamento IA (loading) → Revisão → Resumo
+**Fluxo OFX (inalterado):** Upload → Revisão → Resumo
+**Fluxo CSV (inalterado):** Upload → Mapeamento → Revisão → Resumo
+
+**Detalhes técnicos:**
+- Usa `@google/generative-ai` (já instalado) com `inlineData` para enviar PDF nativo ao Gemini
+- Prompt especializado para faturas brasileiras (formato YYYY-MM-DD, valores positivos, tipo receita/despesa)
+- Validação robusta: regex de data, amount > 0, type enum, strip de markdown code fences
+- Nenhuma dependência nova adicionada
+
+### Alterações anteriores (15/02/2026)
 
 ### Importação CSV com Mapeamento de Colunas
 
@@ -235,7 +257,8 @@ src/
 │   ├── closing-day.ts            # Matemática de competência/fechamento
 │   ├── category-icons.tsx        # CategoryIcon SVG component + alias map
 │   ├── investment-utils.ts       # Labels, agrupamento, cálculo de saldo
-│   └── ofx-parser.ts             # Parser OFX/QFX
+│   ├── ofx-parser.ts             # Parser OFX/QFX
+│   └── pdf-import.ts             # Client helper para importação PDF via Gemini
 └── types/
     └── database.ts               # Types do Supabase
 ```
@@ -271,7 +294,7 @@ src/
 |---|-------|------|--------|
 | 1 | Dashboard | `/` | Hero cards, KPIs (poupança/runway/reserva), Insights, Previsto vs Realizado (com alertas), Categorias, Investimentos (com retorno real), Últimas Transações |
 | 2 | Contas | `/contas` | CRUD contas bancárias (tag reserva de emergência) |
-| 3 | Transações | `/transacoes` | CRUD transações + importação OFX/CSV (mapeamento de colunas, auto-categorização por regras) |
+| 3 | Transações | `/transacoes` | CRUD transações + importação OFX/CSV/PDF (mapeamento CSV, extração PDF via IA, auto-categorização por regras) |
 | 4 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
 | 5 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
 | 6 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal + retorno real IPCA) |
