@@ -128,11 +128,11 @@ function TransacoesContent() {
     <div>
       <PageHeader
         title="Transações"
-        description="Registre e acompanhe suas movimentações financeiras"
+        description="Registre e acompanhe suas movimentações financeiras. Importe extratos e faturas em OFX, CSV ou PDF."
         action={
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => router.push("/transacoes/importar")}>
-              Importar OFX
+              Importar
             </Button>
             <Button onClick={() => setShowForm(true)}>Nova transação</Button>
           </div>
