@@ -164,9 +164,10 @@ export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboar
               const total = getGrandTotal(m);
               const prevTotal = idx > 0 ? getGrandTotal(months[idx - 1]) : 0;
               const nominalPct = prevTotal > 0 ? ((total / prevTotal) - 1) * 100 : 0;
-              const showReal = ipca12m !== null && ipca12m !== undefined && nominalPct !== 0;
+              const deflator = ipca12m != null ? 1 + ipca12m / 1200 : 0;
+              const showReal = deflator > 0 && nominalPct !== 0;
               const realPct = showReal
-                ? ((1 + nominalPct / 100) / (1 + ipca12m! / 1200) - 1) * 100
+                ? ((1 + nominalPct / 100) / deflator - 1) * 100
                 : 0;
               return (
                 <td key={m} className="text-right py-3 px-3">

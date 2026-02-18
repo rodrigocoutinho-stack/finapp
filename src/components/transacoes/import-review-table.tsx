@@ -177,10 +177,17 @@ export function ImportReviewTable({
     }, 0);
 
     if (delta !== 0) {
-      await supabase.rpc("adjust_account_balance", {
+      const { error: rpcError } = await supabase.rpc("adjust_account_balance", {
         p_account_id: accountId,
         p_delta: delta,
       });
+
+      if (rpcError) {
+        addToast(
+          "Transações importadas, mas o saldo da conta não foi atualizado. Atualize manualmente.",
+          "error"
+        );
+      }
     }
 
     setSaving(false);

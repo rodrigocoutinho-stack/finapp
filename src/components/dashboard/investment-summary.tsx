@@ -75,12 +75,17 @@ export function InvestmentSummary({
               {lastReturnPercent.toFixed(2)}%)
             </span>
           </p>
-          {ipca12m !== null && ipca12m !== undefined && lastReturnPercent !== 0 && (
-            <p className="text-xs text-slate-400 mt-0.5 tabular-nums" title={`IPCA 12m: ${ipca12m.toFixed(2)}%`}>
-              Real: {(((1 + lastReturnPercent / 100) / (1 + ipca12m / 1200) - 1) * 100).toFixed(2)}%
-              <span className="ml-1 text-slate-300">(IPCA 12m: {ipca12m.toFixed(1)}%)</span>
-            </p>
-          )}
+          {ipca12m !== null && ipca12m !== undefined && lastReturnPercent !== 0 && (() => {
+            const deflator = 1 + ipca12m / 1200;
+            if (deflator <= 0) return null;
+            const realPct = ((1 + lastReturnPercent / 100) / deflator - 1) * 100;
+            return (
+              <p className="text-xs text-slate-400 mt-0.5 tabular-nums" title={`IPCA 12m: ${ipca12m.toFixed(2)}%`}>
+                Real: {realPct.toFixed(2)}%
+                <span className="ml-1 text-slate-300">(IPCA 12m: {ipca12m.toFixed(1)}%)</span>
+              </p>
+            );
+          })()}
         </div>
       </div>
     </div>
