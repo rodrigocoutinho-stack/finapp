@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { calculateForecast } from "@/lib/forecast";
 import { buildFinancialContext } from "@/lib/ai/financial-context";
 import { FINANCIAL_ADVISOR_SYSTEM_PROMPT } from "@/lib/ai/system-prompt";
+import { checkRateLimit, AI_CHAT_LIMIT } from "@/lib/rate-limit";
 import type {
   Account,
   Category,
@@ -71,6 +72,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Não autenticado." },
       { status: 401 }
+    );
+  }
+
+  // Rate limiting: 5 requests per minute per user
+  const rateCheck = checkRateLimit(user.id, AI_CHAT_LIMIT);
+  if (!rateCheck.allowed) {
+    const retrySeconds = Math.ceil(rateCheck.retryAfterMs / 1000);
+    return NextResponse.json(
+      { error: `Muitas requisições. Tente novamente em ${retrySeconds}s.` },
+      { status: 429 }
     );
   }
 

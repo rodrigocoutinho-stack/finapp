@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit, PDF_IMPORT_LIMIT } from "@/lib/rate-limit";
 import type { ParsedTransaction } from "@/lib/ofx-parser";
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
@@ -158,6 +159,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Não autenticado." },
       { status: 401 }
+    );
+  }
+
+  // Rate limiting: 2 requests per 5 minutes per user
+  const rateCheck = checkRateLimit(user.id, PDF_IMPORT_LIMIT);
+  if (!rateCheck.allowed) {
+    const retrySeconds = Math.ceil(rateCheck.retryAfterMs / 1000);
+    return NextResponse.json(
+      { error: `Muitas importações. Tente novamente em ${retrySeconds}s.` },
+      { status: 429 }
     );
   }
 
