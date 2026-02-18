@@ -36,10 +36,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (!user) {
-          setLoading(false);
-          return;
-        }
+        if (!user) return;
 
         const { data } = await supabase
           .from("profiles")

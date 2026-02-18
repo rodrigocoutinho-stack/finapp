@@ -12,15 +12,18 @@ const store = new Map<string, RateLimitEntry>();
 
 // Cleanup stale entries every 5 minutes to prevent memory leaks
 const CLEANUP_INTERVAL = 5 * 60 * 1000;
+// Use the largest configured window so cleanup never prunes valid timestamps
+// from limiters with longer windows (e.g. pdf-import 5min vs ai-chat 1min)
+const MAX_WINDOW = 5 * 60 * 1000;
 let lastCleanup = Date.now();
 
-function cleanup(windowMs: number) {
+function cleanup() {
   const now = Date.now();
   if (now - lastCleanup < CLEANUP_INTERVAL) return;
   lastCleanup = now;
 
   for (const [key, entry] of store.entries()) {
-    entry.timestamps = entry.timestamps.filter((t) => now - t < windowMs);
+    entry.timestamps = entry.timestamps.filter((t) => now - t < MAX_WINDOW);
     if (entry.timestamps.length === 0) {
       store.delete(key);
     }
@@ -48,7 +51,7 @@ export function checkRateLimit(userId: string, config: RateLimitConfig): RateLim
   const now = Date.now();
   const key = `${config.prefix}:${userId}`;
 
-  cleanup(config.windowMs);
+  cleanup();
 
   let entry = store.get(key);
   if (!entry) {

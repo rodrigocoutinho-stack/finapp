@@ -95,6 +95,7 @@ export async function calculateForecast(
               .select("category_id, type, amount_cents, date")
               .gte("date", currentRange.start)
               .lte("date", todayStr)
+              .limit(5000)
           : Promise.resolve({ data: null }),
       ]);
 
