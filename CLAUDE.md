@@ -24,7 +24,7 @@ FinApp - Gestão Financeira Pessoal
 - [x] Redesign UX Fase 2 (sidebar, hero cards, ícones categorias, greeting, layout 2 colunas)
 - [x] Assistente Financeiro IA (Gemini 2.5 Flash, streaming, contexto conversacional, botão copiar)
 - [x] Fase 3A Quick Wins (KPIs, alertas orçamento, insights, reserva emergência, regras categorização, retorno real)
-- [x] Robustez e Performance (índices compostos, timeouts APIs, singleton client, memory leak fix, lazy loading)
+- [x] Robustez e Performance (índices compostos, timeouts APIs, singleton client, memory leak fix, lazy loading, rate limiting, error boundaries, query limits, validação numérica)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
 - [x] Migrations 001-010 executadas no SQL Editor
@@ -65,6 +65,35 @@ FinApp - Gestão Financeira Pessoal
 
 **Lazy loading de Recharts:**
 - `src/app/(dashboard)/page.tsx` — `CategoryChart` carregado via `next/dynamic` com `ssr: false` (reduz bundle inicial do dashboard)
+
+**Rate limiting nas API routes:**
+- `src/lib/rate-limit.ts` (NOVO) — Rate limiter in-memory com sliding window, auto-cleanup a cada 5 min
+- `src/app/api/ai/analyze/route.ts` — 5 requisições/minuto por usuário (retorna 429)
+- `src/app/api/import/pdf/route.ts` — 2 requisições/5 minutos por usuário (retorna 429)
+
+**Error Boundary + try-catch em hooks:**
+- `src/app/(dashboard)/error.tsx` (NOVO) — Next.js Error Boundary para o layout dashboard com botão "Tentar novamente"
+- `src/contexts/preferences-context.tsx` — try-catch em `fetchPreferences`
+- `src/components/investimentos/investment-dashboard.tsx` — try-catch em `fetchEntries`
+- `src/components/investimentos/investment-list.tsx` — try-catch em `fetchAllEntries` e `fetchEntries`
+- `src/components/categorias/category-rules.tsx` — try-catch em `fetchData` com toast de erro
+- `src/app/(dashboard)/transacoes/importar/page.tsx` — try-catch em `fetchData`
+- `src/lib/forecast.ts` — try-catch em `calculateForecast` (retorna `{ months: [] }` em caso de falha)
+
+**LIMIT em queries Supabase:**
+- `transactions` (mensal): `.limit(2000)` — dashboard, transações, daily-flow
+- `transactions` (3 meses): `.limit(5000)` — despesas passadas, daily-flow passado
+- `investment_entries`: `.limit(5000)` — dashboard, investment-dashboard, investment-list
+- `investment_entries` (por investimento): `.limit(1000)` — investment-list modal
+- `recurring_transactions` (ativas): `.limit(1000)` — forecast, daily-flow, recorrentes, API IA
+- `investments` (ativos, API IA): `.limit(500)`
+
+**Atomicidade na importação:**
+- `src/components/transacoes/import-review-table.tsx` — Verifica erro do `rpc("adjust_account_balance")` e exibe toast de alerta se saldo não for atualizado
+
+**Validação numérica (divisão por zero):**
+- `src/components/dashboard/investment-summary.tsx` — Calcula deflator IPCA com guard `deflator > 0`
+- `src/components/investimentos/investment-dashboard.tsx` — Calcula deflator IPCA com guard `deflator > 0`
 
 ### Alterações anteriores (17/02/2026)
 
@@ -291,7 +320,8 @@ src/
 │   ├── category-icons.tsx        # CategoryIcon SVG component + alias map
 │   ├── investment-utils.ts       # Labels, agrupamento, cálculo de saldo
 │   ├── ofx-parser.ts             # Parser OFX/QFX
-│   └── pdf-import.ts             # Client helper para importação PDF via Gemini
+│   ├── pdf-import.ts             # Client helper para importação PDF via Gemini
+│   └── rate-limit.ts             # Rate limiter in-memory sliding window
 └── types/
     └── database.ts               # Types do Supabase
 ```
@@ -355,9 +385,13 @@ src/
 - [x] Queries do assistente IA limitadas (12 meses entries, investments ativos)
 - [x] Dashboard memoizado (useMemo nos cálculos derivados)
 - [x] Lazy loading de Recharts (next/dynamic, ssr: false)
+- [x] Rate limiting nas API routes (in-memory sliding window)
+- [x] Error boundaries + try-catch em todos os hooks assíncronos
+- [x] LIMIT em todas as queries Supabase (proteção contra crescimento descontrolado)
+- [x] Atomicidade na importação (tratamento de erro RPC)
+- [x] Validação numérica (guard contra divisão por zero em cálculos IPCA)
 - [ ] Validações de formulário mais rigorosas
 - [ ] Paginação server-side para tabelas com muitos registros
-- [ ] Rate limiting nas API routes
 - [ ] Connection pooling (Supabase Pooler)
 - [ ] Testes automatizados (unitários e/ou e2e com Playwright)
 
