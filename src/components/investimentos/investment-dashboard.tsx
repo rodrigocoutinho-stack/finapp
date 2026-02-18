@@ -57,7 +57,7 @@ export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboar
 
     setAllEntries((data as InvestmentEntry[]) ?? []);
     setLoading(false);
-  }, [investments, supabase]);
+  }, [investments]);
 
   useEffect(() => {
     fetchEntries();

@@ -63,7 +63,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
       }
       setBalances(bals);
     }
-  }, [investments, supabase, today]);
+  }, [investments, today]);
 
   useEffect(() => {
     fetchAllEntries();

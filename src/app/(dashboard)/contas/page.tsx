@@ -27,7 +27,7 @@ export default function ContasPage() {
 
     setAccounts((data as Account[]) ?? []);
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     fetchAccounts();

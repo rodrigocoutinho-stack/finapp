@@ -44,7 +44,7 @@ export default function InvestimentosPage() {
     setAccounts((accRes.data as Account[]) ?? []);
     setIpca12m(ipca);
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     fetchData();

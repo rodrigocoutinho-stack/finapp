@@ -93,7 +93,7 @@ function TransacoesContent() {
     setAccounts((accRes.data as Account[]) ?? []);
     setCategories((catRes.data as Category[]) ?? []);
     setLoading(false);
-  }, [supabase, year, month, closingDay]);
+  }, [year, month, closingDay]);
 
   useEffect(() => {
     if (!prefsLoading) {

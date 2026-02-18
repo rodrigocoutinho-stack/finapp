@@ -46,7 +46,7 @@ export function CategoryRules() {
     setRules((rulesRes.data as CategoryRuleWithCategory[]) ?? []);
     setCategories((catsRes.data as Category[]) ?? []);
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     fetchData();

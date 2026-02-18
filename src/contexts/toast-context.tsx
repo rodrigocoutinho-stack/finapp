@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 export type ToastVariant = "success" | "error" | "info";
 
@@ -24,21 +24,44 @@ let nextId = 0;
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timersRef = useRef<Map<number, ReturnType<typeof setTimeout>[]>>(new Map());
+
+  // Cleanup all timers on unmount
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      for (const timerList of timers.values()) {
+        timerList.forEach(clearTimeout);
+      }
+      timers.clear();
+    };
+  }, []);
+
+  const clearTimersForToast = useCallback((id: number) => {
+    const timerList = timersRef.current.get(id);
+    if (timerList) {
+      timerList.forEach(clearTimeout);
+      timersRef.current.delete(id);
+    }
+  }, []);
 
   const removeToast = useCallback((id: number) => {
+    clearTimersForToast(id);
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+  }, [clearTimersForToast]);
 
   const dismissToast = useCallback(
     (id: number) => {
+      clearTimersForToast(id);
       setToasts((prev) =>
         prev.map((t) => (t.id === id ? { ...t, leaving: true } : t))
       );
-      setTimeout(() => {
-        removeToast(id);
+      const timer = setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
       }, 300);
+      timersRef.current.set(id, [timer]);
     },
-    [removeToast]
+    [clearTimersForToast]
   );
 
   const addToast = useCallback(
@@ -48,18 +71,21 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       setToasts((prev) => [...prev, { id, message, variant, leaving: false }]);
 
       // Start exit animation 500ms before removal
-      setTimeout(() => {
+      const leaveTimer = setTimeout(() => {
         setToasts((prev) =>
           prev.map((t) => (t.id === id ? { ...t, leaving: true } : t))
         );
       }, duration - 500);
 
       // Remove after duration
-      setTimeout(() => {
-        removeToast(id);
+      const removeTimer = setTimeout(() => {
+        timersRef.current.delete(id);
+        setToasts((prev) => prev.filter((t) => t.id !== id));
       }, duration);
+
+      timersRef.current.set(id, [leaveTimer, removeTimer]);
     },
-    [removeToast]
+    []
   );
 
   return (

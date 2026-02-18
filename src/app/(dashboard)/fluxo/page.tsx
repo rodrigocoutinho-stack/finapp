@@ -40,14 +40,14 @@ export default function FluxoPage() {
     const result = await calculateDailyFlow(supabase, year, month, closingDay);
     setDailyFlow(result);
     setLoading(false);
-  }, [supabase, year, month, closingDay]);
+  }, [year, month, closingDay]);
 
   const fetchForecast = useCallback(async () => {
     setLoading(true);
     const result = await calculateForecast(supabase, 3, true, closingDay);
     setForecast(result);
     setLoading(false);
-  }, [supabase, closingDay]);
+  }, [closingDay]);
 
   useEffect(() => {
     if (prefsLoading) return;

@@ -54,7 +54,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     }
 
     fetchPreferences();
-  }, [supabase]);
+  }, []);
 
   const setClosingDay = useCallback(
     async (day: number) => {

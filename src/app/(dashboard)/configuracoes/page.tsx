@@ -41,7 +41,7 @@ export default function ConfiguracoesPage() {
 
     setCategories((data as Category[]) ?? []);
     setCatLoading(false);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     if (tab === "categorias") {

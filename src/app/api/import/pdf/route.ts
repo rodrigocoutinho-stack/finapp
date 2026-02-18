@@ -165,22 +165,25 @@ export async function POST(request: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              inlineData: {
-                mimeType: "application/pdf",
-                data: pdfBase64,
+    const result = await model.generateContent(
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                inlineData: {
+                  mimeType: "application/pdf",
+                  data: pdfBase64,
+                },
               },
-            },
-            { text: EXTRACTION_PROMPT },
-          ],
-        },
-      ],
-    });
+              { text: EXTRACTION_PROMPT },
+            ],
+          },
+        ],
+      },
+      { timeout: 60000 }
+    );
 
     const responseText = result.response.text();
 

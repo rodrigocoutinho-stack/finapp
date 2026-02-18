@@ -1,12 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { FinancialKPIs } from "@/components/dashboard/financial-kpis";
 import { FinancialInsights } from "@/components/dashboard/financial-insights";
-import { CategoryChart } from "@/components/dashboard/category-chart";
+import dynamic from "next/dynamic";
+
+const CategoryChart = dynamic(
+  () => import("@/components/dashboard/category-chart").then((mod) => mod.CategoryChart),
+  { ssr: false, loading: () => <div className="h-48 animate-pulse bg-slate-100 rounded-lg" /> }
+);
 import { MonthPicker } from "@/components/dashboard/month-picker";
 import { InvestmentSummary } from "@/components/dashboard/investment-summary";
 import { BudgetComparison } from "@/components/dashboard/budget-comparison";
@@ -134,7 +139,7 @@ export default function DashboardPage() {
     setAvgMonthlyExpense(monthCount > 0 ? Math.round(totalPastExpenses / monthCount) : 0);
 
     setLoading(false);
-  }, [supabase, year, month, closingDay]);
+  }, [year, month, closingDay]);
 
   // Fetch investment data once (does not depend on month)
   useEffect(() => {
@@ -195,7 +200,7 @@ export default function DashboardPage() {
     }
 
     fetchInvestments();
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     if (!prefsLoading) {
@@ -221,41 +226,46 @@ export default function DashboardPage() {
     }
   }
 
-  const totalReceitas = transactions
-    .filter((t) => t.type === "receita")
-    .reduce((sum, t) => sum + t.amount_cents, 0);
+  const totalReceitas = useMemo(
+    () => transactions.filter((t) => t.type === "receita").reduce((sum, t) => sum + t.amount_cents, 0),
+    [transactions]
+  );
 
-  const totalDespesas = transactions
-    .filter((t) => t.type === "despesa")
-    .reduce((sum, t) => sum + t.amount_cents, 0);
+  const totalDespesas = useMemo(
+    () => transactions.filter((t) => t.type === "despesa").reduce((sum, t) => sum + t.amount_cents, 0),
+    [transactions]
+  );
 
-  const categoryMap = new Map<string, number>();
-  transactions
-    .filter((t) => t.type === "despesa")
-    .forEach((t) => {
-      const catName = t.categories?.name ?? "Sem categoria";
-      categoryMap.set(catName, (categoryMap.get(catName) ?? 0) + t.amount_cents);
-    });
+  const chartData = useMemo(() => {
+    const map = new Map<string, number>();
+    transactions
+      .filter((t) => t.type === "despesa")
+      .forEach((t) => {
+        const catName = t.categories?.name ?? "Sem categoria";
+        map.set(catName, (map.get(catName) ?? 0) + t.amount_cents);
+      });
+    return Array.from(map.entries())
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [transactions]);
 
-  const chartData = Array.from(categoryMap.entries())
-    .map(([name, amount]) => ({ name, amount }))
-    .sort((a, b) => b.amount - a.amount);
-
-  const recentTransactions = transactions.slice(0, 5);
+  const recentTransactions = useMemo(() => transactions.slice(0, 5), [transactions]);
 
   // KPIs calculated values
-  const savingsRate =
-    totalReceitas > 0
-      ? ((totalReceitas - totalDespesas) / totalReceitas) * 100
-      : null;
+  const savingsRate = useMemo(
+    () => totalReceitas > 0 ? ((totalReceitas - totalDespesas) / totalReceitas) * 100 : null,
+    [totalReceitas, totalDespesas]
+  );
 
-  const runway =
-    avgMonthlyExpense > 0 ? totalAccountBalance / avgMonthlyExpense : null;
+  const runway = useMemo(
+    () => avgMonthlyExpense > 0 ? totalAccountBalance / avgMonthlyExpense : null,
+    [avgMonthlyExpense, totalAccountBalance]
+  );
 
-  const reserveMonths =
-    hasReserveAccount && avgMonthlyExpense > 0
-      ? reserveBalance / avgMonthlyExpense
-      : null;
+  const reserveMonths = useMemo(
+    () => hasReserveAccount && avgMonthlyExpense > 0 ? reserveBalance / avgMonthlyExpense : null,
+    [hasReserveAccount, avgMonthlyExpense, reserveBalance]
+  );
 
   return (
     <div>

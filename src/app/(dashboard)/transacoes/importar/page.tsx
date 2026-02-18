@@ -60,7 +60,7 @@ export default function ImportarPage() {
     setAccounts((accRes.data as Account[]) ?? []);
     setCategories((catRes.data as Category[]) ?? []);
     setLoading(false);
-  }, [supabase, router]);
+  }, [router]);
 
   useEffect(() => {
     fetchData();

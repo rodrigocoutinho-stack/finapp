@@ -75,10 +75,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Fetch all financial data in parallel
+    // Fetch financial data in parallel (bounded date ranges)
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
     const sixtyDaysAgoStr = sixtyDaysAgo.toISOString().split("T")[0];
+
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+    const twelveMonthsAgoStr = twelveMonthsAgo.toISOString().split("T")[0];
 
     const [
       profileRes,
@@ -101,8 +105,12 @@ export async function POST(request: NextRequest) {
         .from("recurring_transactions")
         .select("*")
         .eq("is_active", true),
-      supabase.from("investments").select("*"),
-      supabase.from("investment_entries").select("*"),
+      supabase.from("investments").select("*").eq("is_active", true),
+      supabase
+        .from("investment_entries")
+        .select("*")
+        .gte("date", twelveMonthsAgoStr)
+        .order("date", { ascending: false }),
     ]);
 
     const profile = profileRes.data as { closing_day?: number; full_name?: string | null } | null;
@@ -179,10 +187,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const result = await model.generateContentStream({
-      systemInstruction: FINANCIAL_ADVISOR_SYSTEM_PROMPT,
-      contents,
-    });
+    const result = await model.generateContentStream(
+      {
+        systemInstruction: FINANCIAL_ADVISOR_SYSTEM_PROMPT,
+        contents,
+      },
+      { timeout: 30000 }
+    );
 
     // Stream response
     const encoder = new TextEncoder();

@@ -8,9 +8,15 @@ export async function getIPCA12Months(): Promise<number | null> {
   if (cachedIPCA !== undefined) return cachedIPCA;
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
     const res = await fetch(
-      "https://api.bcb.gov.br/dados/serie/bcdata.sgs.13522/dados/ultimos/12?formato=json"
+      "https://api.bcb.gov.br/dados/serie/bcdata.sgs.13522/dados/ultimos/12?formato=json",
+      { signal: controller.signal }
     );
+
+    clearTimeout(timeout);
 
     if (!res.ok) {
       cachedIPCA = null;
