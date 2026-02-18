@@ -50,13 +50,19 @@ export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboar
       return;
     }
     setLoading(true);
-    const { data } = await supabase
-      .from("investment_entries")
-      .select("*")
-      .in("investment_id", investments.map((i) => i.id));
+    try {
+      const { data } = await supabase
+        .from("investment_entries")
+        .select("*")
+        .in("investment_id", investments.map((i) => i.id));
 
-    setAllEntries((data as InvestmentEntry[]) ?? []);
-    setLoading(false);
+      setAllEntries((data as InvestmentEntry[]) ?? []);
+    } catch (err) {
+      console.error("Erro ao carregar lançamentos de investimentos:", err);
+      setAllEntries([]);
+    } finally {
+      setLoading(false);
+    }
   }, [investments]);
 
   useEffect(() => {

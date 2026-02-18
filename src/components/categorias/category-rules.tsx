@@ -31,22 +31,28 @@ export function CategoryRules() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [rulesRes, catsRes] = await Promise.all([
-      supabase
-        .from("category_rules")
-        .select("*, categories(name, type)")
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("categories")
-        .select("*")
-        .order("type")
-        .order("name"),
-    ]);
+    try {
+      const [rulesRes, catsRes] = await Promise.all([
+        supabase
+          .from("category_rules")
+          .select("*, categories(name, type)")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("categories")
+          .select("*")
+          .order("type")
+          .order("name"),
+      ]);
 
-    setRules((rulesRes.data as CategoryRuleWithCategory[]) ?? []);
-    setCategories((catsRes.data as Category[]) ?? []);
-    setLoading(false);
-  }, []);
+      setRules((rulesRes.data as CategoryRuleWithCategory[]) ?? []);
+      setCategories((catsRes.data as Category[]) ?? []);
+    } catch (err) {
+      console.error("Erro ao carregar regras de categorização:", err);
+      addToast("Erro ao carregar regras.", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [addToast]);
 
   useEffect(() => {
     fetchData();

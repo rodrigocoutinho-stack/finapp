@@ -47,21 +47,25 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
 
   const fetchAllEntries = useCallback(async () => {
     if (investments.length === 0) return;
-    const { data } = await supabase
-      .from("investment_entries")
-      .select("*")
-      .in("investment_id", investments.map((i) => i.id))
-      .order("date", { ascending: false });
+    try {
+      const { data } = await supabase
+        .from("investment_entries")
+        .select("*")
+        .in("investment_id", investments.map((i) => i.id))
+        .order("date", { ascending: false });
 
-    if (data) {
-      const bals: Record<string, number> = {};
-      for (const inv of investments) {
-        const invEntries = (data as InvestmentEntry[]).filter(
-          (e) => e.investment_id === inv.id
-        );
-        bals[inv.id] = calculateInvestmentBalance(invEntries, today);
+      if (data) {
+        const bals: Record<string, number> = {};
+        for (const inv of investments) {
+          const invEntries = (data as InvestmentEntry[]).filter(
+            (e) => e.investment_id === inv.id
+          );
+          bals[inv.id] = calculateInvestmentBalance(invEntries, today);
+        }
+        setBalances(bals);
       }
-      setBalances(bals);
+    } catch (err) {
+      console.error("Erro ao carregar saldos de investimentos:", err);
     }
   }, [investments, today]);
 
@@ -72,14 +76,20 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
   const fetchEntries = useCallback(
     async (investmentId: string) => {
       setEntriesLoading(true);
-      const { data } = await supabase
-        .from("investment_entries")
-        .select("*")
-        .eq("investment_id", investmentId)
-        .order("date", { ascending: false });
+      try {
+        const { data } = await supabase
+          .from("investment_entries")
+          .select("*")
+          .eq("investment_id", investmentId)
+          .order("date", { ascending: false });
 
-      setEntries((data as InvestmentEntry[]) ?? []);
-      setEntriesLoading(false);
+        setEntries((data as InvestmentEntry[]) ?? []);
+      } catch (err) {
+        console.error("Erro ao carregar lançamentos:", err);
+        setEntries([]);
+      } finally {
+        setEntriesLoading(false);
+      }
     },
     [supabase]
   );

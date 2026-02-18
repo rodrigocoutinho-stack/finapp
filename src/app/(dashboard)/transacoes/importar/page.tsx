@@ -44,22 +44,26 @@ export default function ImportarPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    try {
+      const [userRes, accRes, catRes] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from("accounts").select("*").order("name"),
+        supabase.from("categories").select("*").order("name"),
+      ]);
 
-    const [userRes, accRes, catRes] = await Promise.all([
-      supabase.auth.getUser(),
-      supabase.from("accounts").select("*").order("name"),
-      supabase.from("categories").select("*").order("name"),
-    ]);
+      if (!userRes.data.user) {
+        router.push("/login");
+        return;
+      }
 
-    if (!userRes.data.user) {
-      router.push("/login");
-      return;
+      setUserId(userRes.data.user.id);
+      setAccounts((accRes.data as Account[]) ?? []);
+      setCategories((catRes.data as Category[]) ?? []);
+    } catch (err) {
+      console.error("Erro ao carregar dados de importação:", err);
+    } finally {
+      setLoading(false);
     }
-
-    setUserId(userRes.data.user.id);
-    setAccounts((accRes.data as Account[]) ?? []);
-    setCategories((catRes.data as Category[]) ?? []);
-    setLoading(false);
   }, [router]);
 
   useEffect(() => {

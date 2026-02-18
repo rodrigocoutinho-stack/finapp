@@ -73,28 +73,39 @@ export async function calculateForecast(
   const daysInCurrentPeriod = getCompetencyDayCount(currentYear, currentMonth, closingDay);
   const elapsedDays = getElapsedDays(currentYear, currentMonth, closingDay, now);
 
-  const [categoriesRes, recurringRes, historicalRes, currentMonthRes] =
-    await Promise.all([
-      supabase.from("categories").select("*"),
-      supabase
-        .from("recurring_transactions")
-        .select("*, categories(name)")
-        .eq("is_active", true),
-      getHistoricalTransactions(supabase, closingDay),
-      includeCurrentMonth
-        ? supabase
-            .from("transactions")
-            .select("category_id, type, amount_cents, date")
-            .gte("date", currentRange.start)
-            .lte("date", todayStr)
-        : Promise.resolve({ data: null }),
-    ]);
+  let categories: Category[] = [];
+  let recurrings: RecurringRow[] = [];
+  let transactions: TransactionRow[] = [];
+  let monthsPerCategory = new Map<string, number>();
+  let currentMonthTransactions: TransactionRow[] = [];
 
-  const categories = (categoriesRes.data as Category[]) ?? [];
-  const recurrings = (recurringRes.data as RecurringRow[]) ?? [];
-  const { transactions, monthsPerCategory } = historicalRes;
-  const currentMonthTransactions =
-    (currentMonthRes.data as TransactionRow[] | null) ?? [];
+  try {
+    const [categoriesRes, recurringRes, historicalRes, currentMonthRes] =
+      await Promise.all([
+        supabase.from("categories").select("*"),
+        supabase
+          .from("recurring_transactions")
+          .select("*, categories(name)")
+          .eq("is_active", true),
+        getHistoricalTransactions(supabase, closingDay),
+        includeCurrentMonth
+          ? supabase
+              .from("transactions")
+              .select("category_id, type, amount_cents, date")
+              .gte("date", currentRange.start)
+              .lte("date", todayStr)
+          : Promise.resolve({ data: null }),
+      ]);
+
+    categories = (categoriesRes.data as Category[]) ?? [];
+    recurrings = (recurringRes.data as RecurringRow[]) ?? [];
+    ({ transactions, monthsPerCategory } = historicalRes);
+    currentMonthTransactions =
+      (currentMonthRes.data as TransactionRow[] | null) ?? [];
+  } catch (err) {
+    console.error("Erro ao carregar dados para projeção:", err);
+    return { months: [] };
+  }
 
   const months: MonthForecast[] = [];
   const startIndex = includeCurrentMonth ? 0 : 1;
