@@ -54,7 +54,8 @@ export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboar
       const { data } = await supabase
         .from("investment_entries")
         .select("*")
-        .in("investment_id", investments.map((i) => i.id));
+        .in("investment_id", investments.map((i) => i.id))
+        .limit(5000);
 
       setAllEntries((data as InvestmentEntry[]) ?? []);
     } catch (err) {

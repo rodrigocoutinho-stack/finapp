@@ -102,7 +102,8 @@ export default function DashboardPage() {
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
         .gte("date", start)
         .lte("date", end)
-        .order("date", { ascending: false }),
+        .order("date", { ascending: false })
+        .limit(2000),
       isCurrentMonthSelected
         ? calculateForecast(supabase, 0, true, closingDay)
         : Promise.resolve(null),
@@ -114,7 +115,8 @@ export default function DashboardPage() {
         .select("type, amount_cents")
         .eq("type", "despesa")
         .gte("date", globalStart)
-        .lte("date", globalEnd),
+        .lte("date", globalEnd)
+        .limit(5000),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
@@ -151,7 +153,8 @@ export default function DashboardPage() {
           .eq("is_active", true),
         supabase
           .from("investment_entries")
-          .select("investment_id, type, amount_cents, date"),
+          .select("investment_id, type, amount_cents, date")
+          .limit(5000),
         getIPCA12Months(),
       ]);
 

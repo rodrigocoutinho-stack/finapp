@@ -111,17 +111,20 @@ export async function POST(request: NextRequest) {
         .from("transactions")
         .select("*")
         .gte("date", sixtyDaysAgoStr)
-        .order("date", { ascending: false }),
+        .order("date", { ascending: false })
+        .limit(2000),
       supabase
         .from("recurring_transactions")
         .select("*")
-        .eq("is_active", true),
-      supabase.from("investments").select("*").eq("is_active", true),
+        .eq("is_active", true)
+        .limit(1000),
+      supabase.from("investments").select("*").eq("is_active", true).limit(500),
       supabase
         .from("investment_entries")
         .select("*")
         .gte("date", twelveMonthsAgoStr)
-        .order("date", { ascending: false }),
+        .order("date", { ascending: false })
+        .limit(5000),
     ]);
 
     const profile = profileRes.data as { closing_day?: number; full_name?: string | null } | null;

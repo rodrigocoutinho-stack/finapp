@@ -52,7 +52,8 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
         .from("investment_entries")
         .select("*")
         .in("investment_id", investments.map((i) => i.id))
-        .order("date", { ascending: false });
+        .order("date", { ascending: false })
+        .limit(5000);
 
       if (data) {
         const bals: Record<string, number> = {};
@@ -81,7 +82,8 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
           .from("investment_entries")
           .select("*")
           .eq("investment_id", investmentId)
-          .order("date", { ascending: false });
+          .order("date", { ascending: false })
+          .limit(1000);
 
         setEntries((data as InvestmentEntry[]) ?? []);
       } catch (err) {

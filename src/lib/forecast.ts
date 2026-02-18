@@ -86,7 +86,8 @@ export async function calculateForecast(
         supabase
           .from("recurring_transactions")
           .select("*, categories(name)")
-          .eq("is_active", true),
+          .eq("is_active", true)
+          .limit(1000),
         getHistoricalTransactions(supabase, closingDay),
         includeCurrentMonth
           ? supabase

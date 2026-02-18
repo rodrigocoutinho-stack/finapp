@@ -63,11 +63,13 @@ export async function calculateDailyFlow(
         .from("transactions")
         .select("category_id, type, amount_cents, date")
         .gte("date", firstDay)
-        .lte("date", lastDay),
+        .lte("date", lastDay)
+        .limit(5000),
       supabase
         .from("recurring_transactions")
         .select("*")
-        .eq("is_active", true),
+        .eq("is_active", true)
+        .limit(1000),
       supabase.from("categories").select("id, name, type"),
     ]);
 
@@ -142,7 +144,8 @@ export async function calculateDailyFlow(
       .from("transactions")
       .select("type, amount_cents")
       .gte("date", firstDay)
-      .lte("date", todayStr);
+      .lte("date", todayStr)
+      .limit(5000);
 
     const txList = txSinceMonth ?? [];
     let netSince = 0;

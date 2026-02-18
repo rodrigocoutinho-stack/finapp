@@ -84,7 +84,8 @@ function TransacoesContent() {
         .select("*, accounts(name), categories(name)")
         .gte("date", start)
         .lte("date", end)
-        .order("date", { ascending: false }),
+        .order("date", { ascending: false })
+        .limit(2000),
       supabase.from("accounts").select("*").order("name"),
       supabase.from("categories").select("*").order("name"),
     ]);

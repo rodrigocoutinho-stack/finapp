@@ -32,7 +32,8 @@ export default function RecorrentesPage() {
       supabase
         .from("recurring_transactions")
         .select("*, accounts(name), categories(name)")
-        .order("day_of_month"),
+        .order("day_of_month")
+        .limit(1000),
       supabase.from("accounts").select("*").order("name"),
       supabase.from("categories").select("*").order("name"),
     ]);
