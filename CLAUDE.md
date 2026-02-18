@@ -3,12 +3,12 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
-## Estado Atual (Atualizado: 17/02/2026)
+## Estado Atual (Atualizado: 18/02/2026)
 
-**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations 001-009 (RLS ativo)
+- [x] Database schema + migrations 001-010 (RLS ativo)
 - [x] Autenticação (login, registro com confirmação por email, logout)
 - [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência)
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção — dentro de Configurações)
@@ -24,16 +24,49 @@ FinApp - Gestão Financeira Pessoal
 - [x] Redesign UX Fase 2 (sidebar, hero cards, ícones categorias, greeting, layout 2 colunas)
 - [x] Assistente Financeiro IA (Gemini 2.5 Flash, streaming, contexto conversacional, botão copiar)
 - [x] Fase 3A Quick Wins (KPIs, alertas orçamento, insights, reserva emergência, regras categorização, retorno real)
+- [x] Robustez e Performance (índices compostos, timeouts APIs, singleton client, memory leak fix, lazy loading)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
-- [x] Migrations 001-009 executadas no SQL Editor
+- [x] Migrations 001-010 executadas no SQL Editor
 
 **Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
 - [x] `GEMINI_API_KEY` configurada nas Environment Variables
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Últimas Alterações (17/02/2026)
+## Últimas Alterações (18/02/2026)
+
+### Robustez e Performance para Escala (100-500 usuários)
+
+**Migration 010:** `supabase/migrations/010_composite_indexes.sql`
+- Índice `idx_transactions_user_date` — (user_id, date DESC) para queries de dashboard e transações
+- Índice `idx_transactions_account_date` — (account_id, date DESC) para detecção de duplicatas e histórico por conta
+- Índice `idx_recurring_user_active` — (user_id, is_active) para transações recorrentes
+- Índice `idx_investment_entries_investment_date` — (investment_id, date DESC) para evolução de investimentos
+- Índice `idx_category_rules_user` — (user_id) para regras de categorização
+
+**Timeouts em APIs externas:**
+- `src/lib/inflation.ts` — AbortController com timeout de 10s na chamada à API BCB (IPCA)
+- `src/app/api/ai/analyze/route.ts` — Timeout de 30s nas chamadas Gemini (assistente IA) via SDK `RequestOptions`
+- `src/app/api/import/pdf/route.ts` — Timeout de 60s nas chamadas Gemini (importação PDF) via SDK `RequestOptions`
+
+**Supabase browser client singleton:**
+- `src/lib/supabase/client.ts` — `createClient()` agora retorna instância cached (evita re-criação a cada render)
+- Removido `supabase` das dependency arrays de 13 hooks em 12 arquivos (páginas, contexts, componentes) — elimina re-renders desnecessários causados por referência instável
+
+**Fix memory leak no toast:**
+- `src/contexts/toast-context.tsx` — Timers agora rastreados via `useRef<Map>` e limpos individualmente ao dismiss/remove, com cleanup geral no `useEffect` de unmount
+
+**Queries do assistente IA limitadas:**
+- `src/app/api/ai/analyze/route.ts` — `investment_entries` filtrado aos últimos 12 meses, `investments` filtrado por `is_active` (evita carregar dados históricos irrelevantes)
+
+**Dashboard memoizado:**
+- `src/app/(dashboard)/page.tsx` — `totalReceitas`, `totalDespesas`, `chartData`, `recentTransactions`, `savingsRate`, `runway`, `reserveMonths` todos envolvidos em `useMemo`
+
+**Lazy loading de Recharts:**
+- `src/app/(dashboard)/page.tsx` — `CategoryChart` carregado via `next/dynamic` com `ssr: false` (reduz bundle inicial do dashboard)
+
+### Alterações anteriores (17/02/2026)
 
 ### Importação de PDF via IA (Faturas de Cartão)
 
@@ -287,6 +320,7 @@ src/
 7. `007_closing_day.sql` - Campo closing_day em profiles
 8. `008_quick_wins.sql` - is_emergency_reserve em accounts + tabela category_rules
 9. `009_adjust_balance_rpc.sql` - Função RPC atômica adjust_account_balance
+10. `010_composite_indexes.sql` - Índices compostos para performance (user+date, account+date, etc.)
 
 ## Navegação (Sidebar)
 
@@ -314,8 +348,17 @@ src/
 - [x] Loading states em todas as operações assíncronas
 - [x] Confirmação modal em todas as exclusões
 - [x] Lint limpo (rules-of-hooks corrigido)
+- [x] Índices compostos no banco (migration 010)
+- [x] Timeouts em APIs externas (Gemini 30s/60s, BCB 10s)
+- [x] Supabase browser client singleton (evita re-renders)
+- [x] Memory leak fix nos timers do toast
+- [x] Queries do assistente IA limitadas (12 meses entries, investments ativos)
+- [x] Dashboard memoizado (useMemo nos cálculos derivados)
+- [x] Lazy loading de Recharts (next/dynamic, ssr: false)
 - [ ] Validações de formulário mais rigorosas
-- [ ] Otimização de queries (evitar re-fetches desnecessários)
+- [ ] Paginação server-side para tabelas com muitos registros
+- [ ] Rate limiting nas API routes
+- [ ] Connection pooling (Supabase Pooler)
 - [ ] Testes automatizados (unitários e/ou e2e com Playwright)
 
 ### Futuro
@@ -372,7 +415,7 @@ src/
 
 ### Supabase
 - Usar `@supabase/ssr` para criar clients
-- Client browser: `@/lib/supabase/client.ts`
+- Client browser: `@/lib/supabase/client.ts` (singleton — NÃO incluir `supabase` em dependency arrays de hooks)
 - Client server: `@/lib/supabase/server.ts`
 - RLS ativo em todas as tabelas — filtrar por `auth.uid() = user_id`
 
