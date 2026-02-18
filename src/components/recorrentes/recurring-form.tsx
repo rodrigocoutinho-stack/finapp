@@ -32,6 +32,10 @@ interface RecurringFormProps {
   categories: Category[];
   onSuccess: () => void;
   onCancel: () => void;
+  initialDescription?: string;
+  initialAmountCents?: number;
+  initialType?: "receita" | "despesa";
+  initialDay?: number;
 }
 
 export function RecurringForm({
@@ -40,19 +44,27 @@ export function RecurringForm({
   categories,
   onSuccess,
   onCancel,
+  initialDescription,
+  initialAmountCents,
+  initialType,
+  initialDay,
 }: RecurringFormProps) {
   const supabase = createClient();
   const [type, setType] = useState<"receita" | "despesa">(
-    recurring?.type ?? "despesa"
+    recurring?.type ?? initialType ?? "despesa"
   );
   const [amount, setAmount] = useState(
-    recurring ? (recurring.amount_cents / 100).toFixed(2).replace(".", ",") : ""
+    recurring
+      ? (recurring.amount_cents / 100).toFixed(2).replace(".", ",")
+      : initialAmountCents
+        ? (initialAmountCents / 100).toFixed(2).replace(".", ",")
+        : ""
   );
   const [accountId, setAccountId] = useState(recurring?.account_id ?? "");
   const [categoryId, setCategoryId] = useState(recurring?.category_id ?? "");
-  const [description, setDescription] = useState(recurring?.description ?? "");
+  const [description, setDescription] = useState(recurring?.description ?? initialDescription ?? "");
   const [dayOfMonth, setDayOfMonth] = useState(
-    recurring?.day_of_month?.toString() ?? ""
+    recurring?.day_of_month?.toString() ?? initialDay?.toString() ?? ""
   );
   const [isActive, setIsActive] = useState(recurring?.is_active ?? true);
   const [scheduleType, setScheduleType] = useState(

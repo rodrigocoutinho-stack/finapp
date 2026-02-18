@@ -16,6 +16,10 @@ import { MonthPicker } from "@/components/dashboard/month-picker";
 import { InvestmentSummary } from "@/components/dashboard/investment-summary";
 import { BudgetComparison } from "@/components/dashboard/budget-comparison";
 import { GreetingHeader } from "@/components/layout/greeting-header";
+import { Modal } from "@/components/ui/modal";
+import { MonthlyClosing } from "@/components/dashboard/monthly-closing";
+import { RecurrenceSuggestions } from "@/components/dashboard/recurrence-suggestions";
+import { detectRecurrences, type RecurrenceSuggestion } from "@/lib/recurrence-detection";
 import { CardsSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
 import { calculateForecast, type MonthForecast } from "@/lib/forecast";
@@ -23,7 +27,7 @@ import { getMonthEndBalance } from "@/lib/investment-utils";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
 import { getIPCA12Months } from "@/lib/inflation";
 import { usePreferences } from "@/contexts/preferences-context";
-import type { InvestmentEntry } from "@/types/database";
+import type { InvestmentEntry, Transaction, RecurringTransaction } from "@/types/database";
 
 interface TransactionRow {
   id: string;
@@ -44,7 +48,7 @@ interface InvestmentData {
 
 export default function DashboardPage() {
   const supabase = createClient();
-  const { closingDay, loading: prefsLoading } = usePreferences();
+  const { closingDay, reserveTargetMonths, loading: prefsLoading } = usePreferences();
 
   const { year: initYear, month: initMonth } = getCurrentCompetencyMonth(closingDay);
   const [year, setYear] = useState(initYear);
@@ -58,6 +62,7 @@ export default function DashboardPage() {
     hasData: false,
   });
   const [loading, setLoading] = useState(true);
+  const [showClosing, setShowClosing] = useState(false);
 
   // New state for KPIs/Insights
   const [totalAccountBalance, setTotalAccountBalance] = useState(0);
@@ -65,6 +70,8 @@ export default function DashboardPage() {
   const [hasReserveAccount, setHasReserveAccount] = useState(false);
   const [avgMonthlyExpense, setAvgMonthlyExpense] = useState(0);
   const [ipca12m, setIpca12m] = useState<number | null>(null);
+  const [totalRecurringDespesas, setTotalRecurringDespesas] = useState(0);
+  const [recurrenceSuggestions, setRecurrenceSuggestions] = useState<RecurrenceSuggestion[]>([]);
 
   // Sync initial year/month when closingDay loads
   useEffect(() => {
@@ -96,7 +103,7 @@ export default function DashboardPage() {
     const globalStart = pastMonthsRanges[pastMonthsRanges.length - 1]?.start ?? start;
     const globalEnd = pastMonthsRanges[0]?.end ?? end;
 
-    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes] = await Promise.all([
+    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
@@ -117,6 +124,12 @@ export default function DashboardPage() {
         .gte("date", globalStart)
         .lte("date", globalEnd)
         .limit(5000),
+      supabase
+        .from("recurring_transactions")
+        .select("type, amount_cents")
+        .eq("is_active", true)
+        .eq("type", "despesa")
+        .limit(1000),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
@@ -139,6 +152,32 @@ export default function DashboardPage() {
     const totalPastExpenses = pastExpenses.reduce((sum, t) => sum + t.amount_cents, 0);
     const monthCount = pastMonthsRanges.length;
     setAvgMonthlyExpense(monthCount > 0 ? Math.round(totalPastExpenses / monthCount) : 0);
+
+    // Total recurring despesas (active)
+    const recurringDespesas = (recurringDespesasRes.data ?? []) as { type: string; amount_cents: number }[];
+    setTotalRecurringDespesas(recurringDespesas.reduce((sum, r) => sum + r.amount_cents, 0));
+
+    // Recurrence detection: fetch past 3 months of full transactions + existing recurrings
+    if (isCurrentMonthSelected) {
+      const [past3mRes, existingRecRes] = await Promise.all([
+        supabase
+          .from("transactions")
+          .select("id, user_id, account_id, category_id, type, amount_cents, description, date, created_at")
+          .gte("date", globalStart)
+          .lte("date", end)
+          .limit(5000),
+        supabase
+          .from("recurring_transactions")
+          .select("*")
+          .eq("is_active", true)
+          .limit(1000),
+      ]);
+      const past3mTransactions = (past3mRes.data as Transaction[] | null) ?? [];
+      const existingRecs = (existingRecRes.data as RecurringTransaction[] | null) ?? [];
+      setRecurrenceSuggestions(detectRecurrences(past3mTransactions, existingRecs));
+    } else {
+      setRecurrenceSuggestions([]);
+    }
 
     setLoading(false);
   }, [year, month, closingDay]);
@@ -270,11 +309,27 @@ export default function DashboardPage() {
     [hasReserveAccount, avgMonthlyExpense, reserveBalance]
   );
 
+  const forecastDespesas = useMemo(
+    () => currentMonthForecast?.forecastToDateDespesas ?? 0,
+    [currentMonthForecast]
+  );
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <GreetingHeader />
         <div className="flex gap-2">
+          {currentMonthForecast && (
+            <button
+              onClick={() => setShowClosing(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+              </svg>
+              Revisar mês
+            </button>
+          )}
           <Link
             href="/transacoes?novo=receita"
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
@@ -318,6 +373,9 @@ export default function DashboardPage() {
               avgMonthlyExpense={avgMonthlyExpense}
               reserveBalance={reserveBalance}
               hasReserveAccount={hasReserveAccount}
+              reserveTargetMonths={reserveTargetMonths}
+              forecastDespesas={forecastDespesas}
+              totalRecurringDespesas={totalRecurringDespesas}
             />
           </div>
 
@@ -331,6 +389,7 @@ export default function DashboardPage() {
               reserveMonths={reserveMonths}
               forecast={currentMonthForecast}
               hasInvestments={investmentData.hasData}
+              reserveTargetMonths={reserveTargetMonths}
             />
           </div>
 
@@ -353,6 +412,10 @@ export default function DashboardPage() {
                 hasData={investmentData.hasData}
                 ipca12m={ipca12m}
               />
+
+              {recurrenceSuggestions.length > 0 && (
+                <RecurrenceSuggestions suggestions={recurrenceSuggestions} />
+              )}
             </div>
 
             {/* Right column — single card */}
@@ -412,6 +475,21 @@ export default function DashboardPage() {
             </div>
           </div>
         </>
+      )}
+
+      {currentMonthForecast && (
+        <Modal
+          open={showClosing}
+          onClose={() => setShowClosing(false)}
+          title="Fechamento do Mês"
+        >
+          <MonthlyClosing
+            forecast={currentMonthForecast}
+            totalReceitas={totalReceitas}
+            totalDespesas={totalDespesas}
+            savingsRate={savingsRate}
+          />
+        </Modal>
       )}
     </div>
   );

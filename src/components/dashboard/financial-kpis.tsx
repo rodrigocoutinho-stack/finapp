@@ -10,6 +10,9 @@ interface FinancialKPIsProps {
   avgMonthlyExpense: number;
   reserveBalance: number;
   hasReserveAccount: boolean;
+  reserveTargetMonths: number;
+  forecastDespesas?: number;
+  totalRecurringDespesas?: number;
 }
 
 export function FinancialKPIs({
@@ -19,6 +22,9 @@ export function FinancialKPIs({
   avgMonthlyExpense,
   reserveBalance,
   hasReserveAccount,
+  reserveTargetMonths,
+  forecastDespesas,
+  totalRecurringDespesas,
 }: FinancialKPIsProps) {
   // Taxa de Poupança
   const savingsRate =
@@ -36,8 +42,25 @@ export function FinancialKPIs({
       ? reserveBalance / avgMonthlyExpense
       : null;
 
+  const reservePercent =
+    reserveMonths !== null && reserveTargetMonths > 0
+      ? (reserveMonths / reserveTargetMonths) * 100
+      : null;
+
+  // Desvio Orçamentário
+  const budgetDeviation =
+    forecastDespesas !== undefined && forecastDespesas > 0
+      ? (Math.abs(totalDespesas - forecastDespesas) / forecastDespesas) * 100
+      : null;
+
+  // % Gasto Fixo
+  const fixedExpensePercent =
+    totalRecurringDespesas !== undefined && totalReceitas > 0
+      ? (totalRecurringDespesas / totalReceitas) * 100
+      : null;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
       {/* Taxa de Poupança */}
       <KPICard
         label="Taxa de Poupança"
@@ -87,14 +110,70 @@ export function FinancialKPIs({
             <Link href="/contas" className="text-emerald-600 hover:text-emerald-700 font-medium">
               Configurar em Contas
             </Link>
+          ) : reserveMonths !== null ? (
+            <span className="flex flex-col gap-1">
+              <span>{reserveMonths.toFixed(1)} / {reserveTargetMonths} meses ({Math.min(reservePercent ?? 0, 100).toFixed(0)}%)</span>
+              <span className="h-1.5 w-full max-w-[100px] rounded-full bg-slate-200 overflow-hidden">
+                <span
+                  className={`block h-full rounded-full transition-all ${
+                    (reservePercent ?? 0) >= 100 ? "bg-emerald-500" : (reservePercent ?? 0) >= 50 ? "bg-yellow-500" : "bg-rose-500"
+                  }`}
+                  style={{ width: `${Math.min(reservePercent ?? 0, 100)}%` }}
+                />
+              </span>
+            </span>
           ) : (
             `Saldo: ${formatCurrency(reserveBalance)}`
           )
         }
-        color={!hasReserveAccount ? "slate" : getColor(reserveMonths, 6, 3)}
+        color={
+          !hasReserveAccount
+            ? "slate"
+            : getColor(
+                reservePercent !== null ? reservePercent : null,
+                100,
+                50
+              )
+        }
         icon={
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          </svg>
+        }
+      />
+
+      {/* Desvio Orçamentário */}
+      <KPICard
+        label="Desvio Orçamentário"
+        value={budgetDeviation !== null ? `${budgetDeviation.toFixed(1)}%` : "—"}
+        sublabel={
+          budgetDeviation !== null
+            ? totalDespesas > (forecastDespesas ?? 0)
+              ? "Acima do previsto"
+              : "Abaixo do previsto"
+            : "Sem previsão disponível"
+        }
+        color={getColorInverse(budgetDeviation, 10, 25)}
+        icon={
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+          </svg>
+        }
+      />
+
+      {/* % Gasto Fixo */}
+      <KPICard
+        label="% Gasto Fixo"
+        value={fixedExpensePercent !== null ? `${fixedExpensePercent.toFixed(1)}%` : "—"}
+        sublabel={
+          fixedExpensePercent !== null
+            ? `${formatCurrency(totalRecurringDespesas ?? 0)} fixos`
+            : "Sem dados de recorrentes"
+        }
+        color={getColorInverse(fixedExpensePercent, 50, 70)}
+        icon={
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
           </svg>
         }
       />
@@ -108,6 +187,14 @@ function getColor(value: number | null, good: number, warning: number): KPIColor
   if (value === null) return "slate";
   if (value >= good) return "emerald";
   if (value >= warning) return "yellow";
+  return "rose";
+}
+
+// Inverse: lower is better (e.g. deviation %)
+function getColorInverse(value: number | null, good: number, warning: number): KPIColor {
+  if (value === null) return "slate";
+  if (value <= good) return "emerald";
+  if (value <= warning) return "yellow";
   return "rose";
 }
 
@@ -156,7 +243,7 @@ function KPICard({
         <div className="min-w-0">
           <p className="text-xs font-medium text-slate-500">{label}</p>
           <p className={`text-lg font-bold ${styles.value}`}>{value}</p>
-          <p className="text-xs text-slate-500 truncate">{sublabel}</p>
+          <div className="text-xs text-slate-500 truncate">{sublabel}</div>
         </div>
       </div>
     </div>

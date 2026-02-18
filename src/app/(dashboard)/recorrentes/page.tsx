@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -16,14 +17,21 @@ interface RecurringWithRelations extends RecurringTransaction {
   categories: { name: string } | null;
 }
 
-export default function RecorrentesPage() {
+function RecorrentesContent() {
   const supabase = createClient();
   const { addToast } = useToast();
+  const searchParams = useSearchParams();
   const [recurrings, setRecurrings] = useState<RecurringWithRelations[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+
+  // Pre-fill values from searchParams (from recurrence suggestions)
+  const initialDescription = searchParams.get("desc") ?? undefined;
+  const initialAmount = searchParams.get("valor") ? parseInt(searchParams.get("valor")!, 10) : undefined;
+  const initialType = (searchParams.get("tipo") as "receita" | "despesa" | null) ?? undefined;
+  const initialDay = searchParams.get("dia") ? parseInt(searchParams.get("dia")!, 10) : undefined;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -47,6 +55,13 @@ export default function RecorrentesPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Auto-open form when redirected from suggestions
+  useEffect(() => {
+    if (searchParams.get("novo") === "1" && !loading) {
+      setShowForm(true);
+    }
+  }, [searchParams, loading]);
 
   return (
     <div>
@@ -75,6 +90,10 @@ export default function RecorrentesPage() {
         <RecurringForm
           accounts={accounts}
           categories={categories}
+          initialDescription={initialDescription}
+          initialAmountCents={initialAmount}
+          initialType={initialType}
+          initialDay={initialDay}
           onSuccess={() => {
             setShowForm(false);
             fetchData();
@@ -84,5 +103,13 @@ export default function RecorrentesPage() {
         />
       </Modal>
     </div>
+  );
+}
+
+export default function RecorrentesPage() {
+  return (
+    <Suspense fallback={<TableSkeleton rows={5} cols={6} />}>
+      <RecorrentesContent />
+    </Suspense>
   );
 }

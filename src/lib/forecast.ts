@@ -19,6 +19,7 @@ export interface CategoryForecast {
   realAmount: number;
   projectionType: "recurring" | "historical";
   hasPontual: boolean;
+  budgetCents: number | null;
 }
 
 export interface MonthForecast {
@@ -256,6 +257,7 @@ export async function calculateForecast(
           realAmount: realSoFar,
           projectionType: category.projection_type,
           hasPontual,
+          budgetCents: (category as Category & { budget_cents: number | null }).budget_cents ?? null,
         });
       }
     }

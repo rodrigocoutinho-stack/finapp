@@ -12,6 +12,7 @@ interface FinancialInsightsProps {
   reserveMonths: number | null;
   forecast: MonthForecast | null;
   hasInvestments: boolean;
+  reserveTargetMonths?: number;
 }
 
 interface Insight {
@@ -28,6 +29,7 @@ export function FinancialInsights({
   reserveMonths,
   forecast,
   hasInvestments,
+  reserveTargetMonths = 6,
 }: FinancialInsightsProps) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
@@ -56,16 +58,16 @@ export function FinancialInsights({
     insights.push({
       id: "no-reserve",
       type: "warning",
-      text: "Você não tem reserva de emergência configurada. Especialistas recomendam pelo menos 3 meses de despesas.",
+      text: `Você não tem reserva de emergência configurada. Especialistas recomendam pelo menos ${reserveTargetMonths} meses de despesas.`,
     });
   }
 
   // 4. Reserva insuficiente
-  if (reserveMonths !== null && reserveMonths < 3) {
+  if (reserveMonths !== null && reserveMonths < reserveTargetMonths * 0.5) {
     insights.push({
       id: "low-reserve",
       type: "warning",
-      text: `Sua reserva cobre ${reserveMonths.toFixed(1)} meses. O recomendado é pelo menos 6 meses.`,
+      text: `Sua reserva cobre ${reserveMonths.toFixed(1)} meses. Sua meta é ${reserveTargetMonths} meses.`,
     });
   }
 
@@ -78,28 +80,26 @@ export function FinancialInsights({
     });
   }
 
-  // 6. Categorias estouradas
+  // 6. Categorias estouradas (compara contra budget se definido, senão forecast)
   if (forecast) {
-    const busted = forecast.byCategory.filter(
-      (c) =>
-        c.type === "despesa" &&
-        c.forecastToDateAmount > 0 &&
-        c.realAmount / c.forecastToDateAmount > 1
-    );
+    const busted = forecast.byCategory.filter((c) => {
+      if (c.type !== "despesa") return false;
+      const budgetRef = c.budgetCents != null ? c.budgetCents : c.forecastToDateAmount;
+      return budgetRef > 0 && c.realAmount / budgetRef > 1;
+    });
     if (busted.length > 0) {
-      const worst = busted.sort(
-        (a, b) =>
-          b.realAmount / b.forecastToDateAmount -
-          a.realAmount / a.forecastToDateAmount
-      )[0];
-      const overPercent = (
-        (worst.realAmount / worst.forecastToDateAmount - 1) *
-        100
-      ).toFixed(0);
+      const worst = busted.sort((a, b) => {
+        const refA = a.budgetCents != null ? a.budgetCents : a.forecastToDateAmount;
+        const refB = b.budgetCents != null ? b.budgetCents : b.forecastToDateAmount;
+        return b.realAmount / refB - a.realAmount / refA;
+      })[0];
+      const budgetRef = worst.budgetCents != null ? worst.budgetCents : worst.forecastToDateAmount;
+      const overPercent = ((worst.realAmount / budgetRef - 1) * 100).toFixed(0);
+      const label = worst.budgetCents != null ? "ultrapassou o teto" : "ultrapassou o previsto";
       insights.push({
         id: "category-busted",
         type: "alert",
-        text: `A categoria "${worst.categoryName}" ultrapassou o previsto em ${overPercent}%.`,
+        text: `A categoria "${worst.categoryName}" ${label} em ${overPercent}%.`,
       });
     }
   }

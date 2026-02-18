@@ -6,18 +6,21 @@ export type Database = {
           id: string;
           full_name: string | null;
           closing_day: number;
+          reserve_target_months: number;
           created_at: string;
         };
         Insert: {
           id: string;
           full_name?: string | null;
           closing_day?: number;
+          reserve_target_months?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
           full_name?: string | null;
           closing_day?: number;
+          reserve_target_months?: number;
           created_at?: string;
         };
         Relationships: [];
@@ -67,6 +70,7 @@ export type Database = {
           name: string;
           type: "receita" | "despesa";
           projection_type: "recurring" | "historical";
+          budget_cents: number | null;
           created_at: string;
         };
         Insert: {
@@ -75,6 +79,7 @@ export type Database = {
           name: string;
           type: "receita" | "despesa";
           projection_type?: "recurring" | "historical";
+          budget_cents?: number | null;
           created_at?: string;
         };
         Update: {
@@ -83,6 +88,7 @@ export type Database = {
           name?: string;
           type?: "receita" | "despesa";
           projection_type?: "recurring" | "historical";
+          budget_cents?: number | null;
           created_at?: string;
         };
         Relationships: [

@@ -5,29 +5,30 @@ FinApp - Gestão Financeira Pessoal
 
 ## Estado Atual (Atualizado: 18/02/2026)
 
-**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations 001-010 (RLS ativo)
+- [x] Database schema + migrations 001-011 (RLS ativo)
 - [x] Autenticação (login, registro com confirmação por email, logout)
 - [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência)
-- [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção — dentro de Configurações)
+- [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção, teto de orçamento — dentro de Configurações)
 - [x] CRUD Transações (filtro mensal, atualização automática de saldo)
-- [x] Transações Planejadas (recorrentes, pontuais, com período)
+- [x] Transações Planejadas (recorrentes, pontuais, com período, detecção automática de padrões)
 - [x] Importação OFX/CSV/PDF (extrato bancário, cartão de crédito, CSV com mapeamento de colunas, PDF via IA Gemini, auto-categorização por regras)
 - [x] Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
-- [x] Dashboard (hero cards, KPIs financeiros, insights proativos, alertas orçamento, previsto vs realizado, investimentos, últimas transações)
+- [x] Dashboard (hero cards, 5 KPIs, insights proativos, alertas orçamento com tetos, previsto vs realizado, investimentos, recorrências sugeridas, fechamento mensal, últimas transações)
 - [x] Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
 - [x] Dia de fechamento (competência personalizada por usuário)
-- [x] Configurações (abas Geral + Categorias + Regras de Importação, closing day 1-28)
+- [x] Configurações (abas Geral + Categorias + Regras de Importação, closing day 1-28, meta reserva de emergência)
 - [x] Redesign UX Fase 1 (paleta slate/rose, componentes UI, skeleton, toast, acessibilidade)
 - [x] Redesign UX Fase 2 (sidebar, hero cards, ícones categorias, greeting, layout 2 colunas)
 - [x] Assistente Financeiro IA (Gemini 2.5 Flash, streaming, contexto conversacional, botão copiar)
 - [x] Fase 3A Quick Wins (KPIs, alertas orçamento, insights, reserva emergência, regras categorização, retorno real)
 - [x] Robustez e Performance (índices compostos, timeouts APIs, singleton client, memory leak fix, lazy loading, rate limiting, error boundaries, query limits, validação numérica)
+- [x] Codex P1 (tetos orçamento, fechamento mensal, KPIs desvio/gasto fixo, meta reserva, detecção recorrências)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
-- [x] Migrations 001-010 executadas no SQL Editor
+- [x] Migrations 001-011 executadas no SQL Editor
 
 **Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
 - [x] `GEMINI_API_KEY` configurada nas Environment Variables
@@ -35,6 +36,45 @@ FinApp - Gestão Financeira Pessoal
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
 ## Últimas Alterações (18/02/2026)
+
+### Codex P1 — 5 Itens de Prioridade 1
+
+**Migration 011:** `supabase/migrations/011_budgets_and_reserve_target.sql`
+- `categories.budget_cents` (INTEGER, NULL) — teto de orçamento por categoria (null = sem teto)
+- `profiles.reserve_target_months` (INTEGER, DEFAULT 6) — meta de reserva de emergência em meses
+
+**Feature 1 — Tetos de Orçamento por Categoria:**
+- `src/components/categorias/category-form.tsx` — Campo "Teto mensal (R$)" para categorias despesa, converte via `toCents()`
+- `src/lib/forecast.ts` — `CategoryForecast.budgetCents` adicionado ao tipo e preenchido no cálculo
+- `src/components/dashboard/budget-comparison.tsx` — `getEffectiveBudget()` usa budget como referência quando definido; badge "Teto: R$ X"
+- `src/components/dashboard/financial-insights.tsx` — Insight de estourado compara contra budget (texto "ultrapassou o teto")
+- `src/types/database.ts` — `budget_cents` em Category
+
+**Feature 2 — Fechamento Mensal:**
+- `src/components/dashboard/monthly-closing.tsx` (NOVO) — Modal com 3 seções: Resumo (receitas/despesas/saldo/poupança), Top 3 Desvios (categorias com maior diferença), Sugestões (regras baseadas em thresholds)
+- `src/app/(dashboard)/page.tsx` — Botão "Revisar mês" no header, state `showClosing`, Modal com MonthlyClosing
+
+**Feature 3 — KPIs Faltantes:**
+- `src/components/dashboard/financial-kpis.tsx` — 2 novos KPIs (total 5): Desvio Orçamentário (% com thresholds <10%/<25%) e % Gasto Fixo (recorrentes/receitas com thresholds <50%/<70%)
+- Grid atualizado: `grid-cols-1 sm:grid-cols-3 lg:grid-cols-5`
+- Função `getColorInverse()` para KPIs onde menor é melhor
+- `src/app/(dashboard)/page.tsx` — Fetch recurring despesas, calcula `forecastDespesas` e `totalRecurringDespesas`, passa como props
+
+**Feature 4 — Meta de Reserva de Emergência:**
+- `src/contexts/preferences-context.tsx` — `reserveTargetMonths` + `setReserveTargetMonths` no context; fetch `reserve_target_months` do profile
+- `src/app/(dashboard)/configuracoes/page.tsx` — Novo card "Meta de Reserva de Emergência" com Select (3/6/9/12 meses) + Salvar
+- `src/components/dashboard/financial-kpis.tsx` — KPI Reserva com sublabel "X.X / Y meses (ZZ%)" + mini barra de progresso; thresholds dinâmicos
+- `src/components/dashboard/financial-insights.tsx` — Usa `reserveTargetMonths` em vez de hardcoded 3/6
+- `src/types/database.ts` — `reserve_target_months` em Profile
+
+**Feature 5 — Detecção de Recorrências:**
+- `src/lib/recurrence-detection.ts` (NOVO) — `detectRecurrences()` agrupa por descrição normalizada, filtra 2+ meses, valida ±10% variação de valor, exclui já existentes, estima dia do mês
+- `src/components/dashboard/recurrence-suggestions.tsx` (NOVO) — Card com até 3 sugestões, botão "Criar" redireciona para `/recorrentes?novo=1&desc=...&valor=...&tipo=...&dia=...`
+- `src/app/(dashboard)/page.tsx` — Fetch transações 3 meses + recorrentes existentes, detecta padrões, renderiza RecurrenceSuggestions
+- `src/app/(dashboard)/recorrentes/page.tsx` — `useSearchParams()` com Suspense boundary; auto-abre form quando `?novo=1`; passa `initial*` props
+- `src/components/recorrentes/recurring-form.tsx` — Props opcionais `initialDescription`, `initialAmountCents`, `initialType`, `initialDay` para pré-preenchimento
+
+### Alterações anteriores (18/02/2026)
 
 ### Robustez e Performance para Escala (100-500 usuários)
 
@@ -298,7 +338,7 @@ src/
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
 │   ├── layout/                   # Sidebar, UserAvatar, GreetingHeader, Navbar (legado)
-│   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison
+│   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison, MonthlyClosing, RecurrenceSuggestions
 │   ├── contas/
 │   ├── categorias/
 │   ├── assistente/               # ChatMessage, ChatInput
@@ -321,7 +361,8 @@ src/
 │   ├── investment-utils.ts       # Labels, agrupamento, cálculo de saldo
 │   ├── ofx-parser.ts             # Parser OFX/QFX
 │   ├── pdf-import.ts             # Client helper para importação PDF via Gemini
-│   └── rate-limit.ts             # Rate limiter in-memory sliding window
+│   ├── rate-limit.ts             # Rate limiter in-memory sliding window
+│   └── recurrence-detection.ts   # detectRecurrences — detecta padrões de transações repetidas
 └── types/
     └── database.ts               # Types do Supabase
 ```
@@ -351,19 +392,20 @@ src/
 8. `008_quick_wins.sql` - is_emergency_reserve em accounts + tabela category_rules
 9. `009_adjust_balance_rpc.sql` - Função RPC atômica adjust_account_balance
 10. `010_composite_indexes.sql` - Índices compostos para performance (user+date, account+date, etc.)
+11. `011_budgets_and_reserve_target.sql` - budget_cents em categories + reserve_target_months em profiles
 
 ## Navegação (Sidebar)
 
 | # | Label | Rota | Página |
 |---|-------|------|--------|
-| 1 | Dashboard | `/` | Hero cards, KPIs (poupança/runway/reserva), Insights, Previsto vs Realizado (com alertas), Categorias, Investimentos (com retorno real), Últimas Transações |
+| 1 | Dashboard | `/` | Hero cards, 5 KPIs (poupança/runway/reserva/desvio/gasto fixo), Insights, Previsto vs Realizado (com alertas e tetos), Categorias, Investimentos (com retorno real), Recorrências Sugeridas, Fechamento Mensal, Últimas Transações |
 | 2 | Contas | `/contas` | CRUD contas bancárias (tag reserva de emergência) |
 | 3 | Transações | `/transacoes` | CRUD transações + importação OFX/CSV/PDF (mapeamento CSV, extração PDF via IA, auto-categorização por regras) |
 | 4 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
 | 5 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
 | 6 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal + retorno real IPCA) |
 | 7 | Assistente IA | `/assistente` | Chat com Gemini 2.5 Flash, contexto conversacional, botão copiar, streaming |
-| 8 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento) + Categorias (CRUD receita/despesa) + Regras de Importação |
+| 8 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento, meta reserva) + Categorias (CRUD receita/despesa, teto orçamento) + Regras de Importação |
 
 ## Próximos Passos
 

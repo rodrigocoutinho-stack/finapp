@@ -37,14 +37,16 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
   const saldoReal = month.realReceitas - month.realDespesas;
   const saldoDiff = saldoReal - saldoPrevisto;
 
-  // Budget alerts
+  // Budget alerts — use budget_cents as reference when defined
   const alertCategories = despesas.filter((c) => {
-    if (c.forecastToDateAmount <= 0) return false;
-    return c.realAmount / c.forecastToDateAmount >= 0.8;
+    const ref = getEffectiveBudget(c);
+    if (ref <= 0) return false;
+    return c.realAmount / ref >= 0.8;
   });
-  const bustedCount = alertCategories.filter(
-    (c) => c.realAmount / c.forecastToDateAmount >= 1.0
-  ).length;
+  const bustedCount = alertCategories.filter((c) => {
+    const ref = getEffectiveBudget(c);
+    return ref > 0 && c.realAmount / ref >= 1.0;
+  }).length;
   const warningCount = alertCategories.length - bustedCount;
 
   return (
@@ -202,11 +204,17 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
   );
 }
 
+function getEffectiveBudget(cat: CategoryForecast): number {
+  if (cat.budgetCents != null && cat.budgetCents > 0) return cat.budgetCents;
+  return cat.forecastToDateAmount;
+}
+
 function CategoryRow({ cat }: { cat: CategoryForecast }) {
+  const ref = getEffectiveBudget(cat);
   const diff = cat.realAmount - cat.forecastToDateAmount;
   const progress =
-    cat.forecastToDateAmount > 0
-      ? (cat.realAmount / cat.forecastToDateAmount) * 100
+    ref > 0
+      ? (cat.realAmount / ref) * 100
       : cat.realAmount > 0
         ? 100
         : 0;
@@ -220,17 +228,24 @@ function CategoryRow({ cat }: { cat: CategoryForecast }) {
         ? "bg-emerald-500"
         : "bg-rose-500";
 
-  const usage = cat.type === "despesa" && cat.forecastToDateAmount > 0
-    ? cat.realAmount / cat.forecastToDateAmount
+  const usage = cat.type === "despesa" && ref > 0
+    ? cat.realAmount / ref
     : null;
+
+  const hasBudget = cat.budgetCents != null && cat.budgetCents > 0;
 
   return (
     <tr className="hover:bg-slate-50 transition-colors">
       <td className="py-1.5 pr-4 pl-6 text-slate-700">
         <div>
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 flex-wrap">
             <CategoryIcon name={cat.categoryName} className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             {cat.categoryName}
+            {hasBudget && (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
+                Teto: {formatCurrency(cat.budgetCents!)}
+              </span>
+            )}
             {usage !== null && usage >= 1.0 && (
               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">
                 Estourado
@@ -242,7 +257,7 @@ function CategoryRow({ cat }: { cat: CategoryForecast }) {
               </span>
             )}
           </span>
-          {cat.forecastToDateAmount > 0 && (
+          {ref > 0 && (
             <div className="mt-1 h-1.5 w-full max-w-[120px] rounded-full bg-slate-100 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${barColor}`}
