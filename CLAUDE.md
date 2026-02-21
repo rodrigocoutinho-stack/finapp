@@ -30,8 +30,7 @@ FinApp - Gestão Financeira Pessoal
 - [x] Security Hardening (HTTP headers, RPC hardening, RLS strengthening, error sanitization, MIME validation, auth guard)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
-- [x] Migrations 001-011 executadas no SQL Editor
-- [ ] Migration 012 (security hardening) — executar no SQL Editor
+- [x] Migrations 001-012 executadas no SQL Editor
 
 **Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
 - [x] `GEMINI_API_KEY` configurada nas Environment Variables
