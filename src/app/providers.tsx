@@ -3,7 +3,9 @@
 import { PreferencesProvider } from "@/contexts/preferences-context";
 import { SidebarProvider } from "@/contexts/sidebar-context";
 import { ToastProvider, useToast } from "@/contexts/toast-context";
+import { InactivityProvider } from "@/contexts/inactivity-context";
 import { ToastContainer } from "@/components/ui/toast";
+import { InactivityModal } from "@/components/ui/inactivity-modal";
 
 function ToastOutlet() {
   const { toasts, dismissToast } = useToast();
@@ -15,7 +17,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <PreferencesProvider>
       <SidebarProvider>
         <ToastProvider>
-          {children}
+          <InactivityProvider>
+            {children}
+            <InactivityModal />
+          </InactivityProvider>
           <ToastOutlet />
         </ToastProvider>
       </SidebarProvider>

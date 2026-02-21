@@ -3,9 +3,9 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
-## Estado Atual (Atualizado: 18/02/2026)
+## Estado Atual (Atualizado: 20/02/2026)
 
-**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout por inatividade.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
 - [x] Database schema + migrations 001-011 (RLS ativo)
@@ -26,6 +26,7 @@ FinApp - Gestão Financeira Pessoal
 - [x] Fase 3A Quick Wins (KPIs, alertas orçamento, insights, reserva emergência, regras categorização, retorno real)
 - [x] Robustez e Performance (índices compostos, timeouts APIs, singleton client, memory leak fix, lazy loading, rate limiting, error boundaries, query limits, validação numérica)
 - [x] Codex P1 (tetos orçamento, fechamento mensal, KPIs desvio/gasto fixo, meta reserva, detecção recorrências)
+- [x] Auto-logout por inatividade (30 min timeout, modal com contagem regressiva 60s, cross-tab via localStorage)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
 - [x] Migrations 001-011 executadas no SQL Editor
@@ -35,7 +36,26 @@ FinApp - Gestão Financeira Pessoal
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Últimas Alterações (18/02/2026)
+## Últimas Alterações (20/02/2026)
+
+### Auto-logout por Inatividade
+
+**Novos arquivos:**
+- `src/contexts/inactivity-context.tsx` — `InactivityProvider` + `useInactivity()` hook. Rastreia última atividade via event listeners (mousemove, click, keydown, scroll, touchstart) com throttle 1s. Timer de 29 min → exibe modal de aviso. Timer de 30 min (60s após aviso) → executa `supabase.auth.signOut()` + redirect `/login`. Persiste `lastActivity` em localStorage (`finapp_last_activity`) para detectar inatividade cross-tab/refresh. Verifica autenticação via `getUser()` + `onAuthStateChange` — só ativa quando logado.
+- `src/components/ui/inactivity-modal.tsx` — Modal de aviso com contagem regressiva visual (barra de progresso + número de segundos), texto "Sua sessão expira em X segundos por inatividade", botão "Continuar usando" que reseta o timer. Usa `<Modal>` existente.
+
+**Arquivos modificados:**
+- `src/app/providers.tsx` — `InactivityProvider` + `<InactivityModal />` adicionados wrapping o conteúdo dentro do `ToastProvider`
+
+**Detalhes técnicos:**
+- Timeout: 30 minutos de inatividade total (29 min silencioso + 60s com aviso)
+- Eventos: mousemove, click, keydown, scroll, touchstart (no `window`, passive)
+- Throttle: 1 evento/segundo via timestamp check (sem dependência externa)
+- localStorage key: `finapp_last_activity` — persistência cross-tab
+- Cleanup: remove listeners e limpa todos os timers no unmount
+- Nenhuma dependência nova adicionada
+
+### Alterações anteriores (18/02/2026)
 
 ### Codex P1 — 5 Itens de Prioridade 1
 
