@@ -3,12 +3,12 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
-## Estado Atual (Atualizado: 20/02/2026)
+## Estado Atual (Atualizado: 21/02/2026)
 
-**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout por inatividade.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations 001-011 (RLS ativo)
+- [x] Database schema + migrations 001-012 (RLS ativo + security hardening)
 - [x] Autenticação (login, registro com confirmação por email, logout)
 - [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência)
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção, teto de orçamento — dentro de Configurações)
@@ -27,16 +27,50 @@ FinApp - Gestão Financeira Pessoal
 - [x] Robustez e Performance (índices compostos, timeouts APIs, singleton client, memory leak fix, lazy loading, rate limiting, error boundaries, query limits, validação numérica)
 - [x] Codex P1 (tetos orçamento, fechamento mensal, KPIs desvio/gasto fixo, meta reserva, detecção recorrências)
 - [x] Auto-logout por inatividade (30 min timeout, modal com contagem regressiva 60s, cross-tab via localStorage)
+- [x] Security Hardening (HTTP headers, RPC hardening, RLS strengthening, error sanitization, MIME validation, auth guard)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
 - [x] Migrations 001-011 executadas no SQL Editor
+- [ ] Migration 012 (security hardening) — executar no SQL Editor
 
 **Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
 - [x] `GEMINI_API_KEY` configurada nas Environment Variables
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Últimas Alterações (20/02/2026)
+## Últimas Alterações (21/02/2026)
+
+### Security Hardening (Auditoria de Segurança)
+
+**Migration 012:** `supabase/migrations/012_security_hardening.sql`
+- `adjust_account_balance` reescrita: `SET search_path = ''`, `GET DIAGNOSTICS` + `RAISE EXCEPTION` se 0 linhas, magnitude guard (max 10M BRL)
+- RLS transactions INSERT fortalecida: valida `account_id` e `category_id` pertencem ao mesmo `user_id`
+- RLS category_rules fortalecida: valida `category_id` pertence ao `user_id`
+- CHECK constraint em `reserve_target_months` (1-60)
+
+**HTTP Security Headers:** `next.config.ts`
+- X-Frame-Options: DENY (anti-clickjacking)
+- X-Content-Type-Options: nosniff
+- Referrer-Policy: strict-origin-when-cross-origin
+- Permissions-Policy: camera=(), microphone=(), geolocation=()
+- Strict-Transport-Security: max-age=63072000 (HSTS)
+
+**Error Sanitization:**
+- `src/app/api/ai/analyze/route.ts` — mensagem genérica quando GEMINI_API_KEY ausente; erro streaming sanitizado; history[].content limitado a 4000 chars; Retry-After header no 429
+- `src/app/api/import/pdf/route.ts` — erro genérico no catch (não vaza Gemini SDK); mensagem genérica quando API key ausente; Retry-After header no 429
+
+**PDF Route Hardening:** `src/app/api/import/pdf/route.ts`
+- Auth check movido para ANTES do `arrayBuffer()` (previne consumo de CPU/memória por não-autenticados)
+- Validação de MIME type (`application/pdf` ou extensão `.pdf`)
+
+**Dashboard Auth Guard:**
+- `src/app/(dashboard)/layout.tsx` — convertido para server component com `getUser()` + `redirect("/login")` (defesa em profundidade)
+- `src/components/layout/dashboard-shell.tsx` (NOVO) — client component extraído com Sidebar + padding dinâmico
+
+**Senha Mínima:** `src/app/(auth)/register/page.tsx`
+- Aumentada de 6 para 8 caracteres (validação client-side + atributo HTML)
+
+### Alterações anteriores (20/02/2026)
 
 ### Auto-logout por Inatividade
 
@@ -357,7 +391,7 @@ src/
 │       └── recorrentes/page.tsx
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
-│   ├── layout/                   # Sidebar, UserAvatar, GreetingHeader, Navbar (legado)
+│   ├── layout/                   # Sidebar, DashboardShell, UserAvatar, GreetingHeader, Navbar (legado)
 │   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison, MonthlyClosing, RecurrenceSuggestions
 │   ├── contas/
 │   ├── categorias/
@@ -413,6 +447,7 @@ src/
 9. `009_adjust_balance_rpc.sql` - Função RPC atômica adjust_account_balance
 10. `010_composite_indexes.sql` - Índices compostos para performance (user+date, account+date, etc.)
 11. `011_budgets_and_reserve_target.sql` - budget_cents em categories + reserve_target_months em profiles
+12. `012_security_hardening.sql` - RPC hardening + RLS strengthening + CHECK constraints
 
 ## Navegação (Sidebar)
 

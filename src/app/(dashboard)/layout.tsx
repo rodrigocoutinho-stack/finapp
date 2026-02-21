@@ -1,27 +1,18 @@
-"use client";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
 
-import { Sidebar } from "@/components/layout/sidebar";
-import { useSidebar } from "@/contexts/sidebar-context";
-
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { collapsed } = useSidebar();
+  // Defense-in-depth: server-side auth check (middleware is the primary guard)
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <Sidebar />
-      <main
-        className={`pt-14 lg:pt-0 transition-all duration-300 ${
-          collapsed ? "lg:pl-[68px]" : "lg:pl-60"
-        }`}
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
-          {children}
-        </div>
-      </main>
-    </div>
-  );
+  return <DashboardShell>{children}</DashboardShell>;
 }

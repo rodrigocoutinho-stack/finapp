@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Chave da API Gemini não configurada." },
+      { error: "Serviço de importação temporariamente indisponível." },
       { status: 503 }
     );
   }
@@ -147,11 +147,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Convert file to base64 on the server (avoids JSON body size limits)
-  const arrayBuffer = await pdfFile.arrayBuffer();
-  const pdfBase64 = Buffer.from(arrayBuffer).toString("base64");
+  // Validate MIME type
+  const isPDF =
+    pdfFile.type === "application/pdf" ||
+    pdfFile.name.toLowerCase().endsWith(".pdf");
+  if (!isPDF) {
+    return NextResponse.json(
+      { error: "Apenas arquivos PDF são aceitos." },
+      { status: 400 }
+    );
+  }
 
-  // Authenticate
+  // Authenticate BEFORE reading file into memory
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -168,9 +175,13 @@ export async function POST(request: NextRequest) {
     const retrySeconds = Math.ceil(rateCheck.retryAfterMs / 1000);
     return NextResponse.json(
       { error: `Muitas importações. Tente novamente em ${retrySeconds}s.` },
-      { status: 429 }
+      { status: 429, headers: { "Retry-After": String(retrySeconds) } }
     );
   }
+
+  // Convert file to base64 AFTER auth check (prevents unauthenticated resource consumption)
+  const arrayBuffer = await pdfFile.arrayBuffer();
+  const pdfBase64 = Buffer.from(arrayBuffer).toString("base64");
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -235,7 +246,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: `Erro ao processar PDF: ${message}` },
+      { error: "Erro ao processar o PDF. Verifique se o arquivo é legível e tente novamente." },
       { status: 500 }
     );
   }

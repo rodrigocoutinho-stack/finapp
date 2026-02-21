@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Chave da API Gemini não configurada. Adicione GEMINI_API_KEY no .env.local." },
+      { error: "Serviço de IA temporariamente indisponível." },
       { status: 503 }
     );
   }
@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
         item &&
         typeof item.content === "string" &&
         item.content.length > 0 &&
+        item.content.length <= 4000 &&
         (item.role === "user" || item.role === "assistant")
       ) {
         history.push({ role: item.role, content: item.content });
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     const retrySeconds = Math.ceil(rateCheck.retryAfterMs / 1000);
     return NextResponse.json(
       { error: `Muitas requisições. Tente novamente em ${retrySeconds}s.` },
-      { status: 429 }
+      { status: 429, headers: { "Retry-After": String(retrySeconds) } }
     );
   }
 
@@ -222,10 +223,9 @@ export async function POST(request: NextRequest) {
           }
           controller.close();
         } catch (err) {
-          const errorMessage =
-            err instanceof Error ? err.message : "Erro desconhecido";
+          console.error("AI streaming error:", err);
           controller.enqueue(
-            encoder.encode(`\n\n---\nErro ao gerar resposta: ${errorMessage}`)
+            encoder.encode(`\n\n---\nNão foi possível gerar a resposta. Tente novamente.`)
           );
           controller.close();
         }
