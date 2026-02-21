@@ -2,12 +2,12 @@
 
 ## Manual do Usuário
 
-**Versao:** 1.1
+**Versao:** 2.0
 **Data:** Fevereiro 2026
 
 ---
 
-Bem-vindo ao FinApp, a plataforma de gestao financeira pessoal que reune suas contas, transacoes, investimentos e projecoes em um unico lugar. Este manual vai guia-lo por todas as funcionalidades disponiveis.
+Bem-vindo ao FinApp, a plataforma de gestao financeira pessoal que reune suas contas, transacoes, investimentos, projecoes e inteligencia artificial em um unico lugar. Com alertas inteligentes, indicadores financeiros e um assistente que entende seus dados reais, o FinApp vai alem do controle basico. Este manual vai guia-lo por todas as funcionalidades disponiveis.
 
 ---
 
@@ -50,7 +50,7 @@ A barra lateral esquerda (sidebar) e o ponto central de navegacao. Ela contem oi
 | 5 | **Fluxo** | Fluxo diario (dia a dia) e fluxo previsto (projecao mensal) |
 | 6 | **Investimentos** | Carteira de investimentos e quadro de evolucao |
 | 7 | **Assistente IA** | Chat inteligente que analisa seus dados financeiros reais |
-| 8 | **Configuracoes** | Dia de fechamento e gerenciamento de categorias |
+| 8 | **Configuracoes** | Dia de fechamento, meta de reserva, categorias e regras de importacao |
 
 **Comportamento da sidebar**
 
@@ -90,7 +90,29 @@ Tres cards destacados no topo mostram os totais do mes:
 | **Despesas** | Vermelho | Soma de todas as despesas do mes |
 | **Saldo** | Azul (positivo) ou Vermelho (negativo) | Diferenca entre receitas e despesas |
 
-### 3.4 Widgets do Dashboard
+### 3.4 Indicadores financeiros (KPIs)
+
+Logo abaixo dos cards de resumo, cinco mini-cards exibem indicadores-chave das suas financas:
+
+| KPI | O que mostra | Cores |
+|-----|-------------|-------|
+| **Taxa de Poupanca** | Percentual da receita que voce conseguiu poupar no mes | Verde (>20%), Amarelo (10-20%), Vermelho (<10%) |
+| **Runway Financeiro** | Quantos meses voce consegue manter o padrao de gastos com o saldo atual | Verde (>6), Amarelo (3-6), Vermelho (<3) |
+| **Reserva de Emergencia** | Quantos meses de despesas a sua reserva cobre, com barra de progresso em relacao a meta configurada | Verde (meta atingida), Amarelo (>50%), Vermelho (<50%) |
+| **Desvio Orcamentario** | Percentual medio de desvio entre o previsto e o realizado nas categorias | Verde (<10%), Amarelo (10-25%), Vermelho (>25%) |
+| **% Gasto Fixo** | Percentual das receitas comprometido com despesas recorrentes | Verde (<50%), Amarelo (50-70%), Vermelho (>70%) |
+
+### 3.5 Insights proativos
+
+O FinApp analisa seus dados e exibe ate dois cards de insights priorizados no Dashboard. Cada insight tem borda colorida (vermelho para alertas, amarelo para atencao, verde para pontos positivos) e pode ser dispensado clicando no botao de fechar.
+
+Exemplos de insights:
+
+- "Suas despesas com Alimentacao ultrapassaram o teto de R$ 800 este mes"
+- "Sua reserva de emergencia cobre apenas 2 meses — a meta e 6 meses"
+- "Parabens! Voce poupou 25% da receita este mes"
+
+### 3.6 Widgets do Dashboard
 
 O conteudo principal esta organizado em duas colunas (no desktop):
 
@@ -98,8 +120,9 @@ O conteudo principal esta organizado em duas colunas (no desktop):
 
 | Widget | O que mostra |
 |--------|-------------|
-| **Previsto vs Realizado** | Barra de progresso por categoria, comparando o valor previsto (baseado em recorrentes ou media historica) com o valor realizado (transacoes efetivas). Util para identificar categorias que estouraram o orcamento. |
-| **Investimentos** | Saldo total da carteira e retorno do ultimo mes (em R$ e %). Se nao houver investimentos, exibe orientacao para cadastro. |
+| **Previsto vs Realizado** | Barra de progresso por categoria, comparando o valor previsto com o realizado. Categorias com teto de orcamento exibem um badge "Teto: R$ X". Badges de alerta: **Estourado** (vermelho, >= 100%) e **Atencao** (amarelo, >= 80%). Um resumo no topo indica quantas categorias estouraram e quantas estao em atencao. |
+| **Investimentos** | Saldo total da carteira, retorno nominal do ultimo mes (em R$ e %) e **retorno real** descontando a inflacao (IPCA 12 meses). Se nao houver investimentos, exibe orientacao para cadastro. |
+| **Recorrencias Sugeridas** | O sistema analisa suas transacoes dos ultimos 3 meses e detecta padroes repetitivos (mesma descricao, valores similares, em meses consecutivos). Exibe ate 3 sugestoes com botao **Criar** que redireciona para o cadastro de recorrentes com os dados pre-preenchidos. |
 
 **Coluna direita**
 
@@ -107,6 +130,18 @@ O conteudo principal esta organizado em duas colunas (no desktop):
 |--------|-------------|
 | **Despesas por Categoria** | Grafico de barras horizontais com as maiores categorias de despesa do mes. Cada categoria exibe seu icone visual. |
 | **Ultimas Transacoes** | Lista das 5 transacoes mais recentes com descricao, data, categoria, conta e valor. Receitas em verde, despesas em vermelho. |
+
+### 3.7 Fechamento mensal
+
+No topo do Dashboard, o botao **Revisar mes** abre um modal com o fechamento do mes selecionado. O modal possui tres secoes:
+
+| Secao | O que mostra |
+|-------|-------------|
+| **Resumo** | Total de receitas, despesas, saldo do mes e taxa de poupanca |
+| **Top 3 Desvios** | As tres categorias com maior diferenca entre previsto e realizado |
+| **Sugestoes** | Recomendacoes automaticas baseadas nos desvios identificados |
+
+> **Dica:** Use o fechamento mensal como rotina ao final de cada mes para avaliar sua performance financeira e ajustar o planejamento.
 
 ---
 
@@ -132,7 +167,13 @@ A pagina de Contas permite gerenciar as contas que representam de onde sai e par
 
 A conta e criada com saldo zero. O saldo e atualizado automaticamente conforme voce registra transacoes.
 
-### 4.3 Editar e excluir
+### 4.3 Reserva de emergencia
+
+Ao criar ou editar uma conta, voce pode marcar a opcao **"Conta de reserva de emergencia"**. Contas marcadas exibem um badge verde "Reserva" na lista e seu saldo e usado no calculo do KPI de Reserva de Emergencia no Dashboard.
+
+> **Dica:** Marque como reserva apenas contas dedicadas a essa finalidade (ex: poupanca separada, CDB de liquidez diaria). Isso permite que o FinApp calcule corretamente quantos meses de despesas voce tem guardados.
+
+### 4.4 Editar e excluir
 
 | Acao | Como fazer |
 |------|-----------|
@@ -419,7 +460,11 @@ Passe o mouse sobre qualquer resposta do assistente para revelar o **botao de co
 
 A pagina de Configuracoes possui tres abas: **Geral**, **Categorias** e **Regras de Importacao**.
 
-### 10.1 Geral — Dia de fechamento
+### 10.1 Geral
+
+A aba Geral contem duas configuracoes: **Dia de fechamento** e **Meta de reserva de emergencia**.
+
+#### Dia de fechamento
 
 O dia de fechamento define quando comeca e termina seu "mes financeiro".
 
@@ -437,6 +482,17 @@ Essa configuracao e util para quem recebe salario em um dia diferente do dia 1. 
 |:-----:|------|
 | 1 | Selecione o dia desejado no dropdown (1 a 28). |
 | 2 | Clique em **Salvar**. |
+
+#### Meta de reserva de emergencia
+
+Defina quantos meses de despesas voce deseja manter como reserva de emergencia. Essa meta e usada no calculo do KPI de Reserva no Dashboard e nos insights proativos.
+
+| Passo | Acao |
+|:-----:|------|
+| 1 | Selecione a meta desejada no dropdown: **3**, **6**, **9** ou **12 meses**. |
+| 2 | Clique em **Salvar**. |
+
+O KPI de Reserva no Dashboard exibira uma barra de progresso mostrando o percentual atingido em relacao a meta configurada (ex: "4.2 / 6 meses (70%)").
 
 ### 10.2 Categorias
 
@@ -457,6 +513,7 @@ Gerencie as categorias usadas para classificar suas transacoes.
 | Nome | Nome da categoria — ex: "Alimentacao", "Salario", "Lazer" |
 | Tipo | Receita ou Despesa |
 | Tipo de projecao | **Historico** (media dos meses anteriores) ou **Recorrente** (valor fixo das transacoes planejadas) |
+| Teto mensal (R$) | Limite de gastos para categorias de despesa (opcional). Quando definido, o Dashboard usara esse valor como referencia no Previsto vs Realizado e emitira alertas quando o gasto se aproximar ou ultrapassar o teto. |
 
 Cada categoria exibe automaticamente um icone visual baseado no nome (ex: alimentacao exibe um icone de comida, transporte exibe um carro).
 
@@ -503,9 +560,11 @@ Para aproveitar todos os recursos do FinApp, siga esta sequencia ao configurar a
 | Consultar o Fluxo Diario | Quando necessario | Ver o saldo projetado para dias especificos |
 | Consultar o Fluxo Previsto | Mensalmente | Planejar os proximos 3 meses |
 | Atualizar investimentos | Mensalmente | Registrar aportes, resgates ou atualizar saldo |
+| Revisar fechamento mensal | Mensalmente | Usar o botao "Revisar mes" no Dashboard para avaliar desvios e ajustar planejamento |
+| Verificar recorrencias sugeridas | Mensalmente | Conferir se o sistema detectou padroes que devem virar transacoes recorrentes |
 | Perguntar ao Assistente IA | Quando quiser | Obter diagnosticos e orientacoes personalizadas |
 
 ---
 
 **FinApp** — Gestao Financeira Pessoal
-*Versao 1.1 — Fevereiro 2026*
+*Versao 2.0 — Fevereiro 2026*

@@ -354,7 +354,7 @@ def add_cover_page(doc):
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_before = Pt(30)
-    run = p.add_run("Versao 1.1  |  Fevereiro 2026")
+    run = p.add_run("Versao 2.0  |  Fevereiro 2026")
     run.font.name = FONT_BODY
     run.font.size = Pt(11)
     run.font.color.rgb = SLATE_500
@@ -461,8 +461,11 @@ def build_document():
     add_body_paragraph(
         doc,
         "Bem-vindo ao FinApp, a plataforma de gestao financeira pessoal que "
-        "reune suas contas, transacoes, investimentos e projecoes em um unico "
-        "lugar. Este manual vai guia-lo por todas as funcionalidades disponiveis.",
+        "reune suas contas, transacoes, investimentos, projecoes e inteligencia "
+        "artificial em um unico lugar. Com alertas inteligentes, indicadores "
+        "financeiros e um assistente que entende seus dados reais, o FinApp vai "
+        "alem do controle basico. Este manual vai guia-lo por todas as "
+        "funcionalidades disponiveis.",
         space_after=Pt(16)
     )
 
@@ -519,7 +522,7 @@ def build_document():
             ["5", "**Fluxo**",          "Fluxo diario (dia a dia) e fluxo previsto (projecao mensal)"],
             ["6", "**Investimentos**",  "Carteira de investimentos e quadro de evolucao"],
             ["7", "**Assistente IA**",  "Chat inteligente que analisa seus dados financeiros reais"],
-            ["8", "**Configuracoes**",  "Dia de fechamento e gerenciamento de categorias"],
+            ["8", "**Configuracoes**",  "Dia de fechamento, meta de reserva, categorias e regras de importacao"],
         ],
         step_table=True
     )
@@ -577,15 +580,41 @@ def build_document():
         ]
     )
 
-    add_section_heading(doc, "3.4  Widgets do Dashboard", level=2)
+    add_section_heading(doc, "3.4  Indicadores financeiros (KPIs)", level=2)
+    add_body_paragraph(doc, "Logo abaixo dos cards de resumo, cinco mini-cards exibem indicadores-chave das suas financas:")
+    add_styled_table(doc,
+        ["KPI", "O que mostra", "Cores"],
+        [
+            ["**Taxa de Poupanca**", "Percentual da receita que voce conseguiu poupar no mes", "Verde (>20%), Amarelo (10-20%), Vermelho (<10%)"],
+            ["**Runway Financeiro**", "Quantos meses voce consegue manter o padrao de gastos com o saldo atual", "Verde (>6), Amarelo (3-6), Vermelho (<3)"],
+            ["**Reserva de Emergencia**", "Quantos meses de despesas a sua reserva cobre, com barra de progresso em relacao a meta", "Verde (meta atingida), Amarelo (>50%), Vermelho (<50%)"],
+            ["**Desvio Orcamentario**", "Percentual medio de desvio entre o previsto e o realizado", "Verde (<10%), Amarelo (10-25%), Vermelho (>25%)"],
+            ["**% Gasto Fixo**", "Percentual das receitas comprometido com despesas recorrentes", "Verde (<50%), Amarelo (50-70%), Vermelho (>70%)"],
+        ]
+    )
+
+    add_section_heading(doc, "3.5  Insights proativos", level=2)
+    add_body_paragraph(
+        doc,
+        "O FinApp analisa seus dados e exibe ate dois cards de insights priorizados no Dashboard. "
+        "Cada insight tem borda colorida (vermelho para alertas, amarelo para atencao, verde para "
+        "pontos positivos) e pode ser dispensado clicando no botao de fechar."
+    )
+    add_body_paragraph(doc, "Exemplos de insights:")
+    add_body_paragraph(doc, '- "Suas despesas com Alimentacao ultrapassaram o teto de R$ 800 este mes"')
+    add_body_paragraph(doc, '- "Sua reserva de emergencia cobre apenas 2 meses — a meta e 6 meses"')
+    add_body_paragraph(doc, '- "Parabens! Voce poupou 25% da receita este mes"')
+
+    add_section_heading(doc, "3.6  Widgets do Dashboard", level=2)
     add_body_paragraph(doc, "O conteudo principal esta organizado em duas colunas (no desktop):")
 
     add_section_heading(doc, "Coluna esquerda (maior)", level=3)
     add_styled_table(doc,
         ["Widget", "O que mostra"],
         [
-            ["**Previsto vs Realizado**", "Barra de progresso por categoria, comparando o valor previsto (baseado em recorrentes ou media historica) com o valor realizado (transacoes efetivas). Util para identificar categorias que estouraram o orcamento."],
-            ["**Investimentos**", "Saldo total da carteira e retorno do ultimo mes (em R$ e %). Se nao houver investimentos, exibe orientacao para cadastro."],
+            ["**Previsto vs Realizado**", "Barra de progresso por categoria, comparando o previsto com o realizado. Categorias com teto exibem badge \"Teto: R$ X\". Badges de alerta: **Estourado** (vermelho, >= 100%) e **Atencao** (amarelo, >= 80%). Resumo no topo com totais."],
+            ["**Investimentos**", "Saldo total da carteira, retorno nominal do ultimo mes (em R$ e %) e **retorno real** descontando a inflacao (IPCA 12 meses)."],
+            ["**Recorrencias Sugeridas**", "Analisa transacoes dos ultimos 3 meses e detecta padroes repetitivos. Exibe ate 3 sugestoes com botao **Criar** que redireciona para o cadastro de recorrentes com dados pre-preenchidos."],
         ]
     )
 
@@ -597,6 +626,22 @@ def build_document():
             ["**Ultimas Transacoes**", "Lista das 5 transacoes mais recentes com descricao, data, categoria, conta e valor. Receitas em verde, despesas em vermelho."],
         ]
     )
+
+    add_section_heading(doc, "3.7  Fechamento mensal", level=2)
+    add_body_paragraph(
+        doc,
+        "No topo do Dashboard, o botao **Revisar mes** abre um modal com o fechamento "
+        "do mes selecionado. O modal possui tres secoes:"
+    )
+    add_styled_table(doc,
+        ["Secao", "O que mostra"],
+        [
+            ["**Resumo**", "Total de receitas, despesas, saldo do mes e taxa de poupanca"],
+            ["**Top 3 Desvios**", "As tres categorias com maior diferenca entre previsto e realizado"],
+            ["**Sugestoes**", "Recomendacoes automaticas baseadas nos desvios identificados"],
+        ]
+    )
+    add_callout(doc, "**Dica:** Use o fechamento mensal como rotina ao final de cada mes para avaliar sua performance financeira e ajustar o planejamento.", "info")
 
     # ═══════════════════════════════════════════════════════════
     # SECTION 4 — CONTAS
@@ -635,7 +680,22 @@ def build_document():
         "conforme voce registra transacoes."
     )
 
-    add_section_heading(doc, "4.3  Editar e excluir", level=2)
+    add_section_heading(doc, "4.3  Reserva de emergencia", level=2)
+    add_body_paragraph(
+        doc,
+        "Ao criar ou editar uma conta, voce pode marcar a opcao **\"Conta de reserva "
+        "de emergencia\"**. Contas marcadas exibem um badge verde \"Reserva\" na lista "
+        "e seu saldo e usado no calculo do KPI de Reserva de Emergencia no Dashboard."
+    )
+    add_callout(
+        doc,
+        "**Dica:** Marque como reserva apenas contas dedicadas a essa finalidade "
+        "(ex: poupanca separada, CDB de liquidez diaria). Isso permite que o FinApp "
+        "calcule corretamente quantos meses de despesas voce tem guardados.",
+        "info"
+    )
+
+    add_section_heading(doc, "4.4  Editar e excluir", level=2)
     add_styled_table(doc,
         ["Acao", "Como fazer"],
         [
@@ -1039,7 +1099,10 @@ def build_document():
 
     add_body_paragraph(doc, "A pagina de Configuracoes possui tres abas: **Geral**, **Categorias** e **Regras de Importacao**.")
 
-    add_section_heading(doc, "10.1  Geral — Dia de fechamento", level=2)
+    add_section_heading(doc, "10.1  Geral", level=2)
+    add_body_paragraph(doc, "A aba Geral contem duas configuracoes: **Dia de fechamento** e **Meta de reserva de emergencia**.")
+
+    add_section_heading(doc, "Dia de fechamento", level=3)
     add_body_paragraph(doc, "O dia de fechamento define quando comeca e termina seu \"mes financeiro\".")
     add_styled_table(doc,
         ["Configuracao", "Exemplo"],
@@ -1065,6 +1128,26 @@ def build_document():
         step_table=True
     )
 
+    add_section_heading(doc, "Meta de reserva de emergencia", level=3)
+    add_body_paragraph(
+        doc,
+        "Defina quantos meses de despesas voce deseja manter como reserva de emergencia. "
+        "Essa meta e usada no calculo do KPI de Reserva no Dashboard e nos insights proativos."
+    )
+    add_styled_table(doc,
+        ["Passo", "Acao"],
+        [
+            ["1", "Selecione a meta desejada no dropdown: **3**, **6**, **9** ou **12 meses**."],
+            ["2", "Clique em **Salvar**."],
+        ],
+        step_table=True
+    )
+    add_body_paragraph(
+        doc,
+        "O KPI de Reserva no Dashboard exibira uma barra de progresso mostrando o "
+        "percentual atingido em relacao a meta configurada (ex: \"4.2 / 6 meses (70%)\")."
+    )
+
     add_section_heading(doc, "10.2  Categorias", level=2)
     add_body_paragraph(doc, "Gerencie as categorias usadas para classificar suas transacoes.")
 
@@ -1086,6 +1169,7 @@ def build_document():
             ["Nome",              "Nome da categoria — ex: \"Alimentacao\", \"Salario\", \"Lazer\""],
             ["Tipo",              "Receita ou Despesa"],
             ["Tipo de projecao",  "**Historico** (media dos meses anteriores) ou **Recorrente** (valor fixo das transacoes planejadas)"],
+            ["Teto mensal (R$)",  "Limite de gastos para categorias de despesa (opcional). Quando definido, o Dashboard usara esse valor como referencia e emitira alertas ao se aproximar ou ultrapassar o teto."],
         ]
     )
     add_body_paragraph(
@@ -1155,6 +1239,8 @@ def build_document():
             ["Consultar o Fluxo Diario",  "Quando necessario",     "Ver o saldo projetado para dias especificos"],
             ["Consultar o Fluxo Previsto","Mensalmente",           "Planejar os proximos 3 meses"],
             ["Atualizar investimentos",   "Mensalmente",           "Registrar aportes, resgates ou atualizar saldo"],
+            ["Revisar fechamento mensal", "Mensalmente",           "Usar o botao \"Revisar mes\" no Dashboard para avaliar desvios e ajustar planejamento"],
+            ["Verificar recorrencias sugeridas", "Mensalmente",    "Conferir se o sistema detectou padroes que devem virar transacoes recorrentes"],
             ["Perguntar ao Assistente IA","Quando quiser",         "Obter diagnosticos e orientacoes personalizadas"],
         ]
     )
@@ -1177,7 +1263,7 @@ def build_document():
 
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run("Versao 1.1  |  Fevereiro 2026")
+    run = p.add_run("Versao 2.0  |  Fevereiro 2026")
     run.font.name = FONT_BODY
     run.font.size = Pt(9)
     run.font.color.rgb = SLATE_500
