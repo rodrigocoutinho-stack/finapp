@@ -113,6 +113,7 @@ export function Sidebar() {
   const { fullName } = usePreferences();
   const { collapsed, toggleCollapsed } = useSidebar();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Close drawer on route change
   useEffect(() => {
@@ -132,6 +133,7 @@ export function Sidebar() {
   }, [mobileOpen]);
 
   async function handleLogout() {
+    setLoggingOut(true);
     await supabase.auth.signOut();
     router.push("/login");
   }
@@ -196,7 +198,8 @@ export function Sidebar() {
         </div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 mt-1 w-full rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+          disabled={loggingOut}
+          className="flex items-center gap-3 px-3 py-2.5 mt-1 w-full rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
         >
           <svg
             className="w-5 h-5 shrink-0"
@@ -287,8 +290,9 @@ export function Sidebar() {
               <UserAvatar name={fullName} size="sm" />
               <button
                 onClick={handleLogout}
+                disabled={loggingOut}
                 title="Sair"
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
               >
                 <svg
                   className="w-5 h-5"
@@ -317,7 +321,8 @@ export function Sidebar() {
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-2.5 mt-1 w-full rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+                disabled={loggingOut}
+                className="flex items-center gap-3 px-3 py-2.5 mt-1 w-full rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
               >
                 <svg
                   className="w-5 h-5 shrink-0"
