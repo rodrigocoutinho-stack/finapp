@@ -54,7 +54,26 @@ export function TransactionList({
       return;
     }
 
-    await supabase.from("transactions").delete().eq("id", deletingTransaction.id);
+    const { error: deleteError } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("id", deletingTransaction.id);
+
+    if (deleteError) {
+      // Revert: re-apply the balance that was just removed
+      const reverseDelta =
+        deletingTransaction.type === "receita"
+          ? deletingTransaction.amount_cents
+          : -deletingTransaction.amount_cents;
+      await supabase.rpc("adjust_account_balance", {
+        p_account_id: deletingTransaction.account_id,
+        p_delta: reverseDelta,
+      });
+      addToast("Erro ao excluir transação.", "error");
+      setDeleteLoading(false);
+      setDeletingTransaction(null);
+      return;
+    }
 
     setDeleteLoading(false);
     setDeletingTransaction(null);

@@ -13,7 +13,7 @@ interface ReviewRow extends ParsedTransaction {
   selected: boolean;
   categoryId: string;
   isDuplicate: boolean;
-  autoCategorizied: boolean;
+  autoCategorized: boolean;
 }
 
 interface ImportResult {
@@ -90,12 +90,12 @@ export function ImportReviewTable({
 
         // Auto-categorize using rules
         let matchedCategoryId = "";
-        let autoCategorizied = false;
+        let autoCategorized = false;
         const descLower = t.description.toLowerCase();
         for (const rule of rules) {
           if (descLower.includes(rule.pattern.toLowerCase())) {
             matchedCategoryId = rule.category_id;
-            autoCategorizied = true;
+            autoCategorized = true;
             break;
           }
         }
@@ -105,7 +105,7 @@ export function ImportReviewTable({
           selected: !isDuplicate,
           categoryId: matchedCategoryId,
           isDuplicate,
-          autoCategorizied,
+          autoCategorized,
         };
       });
 
@@ -322,7 +322,7 @@ export function ImportReviewTable({
                           </option>
                         ))}
                       </select>
-                      {row.autoCategorizied && row.categoryId && (
+                      {row.autoCategorized && row.categoryId && (
                         <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700">
                           Auto
                         </span>

@@ -57,9 +57,16 @@ export function RecurringList({
     if (!deletingRecurring) return;
     setDeleteLoading(true);
 
-    await supabase.from("recurring_transactions").delete().eq("id", deletingRecurring.id);
+    const { error } = await supabase
+      .from("recurring_transactions")
+      .delete()
+      .eq("id", deletingRecurring.id);
 
     setDeleteLoading(false);
+    if (error) {
+      addToast("Erro ao excluir transação planejada.", "error");
+      return;
+    }
     setDeletingRecurring(null);
     onRefresh();
     addToast("Transação planejada excluída.");
@@ -67,11 +74,15 @@ export function RecurringList({
 
   async function handleToggleActive(recurring: RecurringWithRelations) {
     setTogglingId(recurring.id);
-    await supabase
+    const { error } = await supabase
       .from("recurring_transactions")
       .update({ is_active: !recurring.is_active })
       .eq("id", recurring.id);
     setTogglingId(null);
+    if (error) {
+      addToast("Erro ao alterar status da transação.", "error");
+      return;
+    }
     onRefresh();
     addToast(recurring.is_active ? "Transação desativada." : "Transação ativada.");
   }

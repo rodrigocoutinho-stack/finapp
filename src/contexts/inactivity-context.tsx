@@ -58,8 +58,8 @@ export function InactivityProvider({ children }: { children: React.ReactNode }) 
     router.push("/login");
   }, [clearAllTimers, router]);
 
-  const startCountdown = useCallback(() => {
-    setRemainingSeconds(60);
+  const startCountdown = useCallback((initialSeconds: number = 60) => {
+    setRemainingSeconds(initialSeconds);
     setShowWarning(true);
 
     countdownRef.current = setInterval(() => {
@@ -74,7 +74,7 @@ export function InactivityProvider({ children }: { children: React.ReactNode }) 
 
     logoutTimerRef.current = setTimeout(() => {
       performLogout();
-    }, WARNING_BEFORE_LOGOUT_MS);
+    }, initialSeconds * 1000);
   }, [performLogout]);
 
   const resetTimer = useCallback(() => {
@@ -118,35 +118,22 @@ export function InactivityProvider({ children }: { children: React.ReactNode }) 
       return;
     }
 
-    // Check localStorage for existing activity timestamp
+    // Check localStorage for existing activity timestamp (validated)
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const elapsed = Date.now() - parseInt(stored, 10);
+    const parsedStored = stored ? parseInt(stored, 10) : NaN;
+    const now = Date.now();
+    if (!isNaN(parsedStored) && parsedStored > 0 && parsedStored <= now) {
+      const elapsed = now - parsedStored;
       if (elapsed >= INACTIVITY_TIMEOUT_MS + WARNING_BEFORE_LOGOUT_MS) {
         // Already expired — logout immediately
         performLogout();
         return;
       } else if (elapsed >= INACTIVITY_TIMEOUT_MS) {
-        // In warning window
+        // In warning window — reuse startCountdown with remaining time
         const remaining = Math.ceil(
           (INACTIVITY_TIMEOUT_MS + WARNING_BEFORE_LOGOUT_MS - elapsed) / 1000
         );
-        setRemainingSeconds(remaining);
-        setShowWarning(true);
-
-        countdownRef.current = setInterval(() => {
-          setRemainingSeconds((prev) => {
-            if (prev <= 1) {
-              performLogout();
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-
-        logoutTimerRef.current = setTimeout(() => {
-          performLogout();
-        }, remaining * 1000);
+        startCountdown(remaining);
         return;
       }
       // Still active — set timer for remaining time

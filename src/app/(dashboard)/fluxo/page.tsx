@@ -22,6 +22,19 @@ export default function FluxoPage() {
   const [tab, setTab] = useState<Tab>("diario");
   const [year, setYear] = useState(initYear);
   const [month, setMonth] = useState(initMonth);
+
+  const handlePrevMonth = useCallback(() => {
+    setMonth((prev) => {
+      if (prev === 0) { setYear((y) => y - 1); return 11; }
+      return prev - 1;
+    });
+  }, []);
+  const handleNextMonth = useCallback(() => {
+    setMonth((prev) => {
+      if (prev === 11) { setYear((y) => y + 1); return 0; }
+      return prev + 1;
+    });
+  }, []);
   const [dailyFlow, setDailyFlow] = useState<DailyFlowResult | null>(null);
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,23 +71,6 @@ export default function FluxoPage() {
     }
   }, [tab, fetchDailyFlow, fetchForecast, prefsLoading]);
 
-  function handlePrevMonth() {
-    if (month === 0) {
-      setMonth(11);
-      setYear(year - 1);
-    } else {
-      setMonth(month - 1);
-    }
-  }
-
-  function handleNextMonth() {
-    if (month === 11) {
-      setMonth(0);
-      setYear(year + 1);
-    } else {
-      setMonth(month + 1);
-    }
-  }
 
   const tabs: { key: Tab; label: string; description: string }[] = [
     { key: "diario", label: "Fluxo Diário", description: "Movimentação dia a dia do mês" },

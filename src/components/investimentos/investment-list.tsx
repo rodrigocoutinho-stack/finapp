@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
   // Balances for all investments
   const [balances, setBalances] = useState<Record<string, number>>({});
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   const fetchAllEntries = useCallback(async () => {
     if (investments.length === 0) return;
@@ -66,7 +66,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
         setBalances(bals);
       }
     } catch (err) {
-      console.error("Erro ao carregar saldos de investimentos:", err);
+      if (process.env.NODE_ENV === "development") console.error("Erro ao carregar saldos:", err);
     }
   }, [investments, today]);
 
@@ -87,13 +87,13 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
 
         setEntries((data as InvestmentEntry[]) ?? []);
       } catch (err) {
-        console.error("Erro ao carregar lançamentos:", err);
+        if (process.env.NODE_ENV === "development") console.error("Erro ao carregar lançamentos:", err);
         setEntries([]);
       } finally {
         setEntriesLoading(false);
       }
     },
-    [supabase]
+    []
   );
 
   function handleOpenEntries(inv: Investment) {
@@ -104,8 +104,15 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
   async function handleDelete() {
     if (!deletingInvestment) return;
     setDeleteLoading(true);
-    await supabase.from("investments").delete().eq("id", deletingInvestment.id);
+    const { error } = await supabase
+      .from("investments")
+      .delete()
+      .eq("id", deletingInvestment.id);
     setDeleteLoading(false);
+    if (error) {
+      addToast("Erro ao excluir investimento.", "error");
+      return;
+    }
     setDeletingInvestment(null);
     onRefresh();
     addToast("Investimento excluído.");

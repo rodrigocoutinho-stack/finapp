@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/contexts/toast-context";
 import { PageHeader } from "@/components/ui/page-header";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { ImportUpload } from "@/components/transacoes/import-upload";
@@ -24,6 +25,7 @@ interface ImportResult {
 export default function ImportarPage() {
   const supabase = createClient();
   const router = useRouter();
+  const { addToast } = useToast();
   const [step, setStep] = useState<Step>("upload");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -60,7 +62,8 @@ export default function ImportarPage() {
       setAccounts((accRes.data as Account[]) ?? []);
       setCategories((catRes.data as Category[]) ?? []);
     } catch (err) {
-      console.error("Erro ao carregar dados de importação:", err);
+      if (process.env.NODE_ENV === "development") console.error("Erro ao carregar dados de importação:", err);
+      addToast("Erro ao carregar dados. Tente novamente.", "error");
     } finally {
       setLoading(false);
     }

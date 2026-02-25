@@ -28,6 +28,14 @@ export function EntryForm({ investmentId, onSuccess, onCancel }: EntryFormProps)
     e.preventDefault();
     setError("");
 
+    const dateObj = new Date(date);
+    const minDate = new Date("2000-01-01");
+    const maxDate = new Date(new Date().getFullYear() + 5, 11, 31);
+    if (isNaN(dateObj.getTime()) || dateObj < minDate || dateObj > maxDate) {
+      setError("Data inválida. Informe uma data entre 2000 e daqui a 5 anos.");
+      return;
+    }
+
     const cents = toCents(amount);
     if (cents <= 0) {
       setError("Informe um valor maior que zero.");
@@ -104,6 +112,7 @@ export function EntryForm({ investmentId, onSuccess, onCancel }: EntryFormProps)
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder="Opcional"
+        maxLength={500}
       />
 
       <div className="flex gap-3 justify-end pt-2">

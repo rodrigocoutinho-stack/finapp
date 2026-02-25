@@ -14,7 +14,22 @@ import type {
   InvestmentEntry,
 } from "@/types/database";
 
+function isOriginAllowed(request: NextRequest): boolean {
+  const origin = request.headers.get("origin");
+  if (!origin) return true; // same-origin requests may omit Origin
+  const allowed = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    "https://finapp-kohl.vercel.app",
+    "http://localhost:3000",
+  ].filter(Boolean);
+  return allowed.includes(origin);
+}
+
 export async function POST(request: NextRequest) {
+  if (!isOriginAllowed(request)) {
+    return NextResponse.json({ error: "Origem não permitida." }, { status: 403 });
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(

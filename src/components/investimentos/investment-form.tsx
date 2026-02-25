@@ -102,6 +102,7 @@ export function InvestmentForm({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Ex: CDB Banco Inter 120% CDI"
+        maxLength={200}
         required
       />
 
@@ -137,6 +138,7 @@ export function InvestmentForm({
         value={rate}
         onChange={(e) => setRate(e.target.value)}
         placeholder="Ex: 120% CDI, IPCA+6,5%"
+        maxLength={50}
       />
 
       <Input
@@ -153,6 +155,7 @@ export function InvestmentForm({
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder="Opcional"
+        maxLength={500}
       />
 
       <div className="flex gap-3 justify-end pt-2">

@@ -3,9 +3,9 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
-## Estado Atual (Atualizado: 21/02/2026)
+## Estado Atual (Atualizado: 25/02/2026)
 
-**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening + Code Review (26/26 corrigidos).** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
 - [x] Database schema + migrations 001-012 (RLS ativo + security hardening)
@@ -37,7 +37,43 @@ FinApp - Gestão Financeira Pessoal
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Últimas Alterações (21/02/2026)
+## Últimas Alterações (25/02/2026)
+
+### Code Review — Correções de Alta e Média Severidade (20 problemas)
+
+**Alta Severidade (9 correções):**
+- `src/app/(dashboard)/recorrentes/page.tsx` — URL params sanitizados: desc limitado a 200 chars, tipo validado como enum, valor/dia com isNaN + bounds check
+- `next.config.ts` — Content-Security-Policy adicionado (default-src, script-src, connect-src para Supabase/Gemini/BCB, frame-ancestors none)
+- `src/components/recorrentes/recurring-list.tsx` — handleDelete e handleToggleActive agora verificam `{ error }` e exibem toast de erro
+- `src/components/investimentos/investment-list.tsx` — handleDelete agora verifica `{ error }` e exibe toast de erro
+- `src/contexts/preferences-context.tsx` — `supabase` removido das dep arrays de 2 useCallback (regra do projeto: singleton)
+- `src/components/transacoes/import-review-table.tsx` — Typo `autoCategorizied` renomeado para `autoCategorized` (5 ocorrências)
+- Formulários (transaction-form, account-form, recurring-form, category-form, investment-form, entry-form) — `maxLength` adicionado em todos os campos de texto
+- `src/components/dashboard/category-chart.tsx` — `any` removido, tipado com `CustomYTickProps` interface
+
+**Média Severidade (11 correções):**
+- `src/components/transacoes/transaction-list.tsx` — Delete agora verifica erro e reverte saldo se falhar (race condition fix)
+- `src/lib/ai/financial-context.ts` — Usa apenas primeiro nome (privacidade/LGPD)
+- `src/app/api/ai/analyze/route.ts` + `src/app/api/import/pdf/route.ts` — Validação de Origin header (CSRF protection)
+- `src/components/investimentos/investment-list.tsx` — `supabase` removido de dep array; `today` envolvido em `useMemo`
+- `src/contexts/preferences-context.tsx` + `investment-list.tsx` + `investment-dashboard.tsx` — console.error condicionado a `NODE_ENV === "development"`
+- `src/lib/utils.ts` — `isRecurringActiveInMonth()` extraída e exportada; duplicatas removidas de `forecast.ts` e `daily-flow.ts`
+- `src/contexts/inactivity-context.tsx` — `startCountdown(initialSeconds)` refatorado para aceitar tempo inicial; countdown duplicado substituído por chamada à função
+- `src/hooks/use-month-navigation.ts` (NOVO) — Hook extraído; navegação de meses unificada em 3 páginas (dashboard, transações, fluxo)
+- `src/components/transacoes/transaction-form.tsx` + `entry-form.tsx` — Validação de data (range 2000 a +5 anos)
+- `src/contexts/inactivity-context.tsx` — Timestamp do localStorage validado (numérico, positivo, não-futuro)
+
+**Novo arquivo:**
+- `src/hooks/use-month-navigation.ts` — Hook reutilizável para navegação mensal
+
+**Baixa Severidade (6 correções):**
+- `src/app/api/import/pdf/route.ts` — MIME validation por magic bytes `%PDF-` (removido fallback extensão); amount bound superior 10M BRL
+- `src/components/investimentos/investment-dashboard.tsx` — `formatMonthShort` local removida, usa `formatMonthLabel` de utils
+- `src/components/layout/navbar.tsx` — Arquivo legado deletado (não era importado em lugar nenhum)
+- `src/app/(dashboard)/transacoes/importar/page.tsx` — console.error condicionado a dev + toast de erro ao usuário
+- `src/app/api/health/route.ts` — Cache-Control header adicionado (max-age=10)
+
+### Alterações anteriores (21/02/2026)
 
 ### Security Hardening (Auditoria de Segurança)
 

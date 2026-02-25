@@ -7,6 +7,7 @@ import {
   getRecurringDateInCompetency,
   getCompetencyLabel,
 } from "@/lib/closing-day";
+import { isRecurringActiveInMonth } from "@/lib/utils";
 
 export interface DayColumn {
   day: number;
@@ -32,16 +33,6 @@ export interface DailyFlowResult {
   despesas: FlowCategory[];
   totalEntradas: number[];
   totalSaidas: number[];
-}
-
-function isRecurringActiveInMonth(
-  recurring: { start_month: string | null; end_month: string | null },
-  targetMonth: string
-): boolean {
-  const { start_month, end_month } = recurring;
-  if (start_month && targetMonth < start_month) return false;
-  if (end_month && targetMonth > end_month) return false;
-  return true;
 }
 
 export async function calculateDailyFlow(

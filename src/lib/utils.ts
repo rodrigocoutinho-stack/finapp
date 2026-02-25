@@ -60,6 +60,19 @@ export function getMonthName(month: number): string {
 /**
  * Formata "YYYY-MM" para "mmm/aaaa" (ex: "2026-04" → "abr/2026").
  */
+/**
+ * Verifica se uma transação recorrente está ativa em um dado mês (YYYY-MM).
+ */
+export function isRecurringActiveInMonth(
+  recurring: { start_month: string | null; end_month: string | null },
+  targetMonth: string
+): boolean {
+  const { start_month, end_month } = recurring;
+  if (start_month && targetMonth < start_month) return false;
+  if (end_month && targetMonth > end_month) return false;
+  return true;
+}
+
 export function formatMonthLabel(yearMonth: string): string {
   const [year, month] = yearMonth.split("-");
   const shortNames = [

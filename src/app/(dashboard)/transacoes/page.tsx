@@ -47,6 +47,19 @@ function TransacoesContent() {
   const { year: initYear, month: initMonth } = getCurrentCompetencyMonth(closingDay);
   const [year, setYear] = useState(initYear);
   const [month, setMonth] = useState(initMonth);
+
+  const prevMonth = useCallback(() => {
+    setMonth((prev) => {
+      if (prev === 0) { setYear((y) => y - 1); return 11; }
+      return prev - 1;
+    });
+  }, []);
+  const nextMonth = useCallback(() => {
+    setMonth((prev) => {
+      if (prev === 11) { setYear((y) => y + 1); return 0; }
+      return prev + 1;
+    });
+  }, []);
   const [transactions, setTransactions] = useState<TransactionWithRelations[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -102,23 +115,6 @@ function TransacoesContent() {
     }
   }, [fetchData, prefsLoading]);
 
-  function prevMonth() {
-    if (month === 0) {
-      setMonth(11);
-      setYear(year - 1);
-    } else {
-      setMonth(month - 1);
-    }
-  }
-
-  function nextMonth() {
-    if (month === 11) {
-      setMonth(0);
-      setYear(year + 1);
-    } else {
-      setMonth(month + 1);
-    }
-  }
 
   function handleCloseForm() {
     setShowForm(false);

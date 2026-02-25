@@ -8,6 +8,7 @@ import {
   getRecurringDateInCompetency,
   getCompetencyLabel,
 } from "@/lib/closing-day";
+import { isRecurringActiveInMonth } from "@/lib/utils";
 
 export interface CategoryForecast {
   categoryId: string;
@@ -381,12 +382,3 @@ async function getHistoricalTransactions(
   return { transactions, monthsPerCategory };
 }
 
-function isRecurringActiveInMonth(
-  recurring: RecurringRow,
-  targetMonth: string
-): boolean {
-  const { start_month, end_month } = recurring;
-  if (start_month && targetMonth < start_month) return false;
-  if (end_month && targetMonth > end_month) return false;
-  return true;
-}

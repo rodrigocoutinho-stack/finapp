@@ -53,6 +53,19 @@ export default function DashboardPage() {
   const { year: initYear, month: initMonth } = getCurrentCompetencyMonth(closingDay);
   const [year, setYear] = useState(initYear);
   const [month, setMonth] = useState(initMonth);
+
+  const prevMonth = useCallback(() => {
+    setMonth((prev) => {
+      if (prev === 0) { setYear((y) => y - 1); return 11; }
+      return prev - 1;
+    });
+  }, []);
+  const nextMonth = useCallback(() => {
+    setMonth((prev) => {
+      if (prev === 11) { setYear((y) => y + 1); return 0; }
+      return prev + 1;
+    });
+  }, []);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [currentMonthForecast, setCurrentMonthForecast] = useState<MonthForecast | null>(null);
   const [investmentData, setInvestmentData] = useState<InvestmentData>({
@@ -250,23 +263,6 @@ export default function DashboardPage() {
     }
   }, [fetchData, prefsLoading]);
 
-  function prevMonth() {
-    if (month === 0) {
-      setMonth(11);
-      setYear(year - 1);
-    } else {
-      setMonth(month - 1);
-    }
-  }
-
-  function nextMonth() {
-    if (month === 11) {
-      setMonth(0);
-      setYear(year + 1);
-    } else {
-      setMonth(month + 1);
-    }
-  }
 
   const totalReceitas = useMemo(
     () => transactions.filter((t) => t.type === "receita").reduce((sum, t) => sum + t.amount_cents, 0),

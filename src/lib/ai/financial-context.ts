@@ -30,7 +30,8 @@ export function buildFinancialContext(data: FinancialData): string {
   const sections: string[] = [];
   const today = new Date().toISOString().split("T")[0];
 
-  sections.push(`USUÁRIO: ${data.fullName || "Não informado"}`);
+  const firstName = data.fullName ? data.fullName.split(" ")[0] : "Usuário";
+  sections.push(`USUÁRIO: ${firstName}`);
   sections.push(`DATA: ${today}`);
   sections.push(`DIA DE FECHAMENTO: ${data.closingDay}`);
 

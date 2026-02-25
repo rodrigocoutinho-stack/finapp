@@ -55,7 +55,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
           setReserveTargetMonthsState(data.reserve_target_months ?? 6);
         }
       } catch (err) {
-        console.error("Erro ao carregar preferências:", err);
+        if (process.env.NODE_ENV === "development") console.error("Erro ao carregar preferências:", err);
       } finally {
         setLoading(false);
       }
@@ -80,7 +80,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setClosingDayState(day);
       }
     },
-    [supabase]
+    []
   );
 
   const setReserveTargetMonths = useCallback(
@@ -99,7 +99,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         setReserveTargetMonthsState(months);
       }
     },
-    [supabase]
+    []
   );
 
   return (

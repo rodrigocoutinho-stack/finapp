@@ -27,11 +27,23 @@ function RecorrentesContent() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
-  // Pre-fill values from searchParams (from recurrence suggestions)
-  const initialDescription = searchParams.get("desc") ?? undefined;
-  const initialAmount = searchParams.get("valor") ? parseInt(searchParams.get("valor")!, 10) : undefined;
-  const initialType = (searchParams.get("tipo") as "receita" | "despesa" | null) ?? undefined;
-  const initialDay = searchParams.get("dia") ? parseInt(searchParams.get("dia")!, 10) : undefined;
+  // Pre-fill values from searchParams (from recurrence suggestions) — sanitized
+  const rawDesc = searchParams.get("desc");
+  const initialDescription = rawDesc ? rawDesc.slice(0, 200) : undefined;
+
+  const rawTipo = searchParams.get("tipo");
+  const initialType: "receita" | "despesa" | undefined =
+    rawTipo === "receita" || rawTipo === "despesa" ? rawTipo : undefined;
+
+  const rawValor = searchParams.get("valor");
+  const parsedValor = rawValor ? parseInt(rawValor, 10) : NaN;
+  const initialAmount = !isNaN(parsedValor) && parsedValor > 0 && parsedValor < 1_000_000_00
+    ? parsedValor : undefined;
+
+  const rawDia = searchParams.get("dia");
+  const parsedDia = rawDia ? parseInt(rawDia, 10) : NaN;
+  const initialDay = !isNaN(parsedDia) && parsedDia >= 1 && parsedDia <= 31
+    ? parsedDia : undefined;
 
   const fetchData = useCallback(async () => {
     setLoading(true);

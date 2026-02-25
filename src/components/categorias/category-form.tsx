@@ -104,6 +104,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Ex: Alimentação, Salário"
+        maxLength={100}
         required
       />
 

@@ -27,8 +27,13 @@ const COLORS = [
 ];
 
 // Custom Y-axis tick with category icon
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomYTick({ x, y, payload }: any) {
+interface CustomYTickProps {
+  x?: number;
+  y?: number;
+  payload?: { value: string };
+}
+
+function CustomYTick({ x, y, payload }: CustomYTickProps) {
   const name = payload?.value ?? "";
   return (
     <g transform={`translate(${x},${y})`}>

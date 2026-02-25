@@ -85,8 +85,8 @@ function parseGeminiResponse(raw: string): {
     }
 
     const amount = typeof item.amount === "number" ? item.amount : parseFloat(String(item.amount));
-    if (isNaN(amount) || amount <= 0) {
-      errors.push(`Transação ${i + 1}: valor inválido "${String(item.amount)}", ignorada.`);
+    if (isNaN(amount) || amount <= 0 || amount > 10_000_000) {
+      errors.push(`Transação ${i + 1}: valor inválido ou fora do intervalo "${String(item.amount)}", ignorada.`);
       continue;
     }
 
@@ -113,7 +113,22 @@ function parseGeminiResponse(raw: string): {
   return { transactions, errors };
 }
 
+function isOriginAllowed(request: NextRequest): boolean {
+  const origin = request.headers.get("origin");
+  if (!origin) return true; // same-origin requests may omit Origin
+  const allowed = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    "https://finapp-kohl.vercel.app",
+    "http://localhost:3000",
+  ].filter(Boolean);
+  return allowed.includes(origin);
+}
+
 export async function POST(request: NextRequest) {
+  if (!isOriginAllowed(request)) {
+    return NextResponse.json({ error: "Origem não permitida." }, { status: 403 });
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
@@ -147,11 +162,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Validate MIME type
-  const isPDF =
-    pdfFile.type === "application/pdf" ||
-    pdfFile.name.toLowerCase().endsWith(".pdf");
-  if (!isPDF) {
+  // Validate MIME type (strict: only application/pdf, no extension fallback)
+  if (pdfFile.type !== "application/pdf") {
     return NextResponse.json(
       { error: "Apenas arquivos PDF são aceitos." },
       { status: 400 }
@@ -181,6 +193,17 @@ export async function POST(request: NextRequest) {
 
   // Convert file to base64 AFTER auth check (prevents unauthenticated resource consumption)
   const arrayBuffer = await pdfFile.arrayBuffer();
+
+  // Validate PDF magic bytes (%PDF-)
+  const header = new Uint8Array(arrayBuffer.slice(0, 5));
+  const magic = String.fromCharCode(...header);
+  if (magic !== "%PDF-") {
+    return NextResponse.json(
+      { error: "Arquivo não é um PDF válido." },
+      { status: 400 }
+    );
+  }
+
   const pdfBase64 = Buffer.from(arrayBuffer).toString("base64");
 
   try {

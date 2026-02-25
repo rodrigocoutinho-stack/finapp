@@ -253,6 +253,7 @@ export function RecurringForm({
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Ex: Salário, Aluguel, Viagem"
+        maxLength={500}
         required
       />
 

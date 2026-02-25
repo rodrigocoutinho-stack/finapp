@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatMonthLabel } from "@/lib/utils";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import {
   getInvestmentGroup,
@@ -30,12 +30,6 @@ function getMonthColumns(count: number): string[] {
   return months;
 }
 
-function formatMonthShort(ym: string): string {
-  const [year, month] = ym.split("-");
-  const names = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-  return `${names[parseInt(month, 10) - 1]}/${year}`;
-}
-
 export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboardProps) {
   const supabase = createClient();
   const [allEntries, setAllEntries] = useState<InvestmentEntry[]>([]);
@@ -59,7 +53,7 @@ export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboar
 
       setAllEntries((data as InvestmentEntry[]) ?? []);
     } catch (err) {
-      console.error("Erro ao carregar lançamentos de investimentos:", err);
+      if (process.env.NODE_ENV === "development") console.error("Erro ao carregar lançamentos:", err);
       setAllEntries([]);
     } finally {
       setLoading(false);
@@ -131,7 +125,7 @@ export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboar
                 key={m}
                 className="text-right py-2 px-3 font-medium text-slate-600 min-w-[110px]"
               >
-                {formatMonthShort(m)}
+                {formatMonthLabel(m)}
               </th>
             ))}
           </tr>

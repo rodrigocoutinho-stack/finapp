@@ -82,6 +82,7 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Ex: Nubank, Carteira"
+        maxLength={100}
         required
       />
 

@@ -62,6 +62,14 @@ export function TransactionForm({
     e.preventDefault();
     setError("");
 
+    const dateObj = new Date(date);
+    const minDate = new Date("2000-01-01");
+    const maxDate = new Date(new Date().getFullYear() + 5, 11, 31);
+    if (isNaN(dateObj.getTime()) || dateObj < minDate || dateObj > maxDate) {
+      setError("Data inválida. Informe uma data entre 2000 e daqui a 5 anos.");
+      return;
+    }
+
     const amountCents = toCents(amount);
     if (amountCents <= 0) {
       setError("O valor deve ser maior que zero.");
@@ -225,6 +233,7 @@ export function TransactionForm({
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Ex: Supermercado"
+        maxLength={500}
         required
       />
 
