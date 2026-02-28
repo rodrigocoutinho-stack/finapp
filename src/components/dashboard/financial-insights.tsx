@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { formatCurrency } from "@/lib/utils";
+import {
+  getContributionGapPercent,
+  getMonthsRemaining,
+  getGoalProgressPercent,
+} from "@/lib/goal-utils";
 import type { MonthForecast } from "@/lib/forecast";
+import type { Goal, Account } from "@/types/database";
 
 interface FinancialInsightsProps {
   totalReceitas: number;
@@ -13,6 +19,8 @@ interface FinancialInsightsProps {
   forecast: MonthForecast | null;
   hasInvestments: boolean;
   reserveTargetMonths?: number;
+  goals?: Goal[];
+  accounts?: Account[];
 }
 
 interface Insight {
@@ -30,6 +38,8 @@ export function FinancialInsights({
   forecast,
   hasInvestments,
   reserveTargetMonths = 6,
+  goals = [],
+  accounts = [],
 }: FinancialInsightsProps) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
@@ -120,6 +130,48 @@ export function FinancialInsights({
       type: "positive",
       text: `Excelente! Sua taxa de poupança de ${savingsRate.toFixed(1)}% está acima da média brasileira.`,
     });
+  }
+
+  // 9. Metas atrasadas (GOAL_UNDERFUNDED)
+  if (goals.length > 0 && accounts.length > 0) {
+    const behindGoals = goals.filter((g) => {
+      if (!g.is_active) return false;
+      const progress = getGoalProgressPercent(g, accounts);
+      if (progress >= 100) return false;
+      const gap = getContributionGapPercent(g, accounts);
+      return gap > 15;
+    });
+    if (behindGoals.length > 0) {
+      const names = behindGoals
+        .slice(0, 2)
+        .map((g) => `"${g.name}"`)
+        .join(" e ");
+      insights.push({
+        id: "goal-underfunded",
+        type: "warning",
+        text: `${behindGoals.length === 1 ? "A meta" : "As metas"} ${names} ${behindGoals.length === 1 ? "está" : "estão"} abaixo do ritmo necessário. Revise suas contribuições.`,
+      });
+    }
+  }
+
+  // 10. Metas com prazo próximo (GOAL_DEADLINE_CLOSE)
+  if (goals.length > 0 && accounts.length > 0) {
+    const closeGoals = goals.filter((g) => {
+      if (!g.is_active) return false;
+      const progress = getGoalProgressPercent(g, accounts);
+      if (progress >= 100) return false;
+      const months = getMonthsRemaining(g);
+      return months > 0 && months <= 3;
+    });
+    if (closeGoals.length > 0) {
+      const g = closeGoals[0];
+      const months = getMonthsRemaining(g);
+      insights.push({
+        id: "goal-deadline-close",
+        type: "alert",
+        text: `A meta "${g.name}" vence em ${months} ${months === 1 ? "mês" : "meses"} e ainda não foi alcançada.`,
+      });
+    }
   }
 
   // Filter dismissed, show max 2

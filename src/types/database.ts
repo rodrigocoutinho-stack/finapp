@@ -370,6 +370,69 @@ export type Database = {
           },
         ];
       };
+      goals: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          target_cents: number;
+          current_cents: number;
+          deadline: string;
+          horizon: "short" | "medium" | "long";
+          priority: number;
+          account_id: string | null;
+          icon: string;
+          color: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          target_cents: number;
+          current_cents?: number;
+          deadline: string;
+          horizon?: "short" | "medium" | "long";
+          priority?: number;
+          account_id?: string | null;
+          icon?: string;
+          color?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          target_cents?: number;
+          current_cents?: number;
+          deadline?: string;
+          horizon?: "short" | "medium" | "long";
+          priority?: number;
+          account_id?: string | null;
+          icon?: string;
+          color?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "goals_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "goals_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -391,3 +454,4 @@ export type RecurringTransaction = Database["public"]["Tables"]["recurring_trans
 export type Investment = Database["public"]["Tables"]["investments"]["Row"];
 export type InvestmentEntry = Database["public"]["Tables"]["investment_entries"]["Row"];
 export type CategoryRule = Database["public"]["Tables"]["category_rules"]["Row"];
+export type Goal = Database["public"]["Tables"]["goals"]["Row"];

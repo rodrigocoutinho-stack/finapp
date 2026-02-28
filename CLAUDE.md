@@ -3,12 +3,12 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
-## Estado Atual (Atualizado: 25/02/2026)
+## Estado Atual (Atualizado: 28/02/2026)
 
-**MVP completo + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening + Code Review (26/26 corrigidos).** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Metas Financeiras + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening + Code Review (26/26 corrigidos) + Bateria de Testes (tudo OK).** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations 001-012 (RLS ativo + security hardening)
+- [x] Database schema + migrations 001-013 (RLS ativo + security hardening)
 - [x] Autenticação (login, registro com confirmação por email, logout)
 - [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência)
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção, teto de orçamento — dentro de Configurações)
@@ -16,7 +16,8 @@ FinApp - Gestão Financeira Pessoal
 - [x] Transações Planejadas (recorrentes, pontuais, com período, detecção automática de padrões)
 - [x] Importação OFX/CSV/PDF (extrato bancário, cartão de crédito, CSV com mapeamento de colunas, PDF via IA Gemini, auto-categorização por regras)
 - [x] Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
-- [x] Dashboard (hero cards, 5 KPIs, insights proativos, alertas orçamento com tetos, previsto vs realizado, investimentos, recorrências sugeridas, fechamento mensal, últimas transações)
+- [x] Metas Financeiras (CRUD + progresso + vínculo a conta + cards visuais + widget dashboard + insights automáticos)
+- [x] Dashboard (hero cards, 5 KPIs, insights proativos, alertas orçamento com tetos, previsto vs realizado, investimentos, recorrências sugeridas, metas, fechamento mensal, últimas transações)
 - [x] Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
 - [x] Dia de fechamento (competência personalizada por usuário)
 - [x] Configurações (abas Geral + Categorias + Regras de Importação, closing day 1-28, meta reserva de emergência)
@@ -37,7 +38,46 @@ FinApp - Gestão Financeira Pessoal
 
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
-## Últimas Alterações (25/02/2026)
+## Últimas Alterações (28/02/2026)
+
+### Metas Financeiras (Goals)
+
+**Migration 013:** `supabase/migrations/013_goals.sql`
+- Tabela `goals` com UUID PK, user_id FK, name, target_cents, current_cents, deadline, horizon, priority, account_id (opcional), icon, color, is_active
+- RLS completo (SELECT/INSERT/UPDATE/DELETE) com validação de account_id pertence ao user
+- Índice `idx_goals_user_active` (user_id, is_active)
+- CHECK constraints: target_cents > 0 e <= 100B, current_cents >= 0, priority 1-5, horizon IN ('short','medium','long')
+
+**Novos arquivos:**
+- `src/lib/goal-utils.ts` — Funções puras: `getGoalProgress`, `getGoalProgressPercent`, `getExpectedProgressPercent`, `getContributionGapPercent`, `getRequiredMonthlyContribution`, `getDelayMonths`, `getGoalStatus`, `getMonthsRemaining`. Constantes: `GOAL_ICONS` (12 ícones), `GOAL_COLORS` (7 cores), `HORIZON_LABELS`
+- `src/components/metas/goal-form.tsx` — Formulário de criação/edição com campos: nome, valor alvo, prazo, horizonte, prioridade, conta vinculada (opcional), valor atual (manual), ícone (grid emoji), cor (grid círculos). Validação completa
+- `src/components/metas/goal-list.tsx` — Grid de cards `md:grid-cols-2 xl:grid-cols-3` com barra de progresso colorida, badge de status (No prazo/Atenção/Atrasada/Concluída/Vencida), info de prazo/meses restantes, contribuição mensal necessária. Ações: Editar, Excluir (com confirmação), Atualizar saldo (metas manuais)
+- `src/app/(dashboard)/metas/page.tsx` — Página CRUD completa com PageHeader, botão "Nova meta", modal de criação, loading skeleton
+- `src/components/dashboard/goals-summary.tsx` — Widget compacto no dashboard: top 3 metas ativas por prioridade, mini barra de progresso, link "Ver todas"
+
+**Arquivos modificados:**
+- `src/types/database.ts` — Tipo `Goal` adicionado (Row/Insert/Update/Relationships)
+- `src/components/layout/sidebar.tsx` — Link "Metas" adicionado (ícone flag) entre Recorrentes e Fluxo (sidebar 8→9 itens)
+- `src/app/(dashboard)/page.tsx` — Query goals + accounts completos, renderiza GoalsSummary, passa goals/accounts para FinancialInsights
+- `src/components/dashboard/financial-insights.tsx` — 2 novos insights: GOAL_UNDERFUNDED (metas abaixo do ritmo, gap > 15%) e GOAL_DEADLINE_CLOSE (prazo < 3 meses e meta não alcançada)
+
+**Design decisions:**
+- Quando `account_id` está preenchido, o progresso usa `balance_cents` da conta (tempo real). Sem conta, o usuário atualiza `current_cents` manualmente
+- Nenhuma dependência nova adicionada
+
+### Alterações anteriores (25/02/2026)
+
+### Bateria de Testes Completa
+
+**Resultado:** Build OK, Lint 0 erros (17 warnings esperados), Imports OK, Tipos OK, Rotas OK, Integridade 4/4.
+
+**Correções durante teste:**
+- `src/components/layout/sidebar.tsx` — Loading state (`loggingOut`) adicionado aos 3 botões de logout (expanded desktop, collapsed desktop, mobile drawer) com `disabled:opacity-50`
+- `src/components/layout/navbar.tsx` — Deletado (legado, não importado)
+- `src/components/dashboard/forecast-chart.tsx` — Deletado (órfão, não importado)
+- `src/components/ui/card.tsx` — Deletado (órfão, não importado)
+- `src/components/ui/badge.tsx` — Deletado (órfão, não importado)
+- `src/hooks/use-month-navigation.ts` — Deletado (criado no code review mas nunca importado; páginas usam useCallback inline)
 
 ### Code Review — Correções de Alta e Média Severidade (20 problemas)
 
@@ -59,12 +99,9 @@ FinApp - Gestão Financeira Pessoal
 - `src/contexts/preferences-context.tsx` + `investment-list.tsx` + `investment-dashboard.tsx` — console.error condicionado a `NODE_ENV === "development"`
 - `src/lib/utils.ts` — `isRecurringActiveInMonth()` extraída e exportada; duplicatas removidas de `forecast.ts` e `daily-flow.ts`
 - `src/contexts/inactivity-context.tsx` — `startCountdown(initialSeconds)` refatorado para aceitar tempo inicial; countdown duplicado substituído por chamada à função
-- `src/hooks/use-month-navigation.ts` (NOVO) — Hook extraído; navegação de meses unificada em 3 páginas (dashboard, transações, fluxo)
+- 3 páginas (dashboard, transações, fluxo) — Navegação de meses refatorada com `useCallback` inline
 - `src/components/transacoes/transaction-form.tsx` + `entry-form.tsx` — Validação de data (range 2000 a +5 anos)
 - `src/contexts/inactivity-context.tsx` — Timestamp do localStorage validado (numérico, positivo, não-futuro)
-
-**Novo arquivo:**
-- `src/hooks/use-month-navigation.ts` — Hook reutilizável para navegação mensal
 
 **Baixa Severidade (6 correções):**
 - `src/app/api/import/pdf/route.ts` — MIME validation por magic bytes `%PDF-` (removido fallback extensão); amount bound superior 10M BRL
@@ -422,12 +459,14 @@ src/
 │       ├── fluxo/page.tsx        # Fluxo Diário + Previsto (abas)
 │       ├── investimentos/page.tsx
 │       ├── assistente/page.tsx     # Chat IA (Gemini Flash)
+│       ├── metas/page.tsx          # CRUD metas financeiras
 │       ├── configuracoes/page.tsx  # Abas: Geral + Categorias
 │       └── recorrentes/page.tsx
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
 │   ├── layout/                   # Sidebar, DashboardShell, UserAvatar, GreetingHeader, Navbar (legado)
-│   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison, MonthlyClosing, RecurrenceSuggestions
+│   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison, MonthlyClosing, RecurrenceSuggestions, GoalsSummary
+│   ├── metas/                    # GoalForm, GoalList
 │   ├── contas/
 │   ├── categorias/
 │   ├── assistente/               # ChatMessage, ChatInput
@@ -451,7 +490,8 @@ src/
 │   ├── ofx-parser.ts             # Parser OFX/QFX
 │   ├── pdf-import.ts             # Client helper para importação PDF via Gemini
 │   ├── rate-limit.ts             # Rate limiter in-memory sliding window
-│   └── recurrence-detection.ts   # detectRecurrences — detecta padrões de transações repetidas
+│   ├── recurrence-detection.ts   # detectRecurrences — detecta padrões de transações repetidas
+│   └── goal-utils.ts             # Cálculos de metas (progresso, gap, contribuição, status)
 └── types/
     └── database.ts               # Types do Supabase
 ```
@@ -469,6 +509,7 @@ src/
 | `investments` | Investimentos (CDB, Tesouro, Ações, etc.) |
 | `investment_entries` | Lançamentos de investimentos (aportes, resgates, saldos) |
 | `category_rules` | Regras de categorização automática (pattern → category) |
+| `goals` | Metas financeiras (prazo, progresso, vínculo a conta opcional) |
 
 ### Migrations
 1. `001_initial_schema.sql` - Estrutura base (profiles, accounts, categories, transactions)
@@ -483,19 +524,21 @@ src/
 10. `010_composite_indexes.sql` - Índices compostos para performance (user+date, account+date, etc.)
 11. `011_budgets_and_reserve_target.sql` - budget_cents em categories + reserve_target_months em profiles
 12. `012_security_hardening.sql` - RPC hardening + RLS strengthening + CHECK constraints
+13. `013_goals.sql` - Tabela goals com RLS, índices, constraints
 
 ## Navegação (Sidebar)
 
 | # | Label | Rota | Página |
 |---|-------|------|--------|
-| 1 | Dashboard | `/` | Hero cards, 5 KPIs (poupança/runway/reserva/desvio/gasto fixo), Insights, Previsto vs Realizado (com alertas e tetos), Categorias, Investimentos (com retorno real), Recorrências Sugeridas, Fechamento Mensal, Últimas Transações |
+| 1 | Dashboard | `/` | Hero cards, 5 KPIs (poupança/runway/reserva/desvio/gasto fixo), Insights, Previsto vs Realizado (com alertas e tetos), Categorias, Investimentos (com retorno real), Recorrências Sugeridas, Metas, Fechamento Mensal, Últimas Transações |
 | 2 | Contas | `/contas` | CRUD contas bancárias (tag reserva de emergência) |
 | 3 | Transações | `/transacoes` | CRUD transações + importação OFX/CSV/PDF (mapeamento CSV, extração PDF via IA, auto-categorização por regras) |
 | 4 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
-| 5 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
-| 6 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal + retorno real IPCA) |
-| 7 | Assistente IA | `/assistente` | Chat com Gemini 2.5 Flash, contexto conversacional, botão copiar, streaming |
-| 8 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento, meta reserva) + Categorias (CRUD receita/despesa, teto orçamento) + Regras de Importação |
+| 5 | Metas | `/metas` | CRUD metas financeiras (prazo, progresso, vínculo a conta, cards visuais) |
+| 6 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
+| 7 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal + retorno real IPCA) |
+| 8 | Assistente IA | `/assistente` | Chat com Gemini 2.5 Flash, contexto conversacional, botão copiar, streaming |
+| 9 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento, meta reserva) + Categorias (CRUD receita/despesa, teto orçamento) + Regras de Importação |
 
 ## Próximos Passos
 

@@ -19,7 +19,13 @@ import { GreetingHeader } from "@/components/layout/greeting-header";
 import { Modal } from "@/components/ui/modal";
 import { MonthlyClosing } from "@/components/dashboard/monthly-closing";
 import { RecurrenceSuggestions } from "@/components/dashboard/recurrence-suggestions";
+import { GoalsSummary } from "@/components/dashboard/goals-summary";
 import { detectRecurrences, type RecurrenceSuggestion } from "@/lib/recurrence-detection";
+import {
+  getGoalProgressPercent,
+  getContributionGapPercent,
+  getMonthsRemaining,
+} from "@/lib/goal-utils";
 import { CardsSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
 import { calculateForecast, type MonthForecast } from "@/lib/forecast";
@@ -27,7 +33,7 @@ import { getMonthEndBalance } from "@/lib/investment-utils";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
 import { getIPCA12Months } from "@/lib/inflation";
 import { usePreferences } from "@/contexts/preferences-context";
-import type { InvestmentEntry, Transaction, RecurringTransaction } from "@/types/database";
+import type { Account, Goal, InvestmentEntry, Transaction, RecurringTransaction } from "@/types/database";
 
 interface TransactionRow {
   id: string;
@@ -85,6 +91,8 @@ export default function DashboardPage() {
   const [ipca12m, setIpca12m] = useState<number | null>(null);
   const [totalRecurringDespesas, setTotalRecurringDespesas] = useState(0);
   const [recurrenceSuggestions, setRecurrenceSuggestions] = useState<RecurrenceSuggestion[]>([]);
+  const [dashGoals, setDashGoals] = useState<Goal[]>([]);
+  const [dashAccounts, setDashAccounts] = useState<Account[]>([]);
 
   // Sync initial year/month when closingDay loads
   useEffect(() => {
@@ -116,7 +124,7 @@ export default function DashboardPage() {
     const globalStart = pastMonthsRanges[pastMonthsRanges.length - 1]?.start ?? start;
     const globalEnd = pastMonthsRanges[0]?.end ?? end;
 
-    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes] = await Promise.all([
+    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
@@ -129,7 +137,7 @@ export default function DashboardPage() {
         : Promise.resolve(null),
       supabase
         .from("accounts")
-        .select("balance_cents, is_emergency_reserve"),
+        .select("*"),
       supabase
         .from("transactions")
         .select("type, amount_cents")
@@ -143,6 +151,12 @@ export default function DashboardPage() {
         .eq("is_active", true)
         .eq("type", "despesa")
         .limit(1000),
+      supabase
+        .from("goals")
+        .select("*")
+        .eq("is_active", true)
+        .order("priority")
+        .limit(10),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
@@ -151,9 +165,10 @@ export default function DashboardPage() {
     );
 
     // Accounts data
-    const accounts = (accountsRes.data ?? []) as { balance_cents: number; is_emergency_reserve: boolean }[];
-    const totalBal = accounts.reduce((sum, a) => sum + a.balance_cents, 0);
-    const reserveAccounts = accounts.filter((a) => a.is_emergency_reserve);
+    const accountsData = (accountsRes.data as Account[] | null) ?? [];
+    setDashAccounts(accountsData);
+    const totalBal = accountsData.reduce((sum, a) => sum + a.balance_cents, 0);
+    const reserveAccounts = accountsData.filter((a) => a.is_emergency_reserve);
     const resBal = reserveAccounts.reduce((sum, a) => sum + a.balance_cents, 0);
 
     setTotalAccountBalance(totalBal);
@@ -169,6 +184,9 @@ export default function DashboardPage() {
     // Total recurring despesas (active)
     const recurringDespesas = (recurringDespesasRes.data ?? []) as { type: string; amount_cents: number }[];
     setTotalRecurringDespesas(recurringDespesas.reduce((sum, r) => sum + r.amount_cents, 0));
+
+    // Goals
+    setDashGoals((goalsRes.data as Goal[] | null) ?? []);
 
     // Recurrence detection: fetch past 3 months of full transactions + existing recurrings
     if (isCurrentMonthSelected) {
@@ -386,6 +404,8 @@ export default function DashboardPage() {
               forecast={currentMonthForecast}
               hasInvestments={investmentData.hasData}
               reserveTargetMonths={reserveTargetMonths}
+              goals={dashGoals}
+              accounts={dashAccounts}
             />
           </div>
 
@@ -411,6 +431,10 @@ export default function DashboardPage() {
 
               {recurrenceSuggestions.length > 0 && (
                 <RecurrenceSuggestions suggestions={recurrenceSuggestions} />
+              )}
+
+              {dashGoals.length > 0 && (
+                <GoalsSummary goals={dashGoals} accounts={dashAccounts} />
               )}
             </div>
 
