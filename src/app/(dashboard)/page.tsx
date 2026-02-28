@@ -92,6 +92,8 @@ export default function DashboardPage() {
   const [totalRecurringDespesas, setTotalRecurringDespesas] = useState(0);
   const [avgEssentialExpense, setAvgEssentialExpense] = useState(0);
   const [hasEssentialCategories, setHasEssentialCategories] = useState(false);
+  const [pastSavingsRates, setPastSavingsRates] = useState<number[]>([]);
+  const [annualProvisions, setAnnualProvisions] = useState<{ description: string; amountCents: number }[]>([]);
   const [recurrenceSuggestions, setRecurrenceSuggestions] = useState<RecurrenceSuggestion[]>([]);
   const [dashGoals, setDashGoals] = useState<Goal[]>([]);
   const [dashAccounts, setDashAccounts] = useState<Account[]>([]);
@@ -209,9 +211,22 @@ export default function DashboardPage() {
     // Goals
     setDashGoals((goalsRes.data as Goal[] | null) ?? []);
 
-    // Recurrence detection: fetch past 3 months of full transactions + existing recurrings
+    // Recurrence detection + savings rates + annual provisions
     if (isCurrentMonthSelected) {
-      const [past3mRes, existingRecRes] = await Promise.all([
+      // Calculate date range for ~12 months ago (for provision detection)
+      let annualYear = curYear - 1;
+      let annualMonth = curMonth;
+      const annualRange = getMonthRange(annualYear, annualMonth, closingDay);
+      // Widen to ±1 month for fuzzy annual matching
+      let annualStartMonth = annualMonth - 1;
+      if (annualStartMonth < 0) { annualStartMonth += 12; annualYear--; }
+      const annualStartRange = getMonthRange(annualYear, annualStartMonth, closingDay);
+      let annualEndYear = curYear - 1;
+      let annualEndMonth = curMonth + 1;
+      if (annualEndMonth > 11) { annualEndMonth -= 12; annualEndYear++; }
+      const annualEndRange = getMonthRange(annualEndYear, annualEndMonth, closingDay);
+
+      const [past3mRes, existingRecRes, pastReceitasRes, annualRes] = await Promise.all([
         supabase
           .from("transactions")
           .select("id, user_id, account_id, category_id, type, amount_cents, description, date, created_at")
@@ -223,12 +238,71 @@ export default function DashboardPage() {
           .select("*")
           .eq("is_active", true)
           .limit(1000),
+        supabase
+          .from("transactions")
+          .select("type, amount_cents, date")
+          .gte("date", globalStart)
+          .lte("date", globalEnd)
+          .limit(5000),
+        supabase
+          .from("transactions")
+          .select("type, amount_cents, description")
+          .eq("type", "despesa")
+          .gte("date", annualStartRange.start)
+          .lte("date", annualEndRange.end)
+          .gte("amount_cents", 50000)
+          .limit(500),
       ]);
       const past3mTransactions = (past3mRes.data as Transaction[] | null) ?? [];
       const existingRecs = (existingRecRes.data as RecurringTransaction[] | null) ?? [];
       setRecurrenceSuggestions(detectRecurrences(past3mTransactions, existingRecs));
+
+      // Calculate savings rates per past month
+      const pastTxns = (pastReceitasRes.data ?? []) as { type: string; amount_cents: number; date: string }[];
+      const rates: number[] = [];
+      for (const range of pastMonthsRanges) {
+        const monthTxns = pastTxns.filter((t) => t.date >= range.start && t.date <= range.end);
+        const rec = monthTxns.filter((t) => t.type === "receita").reduce((s, t) => s + t.amount_cents, 0);
+        const desp = monthTxns.filter((t) => t.type === "despesa").reduce((s, t) => s + t.amount_cents, 0);
+        if (rec > 0) {
+          rates.push(((rec - desp) / rec) * 100);
+        }
+      }
+      setPastSavingsRates(rates);
+
+      // Find large expenses from ~12 months ago that match current month descriptions
+      const annualTxns = (annualRes.data ?? []) as { type: string; amount_cents: number; description: string }[];
+      const currentDescriptions = new Set(
+        transactions
+          .filter((t) => t.type === "despesa" && t.amount_cents >= 50000)
+          .map((t) => t.description.toLowerCase().trim())
+      );
+      // Annual expenses: large expenses from ~12 months ago NOT matching current month (not yet paid)
+      const existingRecDescriptions = new Set(
+        existingRecs.map((r) => r.description.toLowerCase().trim())
+      );
+      const provisions = annualTxns
+        .filter((t) => {
+          const desc = t.description.toLowerCase().trim();
+          return !currentDescriptions.has(desc) && !existingRecDescriptions.has(desc);
+        })
+        .reduce((acc, t) => {
+          const desc = t.description.trim();
+          const existing = acc.find((a) => a.description.toLowerCase() === desc.toLowerCase());
+          if (existing) {
+            existing.amountCents = Math.max(existing.amountCents, t.amount_cents);
+          } else {
+            acc.push({ description: desc, amountCents: t.amount_cents });
+          }
+          return acc;
+        }, [] as { description: string; amountCents: number }[])
+        .sort((a, b) => b.amountCents - a.amountCents)
+        .slice(0, 3);
+      setAnnualProvisions(provisions);
     } else {
       setRecurrenceSuggestions([]);
+      setPastSavingsRates([]);
+      setAnnualProvisions([]);
     }
 
     setLoading(false);
@@ -434,6 +508,8 @@ export default function DashboardPage() {
               reserveTargetMonths={reserveTargetMonths}
               goals={dashGoals}
               accounts={dashAccounts}
+              pastSavingsRates={pastSavingsRates}
+              annualProvisions={annualProvisions}
             />
           </div>
 

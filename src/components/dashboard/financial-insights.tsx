@@ -10,6 +10,11 @@ import {
 import type { MonthForecast } from "@/lib/forecast";
 import type { Goal, Account } from "@/types/database";
 
+interface AnnualProvision {
+  description: string;
+  amountCents: number;
+}
+
 interface FinancialInsightsProps {
   totalReceitas: number;
   totalDespesas: number;
@@ -21,6 +26,8 @@ interface FinancialInsightsProps {
   reserveTargetMonths?: number;
   goals?: Goal[];
   accounts?: Account[];
+  pastSavingsRates?: number[];
+  annualProvisions?: AnnualProvision[];
 }
 
 interface Insight {
@@ -40,6 +47,8 @@ export function FinancialInsights({
   reserveTargetMonths = 6,
   goals = [],
   accounts = [],
+  pastSavingsRates = [],
+  annualProvisions = [],
 }: FinancialInsightsProps) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
@@ -78,6 +87,16 @@ export function FinancialInsights({
       id: "low-reserve",
       type: "warning",
       text: `Sua reserva cobre ${reserveMonths.toFixed(1)} meses. Sua meta é ${reserveTargetMonths} meses.`,
+    });
+  }
+
+  // 4b. Reserva excedente (RESERVE_EXCESS)
+  if (reserveMonths !== null && reserveMonths > reserveTargetMonths + 2) {
+    const excess = reserveMonths - reserveTargetMonths;
+    insights.push({
+      id: "reserve-excess",
+      type: "positive",
+      text: `Sua reserva cobre ${reserveMonths.toFixed(1)} meses — ${excess.toFixed(1)} meses acima da meta. Considere realocar o excedente para metas ou investimentos.`,
     });
   }
 
@@ -172,6 +191,27 @@ export function FinancialInsights({
         text: `A meta "${g.name}" vence em ${months} ${months === 1 ? "mês" : "meses"} e ainda não foi alcançada.`,
       });
     }
+  }
+
+  // 11. Poupança persistentemente baixa (SAVINGS_TOO_LOW)
+  if (pastSavingsRates.length >= 3 && pastSavingsRates.every((r) => r < 10)) {
+    const avg = pastSavingsRates.reduce((s, r) => s + r, 0) / pastSavingsRates.length;
+    insights.push({
+      id: "savings-too-low",
+      type: "alert",
+      text: `Sua taxa de poupança ficou abaixo de 10% nos últimos ${pastSavingsRates.length} meses (média ${avg.toFixed(1)}%). Avalie cortar gastos variáveis.`,
+    });
+  }
+
+  // 12. Provisionamento de despesas anuais (PROVISION_MISSING)
+  if (annualProvisions.length > 0) {
+    const top = annualProvisions[0];
+    const monthly = Math.ceil(top.amountCents / 12);
+    insights.push({
+      id: "provision-missing",
+      type: "warning",
+      text: `Despesa anual detectada: "${top.description}" (${formatCurrency(top.amountCents)}). Provisione ~${formatCurrency(monthly)}/mês para evitar surpresas.`,
+    });
   }
 
   // Filter dismissed, show max 2
