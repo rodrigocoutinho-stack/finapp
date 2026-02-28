@@ -8,6 +8,8 @@ interface FinancialKPIsProps {
   totalDespesas: number;
   totalBalance: number;
   avgMonthlyExpense: number;
+  avgEssentialExpense?: number;
+  hasEssentialCategories?: boolean;
   reserveBalance: number;
   hasReserveAccount: boolean;
   reserveTargetMonths: number;
@@ -20,6 +22,8 @@ export function FinancialKPIs({
   totalDespesas,
   totalBalance,
   avgMonthlyExpense,
+  avgEssentialExpense = 0,
+  hasEssentialCategories = false,
   reserveBalance,
   hasReserveAccount,
   reserveTargetMonths,
@@ -32,14 +36,19 @@ export function FinancialKPIs({
       ? ((totalReceitas - totalDespesas) / totalReceitas) * 100
       : null;
 
+  // Use essential expense when configured, fallback to total average
+  const expenseBase = hasEssentialCategories && avgEssentialExpense > 0
+    ? avgEssentialExpense
+    : avgMonthlyExpense;
+
   // Runway Financeiro
   const runway =
-    avgMonthlyExpense > 0 ? totalBalance / avgMonthlyExpense : null;
+    expenseBase > 0 ? totalBalance / expenseBase : null;
 
   // Reserva de Emergência
   const reserveMonths =
-    hasReserveAccount && avgMonthlyExpense > 0
-      ? reserveBalance / avgMonthlyExpense
+    hasReserveAccount && expenseBase > 0
+      ? reserveBalance / expenseBase
       : null;
 
   const reservePercent =
@@ -84,7 +93,7 @@ export function FinancialKPIs({
         value={runway !== null ? `${runway.toFixed(1)} meses` : "—"}
         sublabel={
           runway !== null
-            ? `Saldo: ${formatCurrency(totalBalance)}`
+            ? `Saldo: ${formatCurrency(totalBalance)}${hasEssentialCategories && avgEssentialExpense > 0 ? " (essencial)" : ""}`
             : "Sem dados de despesa"
         }
         color={getColor(runway, 6, 3)}
@@ -121,6 +130,16 @@ export function FinancialKPIs({
                   style={{ width: `${Math.min(reservePercent ?? 0, 100)}%` }}
                 />
               </span>
+              {(() => {
+                if ((reservePercent ?? 0) >= 100) return null;
+                const monthlySavings = totalReceitas - totalDespesas;
+                if (monthlySavings <= 0) return <span className="text-rose-500">Sem poupança para aportar</span>;
+                const targetCents = reserveTargetMonths * expenseBase;
+                const remaining = targetCents - reserveBalance;
+                if (remaining <= 0) return null;
+                const monthsToGoal = Math.ceil(remaining / monthlySavings);
+                return <span>~{monthsToGoal} {monthsToGoal === 1 ? "mês" : "meses"} p/ completar</span>;
+              })()}
             </span>
           ) : (
             `Saldo: ${formatCurrency(reserveBalance)}`

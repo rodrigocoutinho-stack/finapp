@@ -71,6 +71,7 @@ export type Database = {
           type: "receita" | "despesa";
           projection_type: "recurring" | "historical";
           budget_cents: number | null;
+          is_essential: boolean;
           created_at: string;
         };
         Insert: {
@@ -80,6 +81,7 @@ export type Database = {
           type: "receita" | "despesa";
           projection_type?: "recurring" | "historical";
           budget_cents?: number | null;
+          is_essential?: boolean;
           created_at?: string;
         };
         Update: {
@@ -89,6 +91,7 @@ export type Database = {
           type?: "receita" | "despesa";
           projection_type?: "recurring" | "historical";
           budget_cents?: number | null;
+          is_essential?: boolean;
           created_at?: string;
         };
         Relationships: [

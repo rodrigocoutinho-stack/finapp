@@ -77,6 +77,11 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
                 <span className="flex items-center gap-2 text-slate-900">
                   <CategoryIcon name={cat.name} className="w-4 h-4 text-slate-400" />
                   {cat.name}
+                  {cat.is_essential && (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                      Essencial
+                    </span>
+                  )}
                 </span>
                 <div className="flex gap-2">
                   <Button

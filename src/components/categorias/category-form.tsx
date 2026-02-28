@@ -36,6 +36,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
       ? (category.budget_cents / 100).toFixed(2).replace(".", ",")
       : ""
   );
+  const [isEssential, setIsEssential] = useState(category?.is_essential ?? false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -67,7 +68,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
     if (category) {
       const { error } = await supabase
         .from("categories")
-        .update({ name, type, projection_type: projectionType, budget_cents: budgetCents })
+        .update({ name, type, projection_type: projectionType, budget_cents: budgetCents, is_essential: type === "despesa" ? isEssential : false })
         .eq("id", category.id);
 
       if (error) {
@@ -78,7 +79,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
     } else {
       const { error } = await supabase
         .from("categories")
-        .insert({ user_id: user.id, name, type, projection_type: projectionType, budget_cents: budgetCents });
+        .insert({ user_id: user.id, name, type, projection_type: projectionType, budget_cents: budgetCents, is_essential: type === "despesa" ? isEssential : false });
 
       if (error) {
         setError("Erro ao criar categoria.");
@@ -138,6 +139,21 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
           />
           <p className="text-xs text-slate-500 -mt-2">
             Limite máximo de gasto mensal. Se não definido, a projeção será usada como referência.
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isEssential"
+              checked={isEssential}
+              onChange={(e) => setIsEssential(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <label htmlFor="isEssential" className="text-sm text-slate-700">
+              Despesa essencial
+            </label>
+          </div>
+          <p className="text-xs text-slate-500 -mt-2">
+            Categorias essenciais são usadas para calcular reserva de emergência e runway financeiro com mais precisão.
           </p>
         </>
       )}

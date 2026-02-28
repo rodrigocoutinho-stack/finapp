@@ -5,10 +5,10 @@ FinApp - Gestão Financeira Pessoal
 
 ## Estado Atual (Atualizado: 28/02/2026)
 
-**MVP completo + Metas Financeiras + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening + Code Review (26/26 corrigidos) + Bateria de Testes (tudo OK).** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Metas Financeiras + Codex Quick Wins (custo essencial, tempo reserva, alerta 120%) + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening + Code Review (26/26 corrigidos) + Bateria de Testes (tudo OK).** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations 001-013 (RLS ativo + security hardening)
+- [x] Database schema + migrations 001-014 (RLS ativo + security hardening)
 - [x] Autenticação (login, registro com confirmação por email, logout)
 - [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência)
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção, teto de orçamento — dentro de Configurações)
@@ -64,6 +64,24 @@ FinApp - Gestão Financeira Pessoal
 **Design decisions:**
 - Quando `account_id` está preenchido, o progresso usa `balance_cents` da conta (tempo real). Sem conta, o usuário atualiza `current_cents` manualmente
 - Nenhuma dependência nova adicionada
+
+### Codex Quick Wins — 3 Melhorias de Prioridade 1
+
+**Migration 014:** `supabase/migrations/014_essential_categories.sql`
+- `categories.is_essential` (BOOLEAN, DEFAULT FALSE) — flag para despesas essenciais
+
+**Quick Win 1 — Custo Essencial Configurável:**
+- `src/types/database.ts` — `is_essential` adicionado ao tipo Category
+- `src/components/categorias/category-form.tsx` — Checkbox "Despesa essencial" (visível apenas para tipo despesa), com texto explicativo
+- `src/components/categorias/category-list.tsx` — Badge "Essencial" (azul) nas categorias marcadas
+- `src/app/(dashboard)/page.tsx` — Query categorias essenciais, calcula `avgEssentialExpense` filtrando despesas passadas por category_id essencial, passa para KPIs
+- `src/components/dashboard/financial-kpis.tsx` — Reserva e Runway agora usam custo essencial quando configurado (fallback: média total). Sublabel "(essencial)" no Runway
+
+**Quick Win 2 — Tempo até Meta da Reserva:**
+- `src/components/dashboard/financial-kpis.tsx` — Sublabel "~X meses p/ completar" no KPI de Reserva quando reserva < meta. Cálculo: `(target - current) / poupança_mensal`. Exibe "Sem poupança para aportar" quando poupança <= 0
+
+**Quick Win 3 — Alerta 120% no Orçamento:**
+- `src/components/dashboard/budget-comparison.tsx` — Régua completa de alertas: 80% Atenção (amarelo) / 100% Estourado (vermelho) / 120% Crítico (vermelho escuro). Badge "Crítico" inline nas categorias + resumo no topo com contagem separada
 
 ### Alterações anteriores (25/02/2026)
 
@@ -525,6 +543,7 @@ src/
 11. `011_budgets_and_reserve_target.sql` - budget_cents em categories + reserve_target_months em profiles
 12. `012_security_hardening.sql` - RPC hardening + RLS strengthening + CHECK constraints
 13. `013_goals.sql` - Tabela goals com RLS, índices, constraints
+14. `014_essential_categories.sql` - Flag is_essential em categories
 
 ## Navegação (Sidebar)
 

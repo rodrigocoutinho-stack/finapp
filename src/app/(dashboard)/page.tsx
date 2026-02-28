@@ -90,6 +90,8 @@ export default function DashboardPage() {
   const [avgMonthlyExpense, setAvgMonthlyExpense] = useState(0);
   const [ipca12m, setIpca12m] = useState<number | null>(null);
   const [totalRecurringDespesas, setTotalRecurringDespesas] = useState(0);
+  const [avgEssentialExpense, setAvgEssentialExpense] = useState(0);
+  const [hasEssentialCategories, setHasEssentialCategories] = useState(false);
   const [recurrenceSuggestions, setRecurrenceSuggestions] = useState<RecurrenceSuggestion[]>([]);
   const [dashGoals, setDashGoals] = useState<Goal[]>([]);
   const [dashAccounts, setDashAccounts] = useState<Account[]>([]);
@@ -124,7 +126,7 @@ export default function DashboardPage() {
     const globalStart = pastMonthsRanges[pastMonthsRanges.length - 1]?.start ?? start;
     const globalEnd = pastMonthsRanges[0]?.end ?? end;
 
-    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes] = await Promise.all([
+    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
@@ -140,7 +142,7 @@ export default function DashboardPage() {
         .select("*"),
       supabase
         .from("transactions")
-        .select("type, amount_cents")
+        .select("type, amount_cents, category_id")
         .eq("type", "despesa")
         .gte("date", globalStart)
         .lte("date", globalEnd)
@@ -157,6 +159,11 @@ export default function DashboardPage() {
         .eq("is_active", true)
         .order("priority")
         .limit(10),
+      supabase
+        .from("categories")
+        .select("id")
+        .eq("type", "despesa")
+        .eq("is_essential", true),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
@@ -176,10 +183,24 @@ export default function DashboardPage() {
     setHasReserveAccount(reserveAccounts.length > 0);
 
     // Average monthly expense (last 3 months)
-    const pastExpenses = (pastExpensesRes.data ?? []) as { type: string; amount_cents: number }[];
+    const pastExpenses = (pastExpensesRes.data ?? []) as { type: string; amount_cents: number; category_id: string }[];
     const totalPastExpenses = pastExpenses.reduce((sum, t) => sum + t.amount_cents, 0);
     const monthCount = pastMonthsRanges.length;
     setAvgMonthlyExpense(monthCount > 0 ? Math.round(totalPastExpenses / monthCount) : 0);
+
+    // Essential expense average (for more precise reserve/runway)
+    const essentialCatIds = new Set(
+      ((essentialCatsRes.data ?? []) as { id: string }[]).map((c) => c.id)
+    );
+    setHasEssentialCategories(essentialCatIds.size > 0);
+    if (essentialCatIds.size > 0) {
+      const essentialTotal = pastExpenses
+        .filter((t) => essentialCatIds.has(t.category_id))
+        .reduce((sum, t) => sum + t.amount_cents, 0);
+      setAvgEssentialExpense(monthCount > 0 ? Math.round(essentialTotal / monthCount) : 0);
+    } else {
+      setAvgEssentialExpense(0);
+    }
 
     // Total recurring despesas (active)
     const recurringDespesas = (recurringDespesasRes.data ?? []) as { type: string; amount_cents: number }[];
@@ -313,14 +334,19 @@ export default function DashboardPage() {
     [totalReceitas, totalDespesas]
   );
 
+  const expenseBaseForKpis = useMemo(
+    () => hasEssentialCategories && avgEssentialExpense > 0 ? avgEssentialExpense : avgMonthlyExpense,
+    [hasEssentialCategories, avgEssentialExpense, avgMonthlyExpense]
+  );
+
   const runway = useMemo(
-    () => avgMonthlyExpense > 0 ? totalAccountBalance / avgMonthlyExpense : null,
-    [avgMonthlyExpense, totalAccountBalance]
+    () => expenseBaseForKpis > 0 ? totalAccountBalance / expenseBaseForKpis : null,
+    [expenseBaseForKpis, totalAccountBalance]
   );
 
   const reserveMonths = useMemo(
-    () => hasReserveAccount && avgMonthlyExpense > 0 ? reserveBalance / avgMonthlyExpense : null,
-    [hasReserveAccount, avgMonthlyExpense, reserveBalance]
+    () => hasReserveAccount && expenseBaseForKpis > 0 ? reserveBalance / expenseBaseForKpis : null,
+    [hasReserveAccount, expenseBaseForKpis, reserveBalance]
   );
 
   const forecastDespesas = useMemo(
@@ -385,6 +411,8 @@ export default function DashboardPage() {
               totalDespesas={totalDespesas}
               totalBalance={totalAccountBalance}
               avgMonthlyExpense={avgMonthlyExpense}
+              avgEssentialExpense={avgEssentialExpense}
+              hasEssentialCategories={hasEssentialCategories}
               reserveBalance={reserveBalance}
               hasReserveAccount={hasReserveAccount}
               reserveTargetMonths={reserveTargetMonths}

@@ -43,11 +43,15 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
     if (ref <= 0) return false;
     return c.realAmount / ref >= 0.8;
   });
+  const criticalCount = alertCategories.filter((c) => {
+    const ref = getEffectiveBudget(c);
+    return ref > 0 && c.realAmount / ref >= 1.2;
+  }).length;
   const bustedCount = alertCategories.filter((c) => {
     const ref = getEffectiveBudget(c);
-    return ref > 0 && c.realAmount / ref >= 1.0;
+    return ref > 0 && c.realAmount / ref >= 1.0 && c.realAmount / ref < 1.2;
   }).length;
-  const warningCount = alertCategories.length - bustedCount;
+  const warningCount = alertCategories.length - bustedCount - criticalCount;
 
   return (
     <div className="space-y-1">
@@ -57,6 +61,14 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
 
       {alertCategories.length > 0 && (
         <div className="flex items-center gap-2 mb-3 text-xs">
+          {criticalCount > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-rose-200 text-rose-900 font-semibold">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+              </svg>
+              {criticalCount} crítica{criticalCount !== 1 ? "s" : ""}
+            </span>
+          )}
           {bustedCount > 0 && (
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-rose-100 text-rose-700 font-medium">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -246,7 +258,12 @@ function CategoryRow({ cat }: { cat: CategoryForecast }) {
                 Teto: {formatCurrency(cat.budgetCents!)}
               </span>
             )}
-            {usage !== null && usage >= 1.0 && (
+            {usage !== null && usage >= 1.2 && (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-200 text-rose-900">
+                Crítico
+              </span>
+            )}
+            {usage !== null && usage >= 1.0 && usage < 1.2 && (
               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">
                 Estourado
               </span>
