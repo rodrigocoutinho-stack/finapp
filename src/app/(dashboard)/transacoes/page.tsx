@@ -15,6 +15,8 @@ import { usePreferences } from "@/contexts/preferences-context";
 import { useToast } from "@/contexts/toast-context";
 import type { Account, Category } from "@/types/database";
 
+const PAGE_SIZE = 50;
+
 interface TransactionWithRelations {
   id: string;
   user_id: string;
@@ -47,25 +49,29 @@ function TransacoesContent() {
   const { year: initYear, month: initMonth } = getCurrentCompetencyMonth(closingDay);
   const [year, setYear] = useState(initYear);
   const [month, setMonth] = useState(initMonth);
-
-  const prevMonth = useCallback(() => {
-    setMonth((prev) => {
-      if (prev === 0) { setYear((y) => y - 1); return 11; }
-      return prev - 1;
-    });
-  }, []);
-  const nextMonth = useCallback(() => {
-    setMonth((prev) => {
-      if (prev === 11) { setYear((y) => y + 1); return 0; }
-      return prev + 1;
-    });
-  }, []);
   const [transactions, setTransactions] = useState<TransactionWithRelations[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formDefaultType, setFormDefaultType] = useState<"receita" | "despesa" | undefined>();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const prevMonth = useCallback(() => {
+    setCurrentPage(1);
+    setMonth((prev) => {
+      if (prev === 0) { setYear((y) => y - 1); return 11; }
+      return prev - 1;
+    });
+  }, []);
+  const nextMonth = useCallback(() => {
+    setCurrentPage(1);
+    setMonth((prev) => {
+      if (prev === 11) { setYear((y) => y + 1); return 0; }
+      return prev + 1;
+    });
+  }, []);
 
   // Auto-open form from query param (?novo=receita|despesa)
   const novoParam = searchParams.get("novo");
@@ -90,24 +96,27 @@ function TransacoesContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const { start, end } = getMonthRange(year, month, closingDay);
+    const from = (currentPage - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
 
     const [txRes, accRes, catRes] = await Promise.all([
       supabase
         .from("transactions")
-        .select("*, accounts(name), categories(name)")
+        .select("*, accounts(name), categories(name)", { count: "exact" })
         .gte("date", start)
         .lte("date", end)
         .order("date", { ascending: false })
-        .limit(2000),
+        .range(from, to),
       supabase.from("accounts").select("*").order("name"),
       supabase.from("categories").select("*").order("name"),
     ]);
 
     setTransactions((txRes.data as TransactionWithRelations[]) ?? []);
+    setTotalCount(txRes.count ?? 0);
     setAccounts((accRes.data as Account[]) ?? []);
     setCategories((catRes.data as Category[]) ?? []);
     setLoading(false);
-  }, [year, month, closingDay]);
+  }, [year, month, closingDay, currentPage]);
 
   useEffect(() => {
     if (!prefsLoading) {
@@ -115,6 +124,17 @@ function TransacoesContent() {
     }
   }, [fetchData, prefsLoading]);
 
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  const handleRefresh = useCallback(() => {
+    // If deleting the last item on the current page, go back one page
+    if (transactions.length <= 1 && currentPage > 1) {
+      setCurrentPage((p) => p - 1);
+    } else {
+      fetchData();
+    }
+  }, [transactions.length, currentPage, fetchData]);
 
   function handleCloseForm() {
     setShowForm(false);
@@ -168,7 +188,14 @@ function TransacoesContent() {
           transactions={transactions}
           accounts={accounts}
           categories={categories}
-          onRefresh={fetchData}
+          onRefresh={handleRefresh}
+          pagination={totalPages > 1 ? {
+            currentPage,
+            totalPages,
+            totalCount,
+            onPageChange: setCurrentPage,
+            pageSize: PAGE_SIZE,
+          } : undefined}
         />
       )}
 

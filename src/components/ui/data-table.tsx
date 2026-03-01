@@ -1,4 +1,15 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "./skeleton";
+
+export interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  onPageChange: (page: number) => void;
+  pageSize: number;
+}
 
 interface Column<T> {
   key: string;
@@ -15,6 +26,7 @@ interface DataTableProps<T> {
   actions?: (item: T) => React.ReactNode;
   emptyMessage?: string;
   loading?: boolean;
+  pagination?: PaginationProps;
 }
 
 export function DataTable<T>({
@@ -24,6 +36,7 @@ export function DataTable<T>({
   actions,
   emptyMessage = "Nenhum registro encontrado.",
   loading = false,
+  pagination,
 }: DataTableProps<T>) {
   if (loading) {
     return (
@@ -100,6 +113,34 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
+          <span className="text-sm text-slate-500">
+            {pagination.totalCount} registros
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              className="text-xs px-3 py-1"
+              disabled={pagination.currentPage <= 1}
+              onClick={() => pagination.onPageChange(pagination.currentPage - 1)}
+            >
+              Anterior
+            </Button>
+            <span className="text-sm text-slate-600">
+              Página {pagination.currentPage} de {pagination.totalPages}
+            </span>
+            <Button
+              variant="secondary"
+              className="text-xs px-3 py-1"
+              disabled={pagination.currentPage >= pagination.totalPages}
+              onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
+            >
+              Próxima
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

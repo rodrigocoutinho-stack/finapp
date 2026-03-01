@@ -29,3 +29,4 @@
 - **[2026-03-01]** — Validacao de senha reforçada no registro: exige >= 8 chars + 1 maiuscula + 1 numero. Motivo: alinhamento com boas praticas de segurança; Supabase Auth valida server-side, mas feedback no frontend melhora UX.
 - **[2026-03-01]** — IDs de mensagem do chat substituidos de counter global (`let nextMsgId++`) por `crypto.randomUUID()`. Motivo: counter global pode colidir em SSR e entre re-mounts; UUID e seguro e unico.
 - **[2026-03-01]** — Array de insights do dashboard memoizado com `useMemo`. Motivo: logica complexa (15 regras condicionais) era recalculada a cada render; memoizacao evita reprocessamento desnecessario.
+- **[2026-03-01]** — Paginacao server-side na pagina de transacoes com PAGE_SIZE=50. Motivo: evitar buscar ate 2000 registros de uma vez; usa Supabase `.range()` com `count: "exact"` para paginacao eficiente. Componente DataTable recebeu suporte generico a paginacao via prop opcional `PaginationProps`.

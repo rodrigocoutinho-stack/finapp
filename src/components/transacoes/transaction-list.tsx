@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, type PaginationProps } from "@/components/ui/data-table";
 import { TransactionForm } from "./transaction-form";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { logAudit } from "@/lib/audit-log";
@@ -21,6 +21,7 @@ interface TransactionListProps {
   accounts: Account[];
   categories: Category[];
   onRefresh: () => void;
+  pagination?: PaginationProps;
 }
 
 export function TransactionList({
@@ -28,6 +29,7 @@ export function TransactionList({
   accounts,
   categories,
   onRefresh,
+  pagination,
 }: TransactionListProps) {
   const supabase = createClient();
   const { addToast } = useToast();
@@ -137,6 +139,7 @@ export function TransactionList({
         data={transactions}
         keyExtractor={(t) => t.id}
         emptyMessage="Nenhuma transação encontrada neste mês."
+        pagination={pagination}
         actions={(t) => (
           <div className="flex gap-1 justify-end">
             <Button
