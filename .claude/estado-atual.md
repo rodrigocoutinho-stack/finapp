@@ -18,4 +18,4 @@ Build OK. Lint 0 errors. Deploy Vercel ativo. Migrations 001-018 executadas. For
 - Query de reconciliacao limitada a 10000 transacoes. Usuarios com mais de 10k transacoes podem ver falsos positivos de divergencia. Solucao futura: RPC server-side para agregacao.
 
 ## Proxima Acao Sugerida
-Chart upgrade — CategoryChart horizontal para donut/pie com legenda lateral, ou iniciar dark mode.
+Implementar KPI "Tempo ate meta da reserva" — sublabel no card de Reserva de Emergencia mostrando "X meses para completar". Criterio de sucesso: sublabel visivel no dashboard quando usuario tem conta de reserva e meta configurada.

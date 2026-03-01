@@ -67,7 +67,7 @@ src/
 │       ├── configuracoes/page.tsx  # Abas: Geral + Categorias + Regras
 │       └── recorrentes/page.tsx
 ├── components/
-│   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
+│   ├── ui/                       # Button, Input, Select, Checkbox, Textarea, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
 │   ├── layout/                   # Sidebar, DashboardShell, UserAvatar, GreetingHeader
 │   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison, MonthlyClosing, RecurrenceSuggestions, GoalsSummary, DebtSummary
 │   ├── metas/                    # GoalForm, GoalList
@@ -163,22 +163,7 @@ src/
 | 11 | Simuladores | `/simuladores` |
 | 12 | Configurações | `/configuracoes` |
 
-## Próximos Passos
-
-### Redesign UX — Fase 3: Refinamento
-- [ ] Chart upgrade — CategoryChart horizontal → donut/pie com legenda lateral
-- [ ] Form styling — inputs com melhor hierarquia visual
-- [ ] DataTable — componente reutilizável para tabelas padronizadas
-
-### Robustez e Qualidade
-- [ ] Validações de formulário mais rigorosas
-- [ ] Paginação server-side para tabelas com muitos registros
-- [ ] Connection pooling (Supabase Pooler)
-
-### Futuro
-- [ ] Filtros avançados, exportar dados, metas de orçamento
-- [ ] Dark mode
-- [ ] PWA / mobile responsivo avançado
+## BACKLOG — Ver .claude/plano-melhorias-codex.md
 
 ## Regras
 
