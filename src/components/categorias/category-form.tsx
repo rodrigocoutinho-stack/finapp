@@ -115,6 +115,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
         value={type}
         onChange={(e) => setType(e.target.value as Category["type"])}
         options={categoryTypeOptions}
+        required
       />
 
       <Select
@@ -123,6 +124,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
         value={projectionType}
         onChange={(e) => setProjectionType(e.target.value as "recurring" | "historical")}
         options={projectionTypeOptions}
+        required
       />
       <p className="text-xs text-slate-500 -mt-2">
         Define como calcular a projeção de gastos futuros desta categoria.

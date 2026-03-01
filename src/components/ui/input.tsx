@@ -3,14 +3,16 @@ import { InputHTMLAttributes } from "react";
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  helpText?: string;
 }
 
-export function Input({ label, error, id, className = "", ...props }: InputProps) {
+export function Input({ label, error, helpText, id, className = "", required, ...props }: InputProps) {
   return (
     <div>
       {label && (
         <label htmlFor={id} className="block text-sm font-medium text-slate-700 mb-1">
           {label}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
       <input
@@ -20,8 +22,12 @@ export function Input({ label, error, id, className = "", ...props }: InputProps
             ? "border-red-300 text-red-900 placeholder-red-300"
             : "border-slate-300 text-slate-900 placeholder-slate-400"
         } ${className}`}
+        required={required}
         {...props}
       />
+      {helpText && !error && (
+        <p className="mt-1 text-xs text-slate-500">{helpText}</p>
+      )}
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>
   );

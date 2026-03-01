@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { formatCurrency } from "@/lib/utils";
 import { CategoryIcon } from "@/lib/category-icons";
 
@@ -26,24 +18,19 @@ const COLORS = [
   "#3b82f6", "#8b5cf6", "#ec4899", "#f43f5e", "#14b8a6",
 ];
 
-// Custom Y-axis tick with category icon
-interface CustomYTickProps {
-  x?: number;
-  y?: number;
-  payload?: { value: string };
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: { name: string; value: number }[];
 }
 
-function CustomYTick({ x, y, payload }: CustomYTickProps) {
-  const name = payload?.value ?? "";
+function CustomTooltip({ active, payload }: CustomTooltipProps) {
+  if (!active || !payload?.length) return null;
+  const { name, value } = payload[0];
   return (
-    <g transform={`translate(${x},${y})`}>
-      <foreignObject x={-130} y={-10} width={125} height={20}>
-        <div className="flex items-center gap-1.5 justify-end h-full">
-          <CategoryIcon name={name} className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span className="text-[13px] text-slate-600 truncate">{name}</span>
-        </div>
-      </foreignObject>
-    </g>
+    <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 shadow-lg text-[13px]">
+      <p className="font-semibold text-slate-700">{name}</p>
+      <p className="text-slate-600">{formatCurrency(value)}</p>
+    </div>
   );
 }
 
@@ -56,31 +43,68 @@ export function CategoryChart({ data }: CategoryChartProps) {
     );
   }
 
+  const total = data.reduce((sum, d) => sum + d.amount, 0);
+
   return (
-    <ResponsiveContainer width="100%" height={data.length * 48 + 20}>
-      <BarChart data={data} layout="vertical" margin={{ left: 0, right: 20 }}>
-        <XAxis type="number" hide />
-        <YAxis
-          type="category"
-          dataKey="name"
-          width={135}
-          tick={<CustomYTick />}
-        />
-        <Tooltip
-          formatter={(value) => formatCurrency(Number(value))}
-          labelStyle={{ fontWeight: 600 }}
-          contentStyle={{
-            borderRadius: "8px",
-            border: "1px solid #e2e8f0",
-            fontSize: "13px",
-          }}
-        />
-        <Bar dataKey="amount" radius={[0, 6, 6, 0]} barSize={28}>
-          {data.map((_, index) => (
-            <Cell key={index} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="flex flex-col sm:flex-row items-center gap-6">
+      {/* Donut chart */}
+      <div className="relative w-[200px] h-[200px] shrink-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="amount"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={90}
+              paddingAngle={2}
+              strokeWidth={0}
+            >
+              {data.map((_, index) => (
+                <Cell key={index} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+        {/* Center label */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="text-xs text-slate-500">Total</span>
+          <span className="text-base font-bold text-slate-800">
+            {formatCurrency(total)}
+          </span>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex-1 min-w-0 space-y-2 w-full">
+        {data.map((item, index) => {
+          const pct = total > 0 ? ((item.amount / total) * 100).toFixed(1) : "0.0";
+          return (
+            <div key={item.name} className="flex items-center gap-2.5 text-sm">
+              <span
+                className="w-3 h-3 rounded-full shrink-0"
+                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+              />
+              <CategoryIcon
+                name={item.name}
+                className="w-4 h-4 text-slate-400 shrink-0"
+              />
+              <span className="truncate text-slate-700 flex-1 min-w-0">
+                {item.name}
+              </span>
+              <span className="text-slate-500 shrink-0 tabular-nums">
+                {pct}%
+              </span>
+              <span className="font-medium text-slate-800 shrink-0 tabular-nums">
+                {formatCurrency(item.amount)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

@@ -83,6 +83,7 @@ export function EntryForm({ investmentId, onSuccess, onCancel }: EntryFormProps)
         value={type}
         onChange={(e) => setType(e.target.value as InvestmentEntry["type"])}
         options={[...entryTypeOptions]}
+        required
       />
 
       <Input

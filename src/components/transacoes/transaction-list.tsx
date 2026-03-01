@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { DataTable } from "@/components/ui/data-table";
 import { TransactionForm } from "./transaction-form";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { logAudit } from "@/lib/audit-log";
@@ -83,72 +84,78 @@ export function TransactionList({
     addToast("Transação excluída.");
   }
 
-  if (transactions.length === 0) {
-    return (
-      <p className="text-slate-500 text-center py-8">
-        Nenhuma transação encontrada neste mês.
-      </p>
-    );
-  }
+  const columns = useMemo(() => [
+    {
+      key: "date",
+      header: "Data",
+      render: (t: TransactionWithRelations) => (
+        <span className="text-slate-600">{formatDate(t.date)}</span>
+      ),
+    },
+    {
+      key: "description",
+      header: "Descrição",
+      render: (t: TransactionWithRelations) => (
+        <span className="text-slate-900">{t.description}</span>
+      ),
+    },
+    {
+      key: "category",
+      header: "Categoria",
+      render: (t: TransactionWithRelations) => (
+        <span className="text-slate-600">{t.categories?.name ?? "-"}</span>
+      ),
+    },
+    {
+      key: "account",
+      header: "Conta",
+      render: (t: TransactionWithRelations) => (
+        <span className="text-slate-600">{t.accounts?.name ?? "-"}</span>
+      ),
+    },
+    {
+      key: "amount",
+      header: "Valor",
+      headerClassName: "text-right",
+      className: "text-right",
+      render: (t: TransactionWithRelations) => (
+        <span
+          className={`font-medium ${
+            t.type === "receita" ? "text-emerald-600" : "text-rose-600"
+          }`}
+        >
+          {t.type === "receita" ? "+" : "-"} {formatCurrency(t.amount_cents)}
+        </span>
+      ),
+    },
+  ], []);
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Data</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Descrição</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Categoria</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Conta</th>
-                <th className="text-right px-4 py-3 font-medium text-slate-600">Valor</th>
-                <th className="text-right px-4 py-3 font-medium text-slate-600">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((t) => (
-                <tr key={t.id} className="border-b border-slate-50 hover:bg-slate-50">
-                  <td className="px-4 py-3 text-slate-600">{formatDate(t.date)}</td>
-                  <td className="px-4 py-3 text-slate-900">{t.description}</td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {t.categories?.name ?? "-"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {t.accounts?.name ?? "-"}
-                  </td>
-                  <td
-                    className={`px-4 py-3 text-right font-medium ${
-                      t.type === "receita" ? "text-emerald-600" : "text-rose-600"
-                    }`}
-                  >
-                    {t.type === "receita" ? "+" : "-"}{" "}
-                    {formatCurrency(t.amount_cents)}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex gap-1 justify-end">
-                      <Button
-                        variant="ghost"
-                        className="text-xs"
-                        onClick={() => setEditingTransaction(t)}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setDeletingTransaction(t)}
-                      >
-                        Excluir
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={transactions}
+        keyExtractor={(t) => t.id}
+        emptyMessage="Nenhuma transação encontrada neste mês."
+        actions={(t) => (
+          <div className="flex gap-1 justify-end">
+            <Button
+              variant="ghost"
+              className="text-xs"
+              onClick={() => setEditingTransaction(t)}
+            >
+              Editar
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => setDeletingTransaction(t)}
+            >
+              Excluir
+            </Button>
+          </div>
+        )}
+      />
 
       <Modal
         open={!!editingTransaction}

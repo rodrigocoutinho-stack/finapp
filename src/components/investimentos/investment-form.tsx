@@ -112,6 +112,7 @@ export function InvestmentForm({
         value={accountId}
         onChange={(e) => setAccountId(e.target.value)}
         options={accountOptions}
+        required
       />
 
       <div className="grid grid-cols-2 gap-3">
@@ -121,6 +122,7 @@ export function InvestmentForm({
           value={product}
           onChange={(e) => setProduct(e.target.value as Investment["product"])}
           options={[...productOptions]}
+          required
         />
 
         <Select
@@ -129,6 +131,7 @@ export function InvestmentForm({
           value={indexer}
           onChange={(e) => setIndexer(e.target.value as Investment["indexer"])}
           options={[...indexerOptions]}
+          required
         />
       </div>
 

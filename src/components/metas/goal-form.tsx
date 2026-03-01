@@ -194,6 +194,7 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
           value={horizon}
           onChange={(e) => setHorizon(e.target.value as "short" | "medium" | "long")}
           options={horizonOptions}
+          required
         />
 
         <Select
@@ -202,6 +203,7 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
           options={priorityOptions}
+          required
         />
       </div>
 

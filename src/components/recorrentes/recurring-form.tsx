@@ -218,6 +218,7 @@ export function RecurringForm({
           setCategoryId("");
         }}
         options={transactionTypeOptions}
+        required
       />
 
       <Input
@@ -236,6 +237,7 @@ export function RecurringForm({
         onChange={(e) => setAccountId(e.target.value)}
         options={accountOptions}
         placeholder="Selecione a conta"
+        required
       />
 
       <Select
@@ -245,6 +247,7 @@ export function RecurringForm({
         onChange={(e) => setCategoryId(e.target.value)}
         options={categoryOptions}
         placeholder="Selecione a categoria"
+        required
       />
 
       <Input
@@ -263,6 +266,7 @@ export function RecurringForm({
         value={scheduleType}
         onChange={(e) => setScheduleType(e.target.value)}
         options={scheduleTypeOptions}
+        required
       />
 
       {scheduleType === "pontual" && (

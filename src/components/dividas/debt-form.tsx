@@ -192,6 +192,7 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
         value={type}
         onChange={(e) => setType(e.target.value as Debt["type"])}
         options={typeOptions}
+        required
       />
 
       <div className="grid grid-cols-2 gap-3">

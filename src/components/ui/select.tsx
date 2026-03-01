@@ -3,6 +3,7 @@ import { SelectHTMLAttributes } from "react";
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
+  helpText?: string;
   options: { value: string; label: string }[];
   placeholder?: string;
 }
@@ -10,10 +11,12 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 export function Select({
   label,
   error,
+  helpText,
   id,
   options,
   placeholder,
   className = "",
+  required,
   ...props
 }: SelectProps) {
   return (
@@ -21,6 +24,7 @@ export function Select({
       {label && (
         <label htmlFor={id} className="block text-sm font-medium text-slate-700 mb-1">
           {label}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       )}
       <select
@@ -30,6 +34,7 @@ export function Select({
             ? "border-red-300 text-red-900"
             : "border-slate-300 text-slate-900"
         } ${className}`}
+        required={required}
         {...props}
       >
         {placeholder && (
@@ -43,6 +48,9 @@ export function Select({
           </option>
         ))}
       </select>
+      {helpText && !error && (
+        <p className="mt-1 text-xs text-slate-500">{helpText}</p>
+      )}
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>
   );

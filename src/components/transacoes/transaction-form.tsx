@@ -201,6 +201,7 @@ export function TransactionForm({
           setCategoryId("");
         }}
         options={transactionTypeOptions}
+        required
       />
 
       <Input
@@ -219,6 +220,7 @@ export function TransactionForm({
         onChange={(e) => setAccountId(e.target.value)}
         options={accountOptions}
         placeholder="Selecione a conta"
+        required
       />
 
       <Select
@@ -228,6 +230,7 @@ export function TransactionForm({
         onChange={(e) => setCategoryId(e.target.value)}
         options={categoryOptions}
         placeholder="Selecione a categoria"
+        required
       />
 
       <Input
