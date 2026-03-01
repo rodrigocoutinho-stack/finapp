@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DataTable } from "@/components/ui/data-table";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import type { Category, CategoryRule } from "@/types/database";
 
@@ -184,58 +185,48 @@ export function CategoryRules() {
       {rules.length === 0 ? (
         <EmptyState message="Nenhuma regra cadastrada. Adicione regras para categorizar automaticamente importações OFX." />
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">
-                  Padrão
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">
-                  Categoria
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">
-                  Tipo
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase w-20">
-                  Ação
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {rules.map((rule) => (
-                <tr key={rule.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 text-sm font-mono text-slate-900">
-                    {rule.pattern}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-700">
-                    {rule.categories?.name ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        rule.categories?.type === "receita"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-rose-100 text-rose-800"
-                      }`}
-                    >
-                      {rule.categories?.type === "receita" ? "Receita" : "Despesa"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      variant="ghost"
-                      className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => setDeletingRuleId(rule.id)}
-                    >
-                      Excluir
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={[
+            {
+              key: "pattern",
+              header: "Padrão",
+              className: "font-mono text-slate-900",
+              render: (rule: CategoryRuleWithCategory) => rule.pattern,
+            },
+            {
+              key: "category",
+              header: "Categoria",
+              className: "text-slate-700",
+              render: (rule: CategoryRuleWithCategory) => rule.categories?.name ?? "—",
+            },
+            {
+              key: "type",
+              header: "Tipo",
+              render: (rule: CategoryRuleWithCategory) => (
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                    rule.categories?.type === "receita"
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-rose-100 text-rose-800"
+                  }`}
+                >
+                  {rule.categories?.type === "receita" ? "Receita" : "Despesa"}
+                </span>
+              ),
+            },
+          ]}
+          data={rules}
+          keyExtractor={(rule) => rule.id}
+          actions={(rule) => (
+            <Button
+              variant="ghost"
+              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => setDeletingRuleId(rule.id)}
+            >
+              Excluir
+            </Button>
+          )}
+        />
       )}
 
       <Modal

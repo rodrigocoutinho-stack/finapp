@@ -6,6 +6,7 @@ import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DataTable } from "@/components/ui/data-table";
 import { RecurringForm } from "./recurring-form";
 import { formatCurrency, formatMonthLabel } from "@/lib/utils";
 import type { Account, Category, RecurringTransaction } from "@/types/database";
@@ -87,99 +88,114 @@ export function RecurringList({
     addToast(recurring.is_active ? "Transação desativada." : "Transação ativada.");
   }
 
+  const columns = [
+    {
+      key: "description",
+      header: "Descrição",
+      render: (r: RecurringWithRelations) => (
+        <span className="text-slate-900">{r.description}</span>
+      ),
+    },
+    {
+      key: "category",
+      header: "Categoria",
+      render: (r: RecurringWithRelations) => (
+        <span className="text-slate-600">{r.categories?.name ?? "-"}</span>
+      ),
+    },
+    {
+      key: "account",
+      header: "Conta",
+      render: (r: RecurringWithRelations) => (
+        <span className="text-slate-600">{r.accounts?.name ?? "-"}</span>
+      ),
+    },
+    {
+      key: "day",
+      header: "Dia",
+      headerClassName: "text-center",
+      className: "text-center text-slate-600",
+      render: (r: RecurringWithRelations) => r.day_of_month,
+    },
+    {
+      key: "period",
+      header: "Período",
+      headerClassName: "text-center",
+      className: "text-center",
+      render: (r: RecurringWithRelations) => {
+        const badge = getPeriodBadge(r);
+        return (
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badge.className}`}
+          >
+            {badge.label}
+          </span>
+        );
+      },
+    },
+    {
+      key: "amount",
+      header: "Valor",
+      headerClassName: "text-right",
+      className: "text-right font-medium",
+      render: (r: RecurringWithRelations) => (
+        <span className={r.type === "receita" ? "text-emerald-600" : "text-rose-600"}>
+          {r.type === "receita" ? "+" : "-"} {formatCurrency(r.amount_cents)}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      headerClassName: "text-center",
+      className: "text-center",
+      render: (r: RecurringWithRelations) => (
+        <button
+          onClick={() => handleToggleActive(r)}
+          disabled={togglingId === r.id}
+          role="switch"
+          aria-checked={r.is_active}
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            r.is_active
+              ? "bg-emerald-100 text-emerald-800"
+              : "bg-slate-100 text-slate-600"
+          }`}
+        >
+          {r.is_active ? "Ativo" : "Inativo"}
+        </button>
+      ),
+    },
+  ];
+
   if (recurrings.length === 0) {
     return <EmptyState message="Nenhuma transação recorrente cadastrada." />;
   }
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Descrição</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Categoria</th>
-                <th className="text-left px-4 py-3 font-medium text-slate-600">Conta</th>
-                <th className="text-center px-4 py-3 font-medium text-slate-600">Dia</th>
-                <th className="text-center px-4 py-3 font-medium text-slate-600">Período</th>
-                <th className="text-right px-4 py-3 font-medium text-slate-600">Valor</th>
-                <th className="text-center px-4 py-3 font-medium text-slate-600">Status</th>
-                <th className="text-right px-4 py-3 font-medium text-slate-600">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recurrings.map((r) => (
-                <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50">
-                  <td className="px-4 py-3 text-slate-900">{r.description}</td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {r.categories?.name ?? "-"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {r.accounts?.name ?? "-"}
-                  </td>
-                  <td className="px-4 py-3 text-center text-slate-600">
-                    {r.day_of_month}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {(() => {
-                      const badge = getPeriodBadge(r);
-                      return (
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badge.className}`}
-                        >
-                          {badge.label}
-                        </span>
-                      );
-                    })()}
-                  </td>
-                  <td
-                    className={`px-4 py-3 text-right font-medium ${
-                      r.type === "receita" ? "text-emerald-600" : "text-rose-600"
-                    }`}
-                  >
-                    {r.type === "receita" ? "+" : "-"}{" "}
-                    {formatCurrency(r.amount_cents)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => handleToggleActive(r)}
-                      disabled={togglingId === r.id}
-                      role="switch"
-                      aria-checked={r.is_active}
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        r.is_active
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {r.is_active ? "Ativo" : "Inativo"}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex gap-1 justify-end">
-                      <Button
-                        variant="ghost"
-                        className="text-xs"
-                        onClick={() => setEditingRecurring(r)}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setDeletingRecurring(r)}
-                      >
-                        Excluir
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={recurrings}
+        keyExtractor={(r) => r.id}
+        actions={(r) => (
+          <div className="flex gap-1 justify-end">
+            <Button
+              variant="ghost"
+              className="text-xs"
+              onClick={() => setEditingRecurring(r)}
+            >
+              Editar
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => setDeletingRecurring(r)}
+            >
+              Excluir
+            </Button>
+          </div>
+        )}
+      />
 
       <Modal
         open={!!editingRecurring}

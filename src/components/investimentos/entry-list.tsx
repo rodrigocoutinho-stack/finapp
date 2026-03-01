@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { InvestmentEntry } from "@/types/database";
 
@@ -39,61 +40,59 @@ export function EntryList({ entries, onRefresh }: EntryListProps) {
     addToast("Lançamento excluído.");
   }
 
-  if (entries.length === 0) {
-    return (
-      <p className="text-slate-500 text-center py-6 text-sm">
-        Nenhum lançamento registrado.
-      </p>
-    );
-  }
-
   const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+
+  const columns = [
+    {
+      key: "type",
+      header: "Tipo",
+      render: (entry: InvestmentEntry) => {
+        const badge = typeBadge[entry.type];
+        return (
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badge.class}`}>
+            {badge.label}
+          </span>
+        );
+      },
+    },
+    {
+      key: "amount",
+      header: "Valor",
+      headerClassName: "text-right",
+      className: "text-right font-medium text-slate-900",
+      render: (entry: InvestmentEntry) => formatCurrency(entry.amount_cents),
+    },
+    {
+      key: "date",
+      header: "Data",
+      className: "text-slate-600",
+      render: (entry: InvestmentEntry) => formatDate(entry.date),
+    },
+    {
+      key: "notes",
+      header: "Obs.",
+      className: "text-slate-500 max-w-[150px] truncate",
+      render: (entry: InvestmentEntry) => entry.notes ?? "-",
+    },
+  ];
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-200">
-              <th className="text-left py-2 pr-3 font-medium text-slate-600">Tipo</th>
-              <th className="text-right py-2 px-3 font-medium text-slate-600">Valor</th>
-              <th className="text-left py-2 px-3 font-medium text-slate-600">Data</th>
-              <th className="text-left py-2 px-3 font-medium text-slate-600">Obs.</th>
-              <th className="py-2 pl-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((entry) => {
-              const badge = typeBadge[entry.type];
-              return (
-                <tr key={entry.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-2 pr-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${badge.class}`}>
-                      {badge.label}
-                    </span>
-                  </td>
-                  <td className="text-right py-2 px-3 font-medium text-slate-900">
-                    {formatCurrency(entry.amount_cents)}
-                  </td>
-                  <td className="py-2 px-3 text-slate-600">{formatDate(entry.date)}</td>
-                  <td className="py-2 px-3 text-slate-500 max-w-[150px] truncate">
-                    {entry.notes ?? "-"}
-                  </td>
-                  <td className="py-2 pl-3">
-                    <Button
-                      variant="ghost"
-                      className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => setDeletingEntry(entry)}
-                    >
-                      Excluir
-                    </Button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={sorted}
+        keyExtractor={(entry) => entry.id}
+        emptyMessage="Nenhum lançamento registrado."
+        actions={(entry) => (
+          <Button
+            variant="ghost"
+            className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={() => setDeletingEntry(entry)}
+          >
+            Excluir
+          </Button>
+        )}
+      />
 
       <Modal
         open={!!deletingEntry}
