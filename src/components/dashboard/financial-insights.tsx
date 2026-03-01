@@ -8,7 +8,7 @@ import {
   getGoalProgressPercent,
 } from "@/lib/goal-utils";
 import type { MonthForecast } from "@/lib/forecast";
-import type { Goal, Account } from "@/types/database";
+import type { Goal, Account, Debt } from "@/types/database";
 
 interface AnnualProvision {
   description: string;
@@ -28,6 +28,8 @@ interface FinancialInsightsProps {
   accounts?: Account[];
   pastSavingsRates?: number[];
   annualProvisions?: AnnualProvision[];
+  hasDivergentAccounts?: boolean;
+  debts?: Debt[];
 }
 
 interface Insight {
@@ -49,6 +51,8 @@ export function FinancialInsights({
   accounts = [],
   pastSavingsRates = [],
   annualProvisions = [],
+  hasDivergentAccounts = false,
+  debts = [],
 }: FinancialInsightsProps) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
@@ -211,6 +215,55 @@ export function FinancialInsights({
       id: "provision-missing",
       type: "warning",
       text: `Despesa anual detectada: "${top.description}" (${formatCurrency(top.amountCents)}). Provisione ~${formatCurrency(monthly)}/mês para evitar surpresas.`,
+    });
+  }
+
+  // 13. Dívida/Renda alta (DEBT_TO_INCOME_HIGH)
+  if (debts.length > 0 && totalReceitas > 0) {
+    const activeDebts = debts.filter(
+      (d) => d.is_active && d.remaining_amount_cents > 0
+    );
+    const totalPayments = activeDebts.reduce(
+      (sum, d) => sum + d.monthly_payment_cents,
+      0
+    );
+    const ratio = (totalPayments / totalReceitas) * 100;
+    if (ratio > 30) {
+      insights.push({
+        id: "debt-to-income-high",
+        type: "alert",
+        text: `Suas parcelas de dívidas consomem ${ratio.toFixed(0)}% da receita. O ideal é abaixo de 30%.`,
+      });
+    }
+  }
+
+  // 14. Juros altos (DEBT_HIGH_INTEREST)
+  if (debts.length > 0) {
+    const highInterest = debts.filter(
+      (d) =>
+        d.is_active &&
+        d.remaining_amount_cents > 0 &&
+        Number(d.interest_rate_monthly) > 3
+    );
+    if (highInterest.length > 0) {
+      const worst = highInterest.sort(
+        (a, b) =>
+          Number(b.interest_rate_monthly) - Number(a.interest_rate_monthly)
+      )[0];
+      insights.push({
+        id: "debt-high-interest",
+        type: "warning",
+        text: `A dívida "${worst.name}" tem juros de ${Number(worst.interest_rate_monthly).toFixed(1)}%/mês. Considere renegociar ou priorizar o pagamento.`,
+      });
+    }
+  }
+
+  // 15. Divergência de saldo (BALANCE_DIVERGENCE)
+  if (hasDivergentAccounts) {
+    insights.push({
+      id: "balance-divergence",
+      type: "warning",
+      text: "Há contas com divergência entre saldo registrado e calculado. Acesse Contas → Reconciliar para verificar.",
     });
   }
 

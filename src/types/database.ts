@@ -32,6 +32,7 @@ export type Database = {
           name: string;
           type: "banco" | "cartao" | "carteira";
           balance_cents: number;
+          initial_balance_cents: number;
           is_emergency_reserve: boolean;
           created_at: string;
         };
@@ -41,6 +42,7 @@ export type Database = {
           name: string;
           type: "banco" | "cartao" | "carteira";
           balance_cents?: number;
+          initial_balance_cents?: number;
           is_emergency_reserve?: boolean;
           created_at?: string;
         };
@@ -50,6 +52,7 @@ export type Database = {
           name?: string;
           type?: "banco" | "cartao" | "carteira";
           balance_cents?: number;
+          initial_balance_cents?: number;
           is_emergency_reserve?: boolean;
           created_at?: string;
         };
@@ -436,6 +439,65 @@ export type Database = {
           },
         ];
       };
+      debts: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          type: "emprestimo" | "financiamento" | "cartao" | "cheque_especial" | "outro";
+          original_amount_cents: number;
+          remaining_amount_cents: number;
+          monthly_payment_cents: number;
+          interest_rate_monthly: number;
+          start_date: string;
+          due_date: string | null;
+          total_installments: number | null;
+          paid_installments: number;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          type: "emprestimo" | "financiamento" | "cartao" | "cheque_especial" | "outro";
+          original_amount_cents: number;
+          remaining_amount_cents: number;
+          monthly_payment_cents?: number;
+          interest_rate_monthly?: number;
+          start_date: string;
+          due_date?: string | null;
+          total_installments?: number | null;
+          paid_installments?: number;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          type?: "emprestimo" | "financiamento" | "cartao" | "cheque_especial" | "outro";
+          original_amount_cents?: number;
+          remaining_amount_cents?: number;
+          monthly_payment_cents?: number;
+          interest_rate_monthly?: number;
+          start_date?: string;
+          due_date?: string | null;
+          total_installments?: number | null;
+          paid_installments?: number;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "debts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -458,3 +520,4 @@ export type Investment = Database["public"]["Tables"]["investments"]["Row"];
 export type InvestmentEntry = Database["public"]["Tables"]["investment_entries"]["Row"];
 export type CategoryRule = Database["public"]["Tables"]["category_rules"]["Row"];
 export type Goal = Database["public"]["Tables"]["goals"]["Row"];
+export type Debt = Database["public"]["Tables"]["debts"]["Row"];

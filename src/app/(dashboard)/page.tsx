@@ -20,6 +20,7 @@ import { Modal } from "@/components/ui/modal";
 import { MonthlyClosing } from "@/components/dashboard/monthly-closing";
 import { RecurrenceSuggestions } from "@/components/dashboard/recurrence-suggestions";
 import { GoalsSummary } from "@/components/dashboard/goals-summary";
+import { DebtSummary } from "@/components/dashboard/debt-summary";
 import { detectRecurrences, type RecurrenceSuggestion } from "@/lib/recurrence-detection";
 import {
   getGoalProgressPercent,
@@ -33,7 +34,7 @@ import { getMonthEndBalance } from "@/lib/investment-utils";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
 import { getIPCA12Months } from "@/lib/inflation";
 import { usePreferences } from "@/contexts/preferences-context";
-import type { Account, Goal, InvestmentEntry, Transaction, RecurringTransaction } from "@/types/database";
+import type { Account, Debt, Goal, InvestmentEntry, Transaction, RecurringTransaction } from "@/types/database";
 
 interface TransactionRow {
   id: string;
@@ -97,6 +98,8 @@ export default function DashboardPage() {
   const [recurrenceSuggestions, setRecurrenceSuggestions] = useState<RecurrenceSuggestion[]>([]);
   const [dashGoals, setDashGoals] = useState<Goal[]>([]);
   const [dashAccounts, setDashAccounts] = useState<Account[]>([]);
+  const [dashDebts, setDashDebts] = useState<Debt[]>([]);
+  const [hasDivergentAccounts, setHasDivergentAccounts] = useState(false);
 
   // Sync initial year/month when closingDay loads
   useEffect(() => {
@@ -128,7 +131,7 @@ export default function DashboardPage() {
     const globalStart = pastMonthsRanges[pastMonthsRanges.length - 1]?.start ?? start;
     const globalEnd = pastMonthsRanges[0]?.end ?? end;
 
-    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes] = await Promise.all([
+    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes, allTxnSummaryRes, debtsRes] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
@@ -166,6 +169,16 @@ export default function DashboardPage() {
         .select("id")
         .eq("type", "despesa")
         .eq("is_essential", true),
+      supabase
+        .from("transactions")
+        .select("account_id, type, amount_cents")
+        .limit(50000),
+      supabase
+        .from("debts")
+        .select("*")
+        .eq("is_active", true)
+        .order("remaining_amount_cents", { ascending: false })
+        .limit(20),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
@@ -210,6 +223,20 @@ export default function DashboardPage() {
 
     // Goals
     setDashGoals((goalsRes.data as Goal[] | null) ?? []);
+
+    // Debts
+    setDashDebts((debtsRes.data as Debt[] | null) ?? []);
+
+    // Reconciliation divergence check
+    const allTxnSummary = (allTxnSummaryRes.data ?? []) as { account_id: string; type: string; amount_cents: number }[];
+    const hasDivergence = accountsData.some((account) => {
+      const txnSum = allTxnSummary
+        .filter((t) => t.account_id === account.id)
+        .reduce((sum, t) => sum + (t.type === "receita" ? t.amount_cents : -t.amount_cents), 0);
+      const calculated = account.initial_balance_cents + txnSum;
+      return account.balance_cents !== calculated;
+    });
+    setHasDivergentAccounts(hasDivergence);
 
     // Recurrence detection + savings rates + annual provisions
     if (isCurrentMonthSelected) {
@@ -510,6 +537,8 @@ export default function DashboardPage() {
               accounts={dashAccounts}
               pastSavingsRates={pastSavingsRates}
               annualProvisions={annualProvisions}
+              hasDivergentAccounts={hasDivergentAccounts}
+              debts={dashDebts}
             />
           </div>
 
@@ -539,6 +568,10 @@ export default function DashboardPage() {
 
               {dashGoals.length > 0 && (
                 <GoalsSummary goals={dashGoals} accounts={dashAccounts} />
+              )}
+
+              {dashDebts.length > 0 && (
+                <DebtSummary debts={dashDebts} />
               )}
             </div>
 

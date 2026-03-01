@@ -1,0 +1,13 @@
+# Decisoes Consolidadas — FinApp
+
+- **[2026-02-25]** — Supabase browser client singleton: `supabase` NAO deve ser incluido em dependency arrays de hooks React. Motivo: `createClient()` retorna instancia cached, incluir na dep array causa re-renders desnecessarios. Os 17 lint warnings resultantes sao esperados e nao devem ser "corrigidos".
+- **[2026-02-25]** — Removidos 4 arquivos orfaos: `navbar.tsx`, `forecast-chart.tsx`, `card.tsx`, `badge.tsx`. Motivo: nenhum era importado por qualquer arquivo do projeto; navbar foi substituido pela sidebar, os demais nunca foram utilizados.
+- **[2026-02-25]** — CSRF protection nas API routes (`/api/ai/analyze`, `/api/import/pdf`) via validacao de Origin header. Motivo: proteger endpoints server-side contra requisicoes cross-origin maliciosas.
+- **[2026-02-25]** — PII anonymization no contexto do assistente IA: apenas primeiro nome enviado ao Gemini. Motivo: minimizar dados pessoais enviados a APIs externas.
+- **[2026-02-25]** — PDF import valida magic bytes (`%PDF-`) alem do MIME type. Motivo: MIME type pode ser falsificado; validacao por magic bytes e mais confiavel.
+- **[2026-02-25]** — CSP (Content-Security-Policy) adicionado via next.config.ts com `unsafe-inline` e `unsafe-eval`. Motivo: Next.js requer esses valores para funcionar; restringir quando possivel em versao futura.
+- **[2026-02-25]** — Funcao `isRecurringActiveInMonth` extraida para `utils.ts` e compartilhada entre `forecast.ts` e `daily-flow.ts`. Motivo: eliminar duplicacao de logica.
+- **[2026-02-28]** — Reconciliacao de saldo usa `initial_balance_cents` + soma de transacoes para calcular saldo esperado. Motivo: permite detectar divergencias entre saldo registrado e calculado sem exigir historico completo de movimentacoes.
+- **[2026-02-28]** — Backfill de `initial_balance_cents` na migration 015: `balance_cents - SUM(transacoes)`. Motivo: garantir que contas existentes reconciliem sem divergencia apos a migration.
+- **[2026-02-28]** — Gestao de dividas com simulacao iterativa de payoff (max 600 iteracoes). Motivo: simulacao analitica com juros compostos exigiria formula mais complexa e menos flexivel para cenarios com pagamento extra variavel.
+- **[2026-02-28]** — `interest_rate_monthly` como NUMERIC(8,4) no Postgres. Motivo: precisao decimal para taxas de juros; retorna como `number` no JS via Supabase client.

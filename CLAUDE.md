@@ -5,19 +5,20 @@ FinApp - Gestão Financeira Pessoal
 
 ## Estado Atual (Atualizado: 28/02/2026)
 
-**MVP completo + Metas Financeiras + Codex Quick Wins (custo essencial, tempo reserva, alerta 120%) + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening + Code Review (26/26 corrigidos) + Bateria de Testes (tudo OK).** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Metas Financeiras + Codex Quick Wins + Reconciliação de Saldo + Gestão de Dívidas + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening + Code Review (26/26 corrigidos) + Bateria de Testes (tudo OK).** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations 001-014 (RLS ativo + security hardening)
+- [x] Database schema + migrations 001-016 (RLS ativo + security hardening)
 - [x] Autenticação (login, registro com confirmação por email, logout)
-- [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência)
+- [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência, saldo inicial, reconciliação)
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção, teto de orçamento — dentro de Configurações)
 - [x] CRUD Transações (filtro mensal, atualização automática de saldo)
 - [x] Transações Planejadas (recorrentes, pontuais, com período, detecção automática de padrões)
 - [x] Importação OFX/CSV/PDF (extrato bancário, cartão de crédito, CSV com mapeamento de colunas, PDF via IA Gemini, auto-categorização por regras)
 - [x] Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
 - [x] Metas Financeiras (CRUD + progresso + vínculo a conta + cards visuais + widget dashboard + insights automáticos)
-- [x] Dashboard (hero cards, 5 KPIs, insights proativos, alertas orçamento com tetos, previsto vs realizado, investimentos, recorrências sugeridas, metas, fechamento mensal, últimas transações)
+- [x] Gestão de Dívidas (CRUD + simulador pagamento extra + widget dashboard + insights juros/renda)
+- [x] Dashboard (hero cards, 5 KPIs, insights proativos, alertas orçamento com tetos, previsto vs realizado, investimentos, recorrências sugeridas, metas, dívidas, fechamento mensal, últimas transações)
 - [x] Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
 - [x] Dia de fechamento (competência personalizada por usuário)
 - [x] Configurações (abas Geral + Categorias + Regras de Importação, closing day 1-28, meta reserva de emergência)
@@ -31,7 +32,7 @@ FinApp - Gestão Financeira Pessoal
 - [x] Security Hardening (HTTP headers, RPC hardening, RLS strengthening, error sanitization, MIME validation, auth guard)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
-- [x] Migrations 001-012 executadas no SQL Editor
+- [x] Migrations 001-016 executadas no SQL Editor
 
 **Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
 - [x] `GEMINI_API_KEY` configurada nas Environment Variables
@@ -39,6 +40,43 @@ FinApp - Gestão Financeira Pessoal
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
 ## Últimas Alterações (28/02/2026)
+
+### Reconciliação de Saldo + Gestão de Dívidas
+
+**Migration 015:** `supabase/migrations/015_initial_balance.sql`
+- `accounts.initial_balance_cents` (INTEGER, NOT NULL, DEFAULT 0) — saldo inicial para reconciliação
+- Backfill: `initial_balance_cents = balance_cents - SUM(transações)` para contas existentes
+
+**Migration 016:** `supabase/migrations/016_debts.sql`
+- Tabela `debts` com UUID PK, user_id FK, name, type (emprestimo/financiamento/cartao/cheque_especial/outro), original_amount_cents, remaining_amount_cents, monthly_payment_cents, interest_rate_monthly (NUMERIC 8,4), start_date, due_date, total_installments, paid_installments, is_active
+- RLS completo (SELECT/INSERT/UPDATE/DELETE) com `auth.uid() = user_id`
+- Índice `idx_debts_user_active` (user_id, is_active)
+- CHECK constraints: original > 0 e <= 100B, remaining >= 0, payment >= 0, rate >= 0, installments > 0
+
+**Novos arquivos:**
+- `src/lib/debt-utils.ts` — Funções puras: `getDebtProgress`, `getMonthlyInterestCost`, `getTimeToPayoff` (iterativo, max 600), `getTotalInterestCost`, `getExtraPaymentSavings`, `getDebtStatus`. Constantes: `DEBT_TYPE_LABELS` (5 tipos)
+- `src/components/dividas/debt-form.tsx` — Formulário de criação/edição com campos: nome, tipo, valor original, saldo devedor, parcela mensal, juros % a.m., data início, data vencimento (opcional), total parcelas (opcional), parcelas pagas. Validação completa
+- `src/components/dividas/debt-list.tsx` — Grid de cards `md:grid-cols-2 xl:grid-cols-3` com barra de progresso, badge de status (Em dia/Vencida/Juros altos/Quitada), juros/mês, previsão de quitação. Ações: Simular, Editar, Excluir (com confirmação)
+- `src/components/dividas/debt-simulator.tsx` — Modal "E se eu pagar X a mais?" com cálculo em tempo real: meses economizados, juros economizados. Alerta quando parcela não cobre juros
+- `src/app/(dashboard)/dividas/page.tsx` — Página CRUD completa com PageHeader, botão "Nova dívida", modal de criação, loading skeleton
+- `src/components/dashboard/debt-summary.tsx` — Widget compacto no dashboard: total devedor, parcelas/mês, nº ativas, top 3 dívidas com barra de progresso, link "Ver todas"
+- `src/components/contas/account-reconciliation.tsx` — Modal com tabela: Conta | Saldo Registrado | Saldo Calculado | Divergência | Status (OK/Divergência) | Botão Ajustar. Mensagem verde quando tudo reconciliado
+
+**Arquivos modificados:**
+- `src/types/database.ts` — `initial_balance_cents` no tipo Account + tipo `Debt` completo (Row/Insert/Update/Relationships)
+- `src/components/contas/account-form.tsx` — Campo "Saldo inicial (R$)" na criação de conta, importação de `toCents`
+- `src/app/(dashboard)/contas/page.tsx` — Botão "Reconciliar" no header, query de transações para reconciliação, modal AccountReconciliation
+- `src/components/layout/sidebar.tsx` — Link "Dívidas" adicionado (ícone cartão de crédito) entre Metas e Fluxo (sidebar 9→10 itens)
+- `src/app/(dashboard)/page.tsx` — Query debts + allTxnSummary, calcula `hasDivergentAccounts`, renderiza DebtSummary, passa `hasDivergentAccounts` e `debts` para FinancialInsights
+- `src/components/dashboard/financial-insights.tsx` — 3 novos insights: DEBT_TO_INCOME_HIGH (parcelas > 30% receita), DEBT_HIGH_INTEREST (taxa > 3%/mês), BALANCE_DIVERGENCE (contas com divergência)
+
+**Design decisions:**
+- Simulação de payoff usa loop iterativo (max 600 meses = 50 anos) para flexibilidade com pagamento extra variável
+- `interest_rate_monthly` como NUMERIC(8,4) no Postgres, convertido com `Number()` no JS
+- Reconciliação compara `initial_balance_cents + SUM(receitas) - SUM(despesas)` vs `balance_cents`
+- Nenhuma dependência nova adicionada
+
+### Alterações anteriores (28/02/2026)
 
 ### Metas Financeiras (Goals)
 
@@ -478,13 +516,15 @@ src/
 │       ├── investimentos/page.tsx
 │       ├── assistente/page.tsx     # Chat IA (Gemini Flash)
 │       ├── metas/page.tsx          # CRUD metas financeiras
+│       ├── dividas/page.tsx        # CRUD dívidas + simulador
 │       ├── configuracoes/page.tsx  # Abas: Geral + Categorias
 │       └── recorrentes/page.tsx
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
 │   ├── layout/                   # Sidebar, DashboardShell, UserAvatar, GreetingHeader, Navbar (legado)
-│   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison, MonthlyClosing, RecurrenceSuggestions, GoalsSummary
+│   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison, MonthlyClosing, RecurrenceSuggestions, GoalsSummary, DebtSummary
 │   ├── metas/                    # GoalForm, GoalList
+│   ├── dividas/                  # DebtForm, DebtList, DebtSimulator
 │   ├── contas/
 │   ├── categorias/
 │   ├── assistente/               # ChatMessage, ChatInput
@@ -509,7 +549,8 @@ src/
 │   ├── pdf-import.ts             # Client helper para importação PDF via Gemini
 │   ├── rate-limit.ts             # Rate limiter in-memory sliding window
 │   ├── recurrence-detection.ts   # detectRecurrences — detecta padrões de transações repetidas
-│   └── goal-utils.ts             # Cálculos de metas (progresso, gap, contribuição, status)
+│   ├── goal-utils.ts             # Cálculos de metas (progresso, gap, contribuição, status)
+│   └── debt-utils.ts             # Cálculos de dívidas (progresso, juros, payoff, simulador, status)
 └── types/
     └── database.ts               # Types do Supabase
 ```
@@ -528,6 +569,7 @@ src/
 | `investment_entries` | Lançamentos de investimentos (aportes, resgates, saldos) |
 | `category_rules` | Regras de categorização automática (pattern → category) |
 | `goals` | Metas financeiras (prazo, progresso, vínculo a conta opcional) |
+| `debts` | Dívidas (juros, parcelas, simulação de pagamento extra) |
 
 ### Migrations
 1. `001_initial_schema.sql` - Estrutura base (profiles, accounts, categories, transactions)
@@ -544,20 +586,23 @@ src/
 12. `012_security_hardening.sql` - RPC hardening + RLS strengthening + CHECK constraints
 13. `013_goals.sql` - Tabela goals com RLS, índices, constraints
 14. `014_essential_categories.sql` - Flag is_essential em categories
+15. `015_initial_balance.sql` - initial_balance_cents em accounts + backfill
+16. `016_debts.sql` - Tabela debts com RLS, índice, constraints
 
 ## Navegação (Sidebar)
 
 | # | Label | Rota | Página |
 |---|-------|------|--------|
-| 1 | Dashboard | `/` | Hero cards, 5 KPIs (poupança/runway/reserva/desvio/gasto fixo), Insights, Previsto vs Realizado (com alertas e tetos), Categorias, Investimentos (com retorno real), Recorrências Sugeridas, Metas, Fechamento Mensal, Últimas Transações |
-| 2 | Contas | `/contas` | CRUD contas bancárias (tag reserva de emergência) |
+| 1 | Dashboard | `/` | Hero cards, 5 KPIs (poupança/runway/reserva/desvio/gasto fixo), Insights (15 regras), Previsto vs Realizado (com alertas e tetos), Categorias, Investimentos (com retorno real), Recorrências Sugeridas, Metas, Dívidas, Fechamento Mensal, Últimas Transações |
+| 2 | Contas | `/contas` | CRUD contas bancárias (tag reserva de emergência, saldo inicial, reconciliação) |
 | 3 | Transações | `/transacoes` | CRUD transações + importação OFX/CSV/PDF (mapeamento CSV, extração PDF via IA, auto-categorização por regras) |
 | 4 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
 | 5 | Metas | `/metas` | CRUD metas financeiras (prazo, progresso, vínculo a conta, cards visuais) |
-| 6 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
-| 7 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal + retorno real IPCA) |
-| 8 | Assistente IA | `/assistente` | Chat com Gemini 2.5 Flash, contexto conversacional, botão copiar, streaming |
-| 9 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento, meta reserva) + Categorias (CRUD receita/despesa, teto orçamento) + Regras de Importação |
+| 6 | Dívidas | `/dividas` | CRUD dívidas (juros, parcelas, simulador pagamento extra, cards visuais) |
+| 7 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
+| 8 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal + retorno real IPCA) |
+| 9 | Assistente IA | `/assistente` | Chat com Gemini 2.5 Flash, contexto conversacional, botão copiar, streaming |
+| 10 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento, meta reserva) + Categorias (CRUD receita/despesa, teto orçamento) + Regras de Importação |
 
 ## Próximos Passos
 

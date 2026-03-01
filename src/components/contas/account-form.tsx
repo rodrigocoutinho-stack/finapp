@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { toCents } from "@/lib/utils";
 import type { Account } from "@/types/database";
 
 const accountTypeOptions = [
@@ -23,6 +24,7 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
   const supabase = createClient();
   const [name, setName] = useState(account?.name ?? "");
   const [type, setType] = useState(account?.type ?? "banco");
+  const [initialBalance, setInitialBalance] = useState("");
   const [isEmergencyReserve, setIsEmergencyReserve] = useState(account?.is_emergency_reserve ?? false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -54,9 +56,17 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
         return;
       }
     } else {
+      const initialCents = toCents(initialBalance);
       const { error } = await supabase
         .from("accounts")
-        .insert({ user_id: user.id, name, type, is_emergency_reserve: isEmergencyReserve });
+        .insert({
+          user_id: user.id,
+          name,
+          type,
+          balance_cents: initialCents,
+          initial_balance_cents: initialCents,
+          is_emergency_reserve: isEmergencyReserve,
+        });
 
       if (error) {
         setError("Erro ao criar conta.");
@@ -93,6 +103,16 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
         onChange={(e) => setType(e.target.value as Account["type"])}
         options={accountTypeOptions}
       />
+
+      {!account && (
+        <Input
+          id="initialBalance"
+          label="Saldo inicial (R$)"
+          value={initialBalance}
+          onChange={(e) => setInitialBalance(e.target.value)}
+          placeholder="0,00"
+        />
+      )}
 
       <label className="flex items-center gap-2 cursor-pointer">
         <input
