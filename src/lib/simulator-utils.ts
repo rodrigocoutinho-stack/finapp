@@ -1,3 +1,133 @@
+// ── Financial Independence (FI/RE) ───────────────────────────────
+
+export interface FIYearlyPoint {
+  year: number;
+  conservative: number;
+  base: number;
+  optimistic: number;
+  target: number;
+}
+
+export interface FIScenario {
+  label: string;
+  annualRealReturn: number;
+  yearsToTarget: number | null; // null = não alcança em 100 anos
+  finalPatrimony: number;
+}
+
+export interface FIResult {
+  targetPatrimony: number;
+  monthlyExpenseNeeded: number;
+  currentProgress: number; // 0..1
+  scenarios: [FIScenario, FIScenario, FIScenario];
+  yearlyData: FIYearlyPoint[];
+}
+
+/**
+ * Simula a trajetória de independência financeira com 3 cenários.
+ * @param monthlyExpense Gasto mensal desejado na aposentadoria (R$)
+ * @param currentPatrimony Patrimônio atual (R$)
+ * @param monthlyContribution Aporte mensal (R$)
+ * @param swr Taxa de retirada segura anual (ex: 4 = 4%)
+ * @param realReturnBase Retorno real anual base (ex: 5 = 5%)
+ */
+export function fiSimulation(
+  monthlyExpense: number,
+  currentPatrimony: number,
+  monthlyContribution: number,
+  swr: number,
+  realReturnBase: number
+): FIResult {
+  const swrDecimal = swr / 100;
+  const annualExpense = monthlyExpense * 12;
+  const targetPatrimony = swrDecimal > 0 ? annualExpense / swrDecimal : 0;
+  const currentProgress = targetPatrimony > 0 ? currentPatrimony / targetPatrimony : 0;
+
+  const scenarioDefs = [
+    { label: "Conservador", offset: -2 },
+    { label: "Base", offset: 0 },
+    { label: "Otimista", offset: 2 },
+  ] as const;
+
+  const maxYears = 60;
+  const yearlyData: FIYearlyPoint[] = [];
+  const trajectories: [number[], number[], number[]] = [[], [], []];
+  const yearsToTarget: (number | null)[] = [null, null, null];
+
+  // Initialize
+  for (let s = 0; s < 3; s++) {
+    trajectories[s].push(currentPatrimony);
+  }
+  yearlyData.push({
+    year: 0,
+    conservative: currentPatrimony,
+    base: currentPatrimony,
+    optimistic: currentPatrimony,
+    target: targetPatrimony,
+  });
+
+  for (let y = 1; y <= maxYears; y++) {
+    const point: FIYearlyPoint = {
+      year: y,
+      conservative: 0,
+      base: 0,
+      optimistic: 0,
+      target: targetPatrimony,
+    };
+
+    for (let s = 0; s < 3; s++) {
+      const annualReturn = Math.max(0, realReturnBase + scenarioDefs[s].offset) / 100;
+      const monthlyReturn = Math.pow(1 + annualReturn, 1 / 12) - 1;
+
+      let patrimony = trajectories[s][y - 1];
+      for (let m = 0; m < 12; m++) {
+        patrimony = patrimony * (1 + monthlyReturn) + monthlyContribution;
+      }
+      patrimony = Math.round(patrimony * 100) / 100;
+      trajectories[s].push(patrimony);
+
+      if (yearsToTarget[s] === null && patrimony >= targetPatrimony && targetPatrimony > 0) {
+        yearsToTarget[s] = y;
+      }
+
+      if (s === 0) point.conservative = patrimony;
+      else if (s === 1) point.base = patrimony;
+      else point.optimistic = patrimony;
+    }
+
+    yearlyData.push(point);
+  }
+
+  const scenarios: [FIScenario, FIScenario, FIScenario] = [
+    {
+      label: "Conservador",
+      annualRealReturn: Math.max(0, realReturnBase - 2),
+      yearsToTarget: yearsToTarget[0],
+      finalPatrimony: trajectories[0][maxYears],
+    },
+    {
+      label: "Base",
+      annualRealReturn: realReturnBase,
+      yearsToTarget: yearsToTarget[1],
+      finalPatrimony: trajectories[1][maxYears],
+    },
+    {
+      label: "Otimista",
+      annualRealReturn: realReturnBase + 2,
+      yearsToTarget: yearsToTarget[2],
+      finalPatrimony: trajectories[2][maxYears],
+    },
+  ];
+
+  return {
+    targetPatrimony,
+    monthlyExpenseNeeded: monthlyExpense,
+    currentProgress,
+    scenarios,
+    yearlyData,
+  };
+}
+
 // ── Compound Interest ────────────────────────────────────────────
 
 export interface MonthlyDataPoint {

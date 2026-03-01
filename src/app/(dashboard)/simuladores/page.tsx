@@ -5,13 +5,15 @@ import { PageHeader } from "@/components/ui/page-header";
 import { CompoundInterestSimulator } from "@/components/simuladores/compound-interest-simulator";
 import { InflationSimulator } from "@/components/simuladores/inflation-simulator";
 import { OpportunityCostSimulator } from "@/components/simuladores/opportunity-cost-simulator";
+import { FISimulator } from "@/components/simuladores/fi-simulator";
 
-type Tab = "juros" | "inflacao" | "oportunidade";
+type Tab = "juros" | "inflacao" | "oportunidade" | "fi";
 
 const tabs: { key: Tab; label: string; description: string }[] = [
   { key: "juros", label: "Juros Compostos", description: "Simule o crescimento do seu patrimônio com aportes regulares" },
   { key: "inflacao", label: "Inflação", description: "Veja como a inflação corrói o poder de compra do seu dinheiro" },
   { key: "oportunidade", label: "Custo de Oportunidade", description: "Descubra o custo real dos seus gastos recorrentes" },
+  { key: "fi", label: "Independência Financeira", description: "Calcule quanto você precisa para viver de renda e quando pode chegar lá" },
 ];
 
 export default function SimuladoresPage() {
@@ -25,7 +27,7 @@ export default function SimuladoresPage() {
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 rounded-lg p-1 mb-6 w-fit">
+      <div className="flex gap-1 bg-slate-100 rounded-lg p-1 mb-6 w-fit flex-wrap">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -46,6 +48,7 @@ export default function SimuladoresPage() {
         {tab === "juros" && <CompoundInterestSimulator />}
         {tab === "inflacao" && <InflationSimulator />}
         {tab === "oportunidade" && <OpportunityCostSimulator />}
+        {tab === "fi" && <FISimulator />}
       </div>
     </div>
   );
