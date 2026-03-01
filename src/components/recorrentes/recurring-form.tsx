@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toCents, formatCurrency } from "@/lib/utils";
 import type { Account, Category, RecurringTransaction } from "@/types/database";
 
@@ -312,18 +313,12 @@ export function RecurringForm({
         required
       />
 
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="isActive"
-          checked={isActive}
-          onChange={(e) => setIsActive(e.target.checked)}
-          className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-        />
-        <label htmlFor="isActive" className="text-sm text-slate-700">
-          Ativo
-        </label>
-      </div>
+      <Checkbox
+        id="isActive"
+        label="Ativo"
+        checked={isActive}
+        onChange={(e) => setIsActive(e.target.checked)}
+      />
 
       <div className="flex gap-3 justify-end pt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>

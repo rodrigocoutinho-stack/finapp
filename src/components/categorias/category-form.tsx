@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toCents } from "@/lib/utils";
 import type { Category } from "@/types/database";
 
@@ -142,21 +143,13 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
           <p className="text-xs text-slate-500 -mt-2">
             Limite máximo de gasto mensal. Se não definido, a projeção será usada como referência.
           </p>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isEssential"
-              checked={isEssential}
-              onChange={(e) => setIsEssential(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-            />
-            <label htmlFor="isEssential" className="text-sm text-slate-700">
-              Despesa essencial
-            </label>
-          </div>
-          <p className="text-xs text-slate-500 -mt-2">
-            Categorias essenciais são usadas para calcular reserva de emergência e runway financeiro com mais precisão.
-          </p>
+          <Checkbox
+            id="isEssential"
+            label="Despesa essencial"
+            checked={isEssential}
+            onChange={(e) => setIsEssential(e.target.checked)}
+            helpText="Categorias essenciais são usadas para calcular reserva de emergência e runway financeiro com mais precisão."
+          />
         </>
       )}
 

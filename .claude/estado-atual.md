@@ -3,7 +3,7 @@
 Ultima atualizacao: 2026-03-01
 
 ## Status
-Build OK. Lint 0 errors. Deploy Vercel ativo. Migrations 001-018 executadas. Paginacao server-side implementada na pagina de transacoes (50 registros por pagina via Supabase .range()).
+Build OK. Lint 0 errors. Deploy Vercel ativo. Migrations 001-018 executadas. Form styling concluido: componentes Checkbox e Textarea reutilizaveis criados, Input/Select com py-2.5 + optional + disabled styling, checkboxes raw migrados em 3 formularios.
 
 ## Hipoteses Abertas
 - Nenhuma

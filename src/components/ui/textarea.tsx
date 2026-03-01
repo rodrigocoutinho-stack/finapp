@@ -1,26 +1,13 @@
-import { SelectHTMLAttributes } from "react";
+import { TextareaHTMLAttributes } from "react";
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
   helpText?: string;
   optional?: boolean;
-  options: { value: string; label: string }[];
-  placeholder?: string;
 }
 
-export function Select({
-  label,
-  error,
-  helpText,
-  optional,
-  id,
-  options,
-  placeholder,
-  className = "",
-  required,
-  ...props
-}: SelectProps) {
+export function Textarea({ label, error, helpText, optional, id, className = "", required, ...props }: TextareaProps) {
   return (
     <div>
       {label && (
@@ -30,27 +17,16 @@ export function Select({
           {optional && <span className="text-slate-400 ml-1 font-normal">(opcional)</span>}
         </label>
       )}
-      <select
+      <textarea
         id={id}
         className={`block w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed ${
           error
-            ? "border-red-300 text-red-900"
-            : "border-slate-300 text-slate-900"
+            ? "border-red-300 text-red-900 placeholder-red-300"
+            : "border-slate-300 text-slate-900 placeholder-slate-400"
         } ${className}`}
         required={required}
         {...props}
-      >
-        {placeholder && (
-          <option value="" disabled>
-            {placeholder}
-          </option>
-        )}
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
+      />
       {helpText && !error && (
         <p className="mt-1 text-xs text-slate-500">{helpText}</p>
       )}

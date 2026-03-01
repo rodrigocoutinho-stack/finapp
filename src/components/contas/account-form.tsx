@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toCents } from "@/lib/utils";
 import { logAudit } from "@/lib/audit-log";
 import type { Account } from "@/types/database";
@@ -115,18 +116,16 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
           value={initialBalance}
           onChange={(e) => setInitialBalance(e.target.value)}
           placeholder="0,00"
+          optional
         />
       )}
 
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={isEmergencyReserve}
-          onChange={(e) => setIsEmergencyReserve(e.target.checked)}
-          className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-        />
-        <span className="text-sm text-slate-700">Conta de reserva de emergência</span>
-      </label>
+      <Checkbox
+        id="isEmergencyReserve"
+        label="Conta de reserva de emergência"
+        checked={isEmergencyReserve}
+        onChange={(e) => setIsEmergencyReserve(e.target.checked)}
+      />
 
       <div className="flex gap-3 justify-end pt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
