@@ -11,3 +11,7 @@
 - **[2026-02-28]** — Backfill de `initial_balance_cents` na migration 015: `balance_cents - SUM(transacoes)`. Motivo: garantir que contas existentes reconciliem sem divergencia apos a migration.
 - **[2026-02-28]** — Gestao de dividas com simulacao iterativa de payoff (max 600 iteracoes). Motivo: simulacao analitica com juros compostos exigiria formula mais complexa e menos flexivel para cenarios com pagamento extra variavel.
 - **[2026-02-28]** — `interest_rate_monthly` como NUMERIC(8,4) no Postgres. Motivo: precisao decimal para taxas de juros; retorna como `number` no JS via Supabase client.
+- **[2026-02-28]** — AuditLog como tabela imutavel (sem UPDATE/DELETE via RLS). Motivo: trilha de auditoria deve ser append-only para garantir integridade do historico.
+- **[2026-02-28]** — `logAudit()` fire-and-forget (sem await). Motivo: nao bloquear a operacao principal do usuario; erros de auditoria nao devem impactar a UX.
+- **[2026-02-28]** — Simuladores 100% client-side, sem persistencia em banco. Motivo: ferramentas educacionais que nao precisam salvar estado; simplifica implementacao e evita complexidade desnecessaria.
+- **[2026-02-28]** — Testes E2E com Playwright dependem de usuario de teste manual no Supabase. Motivo: nao ha API publica para criar usuarios no Supabase sem service_role key, e expor essa key no CI e inseguro.

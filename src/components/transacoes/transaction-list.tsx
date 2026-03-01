@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { TransactionForm } from "./transaction-form";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { logAudit } from "@/lib/audit-log";
 import type { Account, Category, Transaction } from "@/types/database";
 
 interface TransactionWithRelations extends Transaction {
@@ -75,6 +76,7 @@ export function TransactionList({
       return;
     }
 
+    logAudit(supabase, "transaction.delete", "transaction", deletingTransaction.id, { description: deletingTransaction.description, amount_cents: deletingTransaction.amount_cents });
     setDeleteLoading(false);
     setDeletingTransaction(null);
     onRefresh();

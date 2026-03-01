@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AccountForm } from "./account-form";
 import { formatCurrency } from "@/lib/utils";
+import { logAudit } from "@/lib/audit-log";
 import type { Account } from "@/types/database";
 
 const typeLabels: Record<Account["type"], string> = {
@@ -40,6 +41,7 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
     if (error) {
       addToast("Erro ao excluir conta. Verifique se não há transações vinculadas.", "error");
     } else {
+      logAudit(supabase, "account.delete", "account", deletingAccount.id, { name: deletingAccount.name });
       onRefresh();
       addToast("Conta excluída.");
     }

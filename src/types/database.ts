@@ -498,6 +498,44 @@ export type Database = {
           },
         ];
       };
+      audit_logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          action: string;
+          entity_type: string;
+          entity_id: string | null;
+          details: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          action: string;
+          entity_type: string;
+          entity_id?: string | null;
+          details?: Record<string, unknown>;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          action?: string;
+          entity_type?: string;
+          entity_id?: string | null;
+          details?: Record<string, unknown>;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -521,3 +559,4 @@ export type InvestmentEntry = Database["public"]["Tables"]["investment_entries"]
 export type CategoryRule = Database["public"]["Tables"]["category_rules"]["Row"];
 export type Goal = Database["public"]["Tables"]["goals"]["Row"];
 export type Debt = Database["public"]["Tables"]["debts"]["Row"];
+export type AuditLog = Database["public"]["Tables"]["audit_logs"]["Row"];

@@ -11,6 +11,7 @@ import { CategoryList } from "@/components/categorias/category-list";
 import { CategoryRules } from "@/components/categorias/category-rules";
 import { usePreferences } from "@/contexts/preferences-context";
 import { useToast } from "@/contexts/toast-context";
+import { logAudit } from "@/lib/audit-log";
 import type { Category } from "@/types/database";
 
 type Tab = "geral" | "categorias" | "regras";
@@ -55,6 +56,7 @@ export default function ConfiguracoesPage() {
     setSaving(true);
     try {
       await setClosingDay(currentDay);
+      logAudit(supabase, "settings.update_closing_day", "settings", null, { closing_day: currentDay });
       addToast("Configuração salva.");
     } catch {
       addToast("Erro ao salvar configuração.", "error");
@@ -69,6 +71,7 @@ export default function ConfiguracoesPage() {
     setSavingReserve(true);
     try {
       await setReserveTargetMonths(currentReserveTarget);
+      logAudit(supabase, "settings.update_reserve_target", "settings", null, { reserve_target_months: currentReserveTarget });
       addToast("Meta de reserva salva.");
     } catch {
       addToast("Erro ao salvar meta de reserva.", "error");

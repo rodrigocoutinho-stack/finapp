@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { toCents, formatCurrency } from "@/lib/utils";
 import { GOAL_ICONS, GOAL_COLORS, HORIZON_LABELS } from "@/lib/goal-utils";
+import { logAudit } from "@/lib/audit-log";
 import type { Goal, Account } from "@/types/database";
 
 const horizonOptions = Object.entries(HORIZON_LABELS).map(([value, label]) => ({
@@ -132,6 +133,7 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
         setLoading(false);
         return;
       }
+      logAudit(supabase, "goal.update", "goal", goal.id, { name: payload.name });
     } else {
       const { error: dbError } = await supabase.from("goals").insert({
         user_id: user.id,
@@ -143,6 +145,7 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
         setLoading(false);
         return;
       }
+      logAudit(supabase, "goal.create", "goal", null, { name: payload.name });
     }
 
     onSuccess();

@@ -16,6 +16,7 @@ import {
   getMonthlyInterestCost,
   getTimeToPayoff,
 } from "@/lib/debt-utils";
+import { logAudit } from "@/lib/audit-log";
 import type { Debt } from "@/types/database";
 
 interface DebtListProps {
@@ -53,6 +54,7 @@ export function DebtList({ debts, onRefresh }: DebtListProps) {
       return;
     }
 
+    logAudit(supabase, "debt.delete", "debt", deleteDebt.id, { name: deleteDebt.name });
     addToast("Dívida excluída com sucesso.");
     setDeleteDebt(null);
     setDeleting(false);

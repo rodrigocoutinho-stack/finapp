@@ -109,6 +109,17 @@ const links = [
     ),
   },
   {
+    href: "/simuladores",
+    label: "Simuladores",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 15.75V18m-7.5-6.75V18m15-8.25l-3.172 3.172a4 4 0 01-2.828 1.172H6.75a4 4 0 01-2.828-1.172L.75 9.75m0 0V6.108c0-1.135.845-2.098 1.976-2.192a48.424 48.424 0 0113.548 0c1.131.094 1.976 1.057 1.976 2.192V9.75m-18 0h18"
+      />
+    ),
+  },
+  {
     href: "/configuracoes",
     label: "Configurações",
     icon: (

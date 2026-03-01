@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { ParsedTransaction } from "@/lib/ofx-parser";
+import { logAudit } from "@/lib/audit-log";
 import type { Category } from "@/types/database";
 
 interface ReviewRow extends ParsedTransaction {
@@ -189,6 +190,8 @@ export function ImportReviewTable({
         );
       }
     }
+
+    logAudit(supabase, "transaction.import", "transaction", null, { count: selectedCount, account_id: accountId });
 
     setSaving(false);
     onImported({

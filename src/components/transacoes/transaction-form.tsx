@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { toCents, formatCurrency } from "@/lib/utils";
+import { logAudit } from "@/lib/audit-log";
 import type { Account, Category, Transaction } from "@/types/database";
 
 const transactionTypeOptions = [
@@ -146,6 +147,7 @@ export function TransactionForm({
         setLoading(false);
         return;
       }
+      logAudit(supabase, "transaction.update", "transaction", transaction.id, { type, amount_cents: amountCents, description });
     } else {
       // Create transaction
       const { error } = await supabase.from("transactions").insert({
@@ -176,6 +178,7 @@ export function TransactionForm({
         setLoading(false);
         return;
       }
+      logAudit(supabase, "transaction.create", "transaction", null, { type, amount_cents: amountCents, description });
     }
 
     onSuccess();

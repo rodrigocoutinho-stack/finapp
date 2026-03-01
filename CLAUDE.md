@@ -5,10 +5,10 @@ FinApp - Gestão Financeira Pessoal
 
 ## Estado Atual (Atualizado: 28/02/2026)
 
-**MVP completo + Metas Financeiras + Codex Quick Wins + Reconciliação de Saldo + Gestão de Dívidas + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening + Code Review (26/26 corrigidos) + Bateria de Testes (tudo OK).** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
+**MVP completo + Metas Financeiras + Codex Quick Wins + Reconciliação de Saldo + Gestão de Dívidas + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening + Code Review (26/26 corrigidos) + Bateria de Testes (tudo OK) + Simuladores Educacionais + AuditLog + Testes E2E.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
 
 - [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations 001-016 (RLS ativo + security hardening)
+- [x] Database schema + migrations 001-017 (RLS ativo + security hardening + audit logs)
 - [x] Autenticação (login, registro com confirmação por email, logout)
 - [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência, saldo inicial, reconciliação)
 - [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção, teto de orçamento — dentro de Configurações)
@@ -30,9 +30,13 @@ FinApp - Gestão Financeira Pessoal
 - [x] Codex P1 (tetos orçamento, fechamento mensal, KPIs desvio/gasto fixo, meta reserva, detecção recorrências)
 - [x] Auto-logout por inatividade (30 min timeout, modal com contagem regressiva 60s, cross-tab via localStorage)
 - [x] Security Hardening (HTTP headers, RPC hardening, RLS strengthening, error sanitization, MIME validation, auth guard)
+- [x] Simuladores Educacionais (juros compostos, inflação, custo de oportunidade — gráficos interativos)
+- [x] Trilha de Auditoria (tabela audit_logs, helper fire-and-forget, integração em 10 componentes)
+- [x] Testes E2E com Playwright (auth, dashboard, transações, contas — 4 suites)
 
 **Supabase:** Projeto `knwbotsyztakseriiwtv`
 - [x] Migrations 001-016 executadas no SQL Editor
+- [ ] Migration 017 (audit_logs) — executar no SQL Editor
 
 **Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
 - [x] `GEMINI_API_KEY` configurada nas Environment Variables
@@ -40,6 +44,69 @@ FinApp - Gestão Financeira Pessoal
 **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
 ## Últimas Alterações (28/02/2026)
+
+### Simuladores Educacionais + AuditLog + Testes E2E
+
+**Feature 1 — Simuladores Educacionais:**
+
+**Novos arquivos:**
+- `src/lib/simulator-utils.ts` — Funções puras: `compoundInterest` (juros compostos mês a mês), `inflationImpact` (perda de poder de compra), `opportunityCost` (custo de oportunidade de gastos recorrentes). 100% client-side, sem dependências
+- `src/components/simuladores/compound-interest-simulator.tsx` — Simulador com inputs (valor inicial, aporte, taxa, período slider), 3 cards resultado, LineChart Recharts (montante vs investido)
+- `src/components/simuladores/inflation-simulator.tsx` — Simulador com IPCA real como default (via `getIPCA12Months()`), BarChart (nominal vs real), perda de poder de compra em %
+- `src/components/simuladores/opportunity-cost-simulator.tsx` — Simulador "E se investisse em vez de gastar?", AreaChart (gasto acumulado vs patrimônio potencial)
+- `src/app/(dashboard)/simuladores/page.tsx` — Página com tabs pill (padrão Fluxo): Juros Compostos | Inflação | Custo de Oportunidade
+
+**Arquivos modificados:**
+- `src/components/layout/sidebar.tsx` — Link "Simuladores" adicionado (ícone calculator) entre Assistente IA e Configurações (sidebar 10→11 itens)
+
+**Feature 2 — Trilha de Auditoria (AuditLog):**
+
+**Migration 017:** `supabase/migrations/017_audit_logs.sql`
+- Tabela `audit_logs` com UUID PK, user_id FK, action TEXT, entity_type TEXT, entity_id UUID (nullable), details JSONB, created_at TIMESTAMPTZ
+- RLS: somente INSERT e SELECT (imutável — sem UPDATE/DELETE)
+- Índice `idx_audit_user_created` (user_id, created_at DESC)
+
+**Novos arquivos:**
+- `src/lib/audit-log.ts` — Helper `logAudit(supabase, action, entityType, entityId?, details?)` fire-and-forget, erros silenciados (console.error em dev)
+
+**Arquivos modificados:**
+- `src/types/database.ts` — Tipo `AuditLog` adicionado (Row/Insert/Update/Relationships)
+- `src/components/contas/account-list.tsx` — logAudit em account.delete
+- `src/components/contas/account-form.tsx` — logAudit em account.create e account.update
+- `src/components/transacoes/transaction-form.tsx` — logAudit em transaction.create e transaction.update
+- `src/components/transacoes/transaction-list.tsx` — logAudit em transaction.delete
+- `src/components/transacoes/import-review-table.tsx` — logAudit em transaction.import (count)
+- `src/components/dividas/debt-form.tsx` — logAudit em debt.create e debt.update
+- `src/components/dividas/debt-list.tsx` — logAudit em debt.delete
+- `src/components/metas/goal-form.tsx` — logAudit em goal.create e goal.update
+- `src/components/metas/goal-list.tsx` — logAudit em goal.delete e goal.update_balance
+- `src/app/(dashboard)/configuracoes/page.tsx` — logAudit em settings.update_closing_day e settings.update_reserve_target
+
+**Feature 3 — Testes E2E com Playwright:**
+
+**Novos arquivos:**
+- `playwright.config.ts` — baseURL localhost:3000, webServer npm run dev, projects setup + chromium com storageState
+- `e2e/auth.setup.ts` — Login com E2E_USER_EMAIL/E2E_USER_PASSWORD, salva storageState
+- `e2e/auth.spec.ts` — Testes: página login, credenciais inválidas, página registro, redirect sem auth
+- `e2e/dashboard.spec.ts` — Testes: carrega dashboard, hero cards, KPIs, navegação sidebar, simuladores
+- `e2e/transactions.spec.ts` — Testes: página transações, abrir form, criar despesa, excluir
+- `e2e/accounts.spec.ts` — Testes: página contas, abrir form, criar conta, excluir
+
+**Arquivos modificados:**
+- `package.json` — Scripts `test:e2e` e `test:e2e:ui`
+- `.gitignore` — Adicionado test-results/, playwright-report/, playwright/.cache/, .playwright/.auth/
+
+**Dependências adicionadas:**
+- `@playwright/test` (devDependency)
+
+**Pré-requisitos para rodar E2E:**
+1. Criar usuário de teste no Supabase
+2. Definir env vars `E2E_USER_EMAIL` e `E2E_USER_PASSWORD`
+3. Executar migration 017 no SQL Editor do Supabase
+4. `npx playwright install chromium`
+5. `npm run test:e2e`
+
+### Alterações anteriores (28/02/2026)
 
 ### Reconciliação de Saldo + Gestão de Dívidas
 
@@ -517,6 +584,7 @@ src/
 │       ├── assistente/page.tsx     # Chat IA (Gemini Flash)
 │       ├── metas/page.tsx          # CRUD metas financeiras
 │       ├── dividas/page.tsx        # CRUD dívidas + simulador
+│       ├── simuladores/page.tsx    # 3 simuladores educacionais (abas)
 │       ├── configuracoes/page.tsx  # Abas: Geral + Categorias
 │       └── recorrentes/page.tsx
 ├── components/
@@ -525,6 +593,7 @@ src/
 │   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison, MonthlyClosing, RecurrenceSuggestions, GoalsSummary, DebtSummary
 │   ├── metas/                    # GoalForm, GoalList
 │   ├── dividas/                  # DebtForm, DebtList, DebtSimulator
+│   ├── simuladores/              # CompoundInterestSimulator, InflationSimulator, OpportunityCostSimulator
 │   ├── contas/
 │   ├── categorias/
 │   ├── assistente/               # ChatMessage, ChatInput
@@ -550,7 +619,9 @@ src/
 │   ├── rate-limit.ts             # Rate limiter in-memory sliding window
 │   ├── recurrence-detection.ts   # detectRecurrences — detecta padrões de transações repetidas
 │   ├── goal-utils.ts             # Cálculos de metas (progresso, gap, contribuição, status)
-│   └── debt-utils.ts             # Cálculos de dívidas (progresso, juros, payoff, simulador, status)
+│   ├── debt-utils.ts             # Cálculos de dívidas (progresso, juros, payoff, simulador, status)
+│   ├── simulator-utils.ts        # Cálculos de simuladores (juros compostos, inflação, custo de oportunidade)
+│   └── audit-log.ts              # Helper logAudit fire-and-forget para trilha de auditoria
 └── types/
     └── database.ts               # Types do Supabase
 ```
@@ -570,6 +641,7 @@ src/
 | `category_rules` | Regras de categorização automática (pattern → category) |
 | `goals` | Metas financeiras (prazo, progresso, vínculo a conta opcional) |
 | `debts` | Dívidas (juros, parcelas, simulação de pagamento extra) |
+| `audit_logs` | Trilha de auditoria imutável (ação, entidade, detalhes JSONB) |
 
 ### Migrations
 1. `001_initial_schema.sql` - Estrutura base (profiles, accounts, categories, transactions)
@@ -588,6 +660,7 @@ src/
 14. `014_essential_categories.sql` - Flag is_essential em categories
 15. `015_initial_balance.sql` - initial_balance_cents em accounts + backfill
 16. `016_debts.sql` - Tabela debts com RLS, índice, constraints
+17. `017_audit_logs.sql` - Tabela audit_logs com RLS (INSERT + SELECT imutável), índice user+created_at
 
 ## Navegação (Sidebar)
 
@@ -602,7 +675,8 @@ src/
 | 7 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
 | 8 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal + retorno real IPCA) |
 | 9 | Assistente IA | `/assistente` | Chat com Gemini 2.5 Flash, contexto conversacional, botão copiar, streaming |
-| 10 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento, meta reserva) + Categorias (CRUD receita/despesa, teto orçamento) + Regras de Importação |
+| 10 | Simuladores | `/simuladores` | Abas: Juros Compostos + Inflação + Custo de Oportunidade (gráficos interativos, IPCA real) |
+| 11 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento, meta reserva) + Categorias (CRUD receita/despesa, teto orçamento) + Regras de Importação |
 
 ## Próximos Passos
 
@@ -632,7 +706,7 @@ src/
 - [ ] Validações de formulário mais rigorosas
 - [ ] Paginação server-side para tabelas com muitos registros
 - [ ] Connection pooling (Supabase Pooler)
-- [ ] Testes automatizados (unitários e/ou e2e com Playwright)
+- [x] Testes automatizados (E2E com Playwright — 4 suites: auth, dashboard, transações, contas)
 
 ### Futuro
 - [x] Deploy na Vercel (finapp-kohl.vercel.app)

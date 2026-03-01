@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { toCents } from "@/lib/utils";
 import { DEBT_TYPE_LABELS } from "@/lib/debt-utils";
+import { logAudit } from "@/lib/audit-log";
 import type { Debt } from "@/types/database";
 
 const typeOptions = Object.entries(DEBT_TYPE_LABELS).map(([value, label]) => ({
@@ -149,6 +150,7 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
         setLoading(false);
         return;
       }
+      logAudit(supabase, "debt.update", "debt", debt.id, { name: payload.name });
     } else {
       const { error: dbError } = await supabase.from("debts").insert({
         user_id: user.id,
@@ -160,6 +162,7 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
         setLoading(false);
         return;
       }
+      logAudit(supabase, "debt.create", "debt", null, { name: payload.name });
     }
 
     onSuccess();

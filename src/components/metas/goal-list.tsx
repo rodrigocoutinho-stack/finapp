@@ -19,6 +19,7 @@ import {
   getRequiredMonthlyContribution,
   getMonthsRemaining,
 } from "@/lib/goal-utils";
+import { logAudit } from "@/lib/audit-log";
 import type { Goal, Account } from "@/types/database";
 
 interface GoalListProps {
@@ -56,6 +57,7 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
       return;
     }
 
+    logAudit(supabase, "goal.delete", "goal", deleteGoal.id, { name: deleteGoal.name });
     addToast("Meta excluída com sucesso.");
     setDeleteGoal(null);
     setDeleting(false);
@@ -86,6 +88,7 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
       return;
     }
 
+    logAudit(supabase, "goal.update_balance", "goal", updateGoal.id, { current_cents: cents });
     addToast("Saldo atualizado com sucesso.");
     setUpdateGoal(null);
     setUpdateAmount("");

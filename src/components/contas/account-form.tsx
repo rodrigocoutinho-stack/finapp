@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { toCents } from "@/lib/utils";
+import { logAudit } from "@/lib/audit-log";
 import type { Account } from "@/types/database";
 
 const accountTypeOptions = [
@@ -55,6 +56,7 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
         setLoading(false);
         return;
       }
+      logAudit(supabase, "account.update", "account", account.id, { name, type });
     } else {
       const initialCents = toCents(initialBalance);
       const { error } = await supabase
@@ -73,6 +75,7 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
         setLoading(false);
         return;
       }
+      logAudit(supabase, "account.create", "account", null, { name, type });
     }
 
     onSuccess();
