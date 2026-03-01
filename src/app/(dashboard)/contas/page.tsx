@@ -38,7 +38,7 @@ export default function ContasPage() {
       supabase
         .from("transactions")
         .select("account_id, type, amount_cents")
-        .limit(50000),
+        .limit(10000),
     ]);
 
     setAccounts((accountsRes.data as Account[]) ?? []);

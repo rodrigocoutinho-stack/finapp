@@ -6,7 +6,7 @@ import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, type PaginationProps } from "@/components/ui/data-table";
 import { RecurringForm } from "./recurring-form";
 import { formatCurrency, formatMonthLabel } from "@/lib/utils";
 import type { Account, Category, RecurringTransaction } from "@/types/database";
@@ -21,6 +21,7 @@ interface RecurringListProps {
   accounts: Account[];
   categories: Category[];
   onRefresh: () => void;
+  pagination?: PaginationProps;
 }
 
 function getPeriodBadge(r: RecurringWithRelations) {
@@ -46,6 +47,7 @@ export function RecurringList({
   accounts,
   categories,
   onRefresh,
+  pagination,
 }: RecurringListProps) {
   const supabase = createClient();
   const { addToast } = useToast();
@@ -177,6 +179,7 @@ export function RecurringList({
         columns={columns}
         data={recurrings}
         keyExtractor={(r) => r.id}
+        pagination={pagination}
         actions={(r) => (
           <div className="flex gap-1 justify-end">
             <Button

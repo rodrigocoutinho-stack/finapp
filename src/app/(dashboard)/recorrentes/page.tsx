@@ -12,6 +12,8 @@ import { RecurringList } from "@/components/recorrentes/recurring-list";
 import { useToast } from "@/contexts/toast-context";
 import type { Account, Category, RecurringTransaction } from "@/types/database";
 
+const PAGE_SIZE = 50;
+
 interface RecurringWithRelations extends RecurringTransaction {
   accounts: { name: string } | null;
   categories: { name: string } | null;
@@ -26,6 +28,8 @@ function RecorrentesContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Pre-fill values from searchParams (from recurrence suggestions) — sanitized
   const rawDesc = searchParams.get("desc");
@@ -48,25 +52,31 @@ function RecorrentesContent() {
   const fetchData = useCallback(async () => {
     setLoading(true);
 
+    const from = (currentPage - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
     const [recRes, accRes, catRes] = await Promise.all([
       supabase
         .from("recurring_transactions")
-        .select("*, accounts(name), categories(name)")
+        .select("*, accounts(name), categories(name)", { count: "exact" })
         .order("day_of_month")
-        .limit(1000),
+        .range(from, to),
       supabase.from("accounts").select("*").order("name"),
       supabase.from("categories").select("*").order("name"),
     ]);
 
     setRecurrings((recRes.data as RecurringWithRelations[]) ?? []);
+    setTotalCount(recRes.count ?? 0);
     setAccounts((accRes.data as Account[]) ?? []);
     setCategories((catRes.data as Category[]) ?? []);
     setLoading(false);
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   // Auto-open form when redirected from suggestions
   useEffect(() => {
@@ -91,6 +101,13 @@ function RecorrentesContent() {
           accounts={accounts}
           categories={categories}
           onRefresh={fetchData}
+          pagination={totalPages > 1 ? {
+            currentPage,
+            totalPages,
+            totalCount,
+            onPageChange: setCurrentPage,
+            pageSize: PAGE_SIZE,
+          } : undefined}
         />
       )}
 
