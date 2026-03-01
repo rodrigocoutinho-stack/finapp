@@ -17,7 +17,7 @@ FinApp - Gestão Financeira Pessoal
 - Google Generative AI (`@google/generative-ai`) — Gemini 2.5 Flash
 
 ### Infraestrutura
-- **Supabase:** Projeto `knwbotsyztakseriiwtv`, Migrations 001-017
+- **Supabase:** Projeto `knwbotsyztakseriiwtv`, Migrations 001-018
 - **Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
 - **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
@@ -31,10 +31,11 @@ FinApp - Gestão Financeira Pessoal
 - Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
 - Metas Financeiras (CRUD + progresso + vínculo a conta + cards visuais + widget dashboard + insights)
 - Gestão de Dívidas (CRUD + simulador pagamento extra + widget dashboard + insights juros/renda)
-- Dashboard (hero cards, 5 KPIs, insights proativos, alertas orçamento, previsto vs realizado, investimentos, recorrências sugeridas, metas, dívidas, fechamento mensal, últimas transações)
+- Dashboard (hero cards, 5 KPIs, insights proativos, alertas orçamento, previsto vs realizado, investimentos, recorrências sugeridas, metas, dívidas, fechamento mensal persistente com histórico, últimas transações)
+- Histórico de KPIs (evolução mensal com gráficos Recharts + tabela de dados, baseado em monthly_closings)
 - Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
 - Assistente Financeiro IA (Gemini 2.5 Flash, streaming, contexto conversacional)
-- Simuladores Educacionais (juros compostos, inflação, custo de oportunidade — gráficos interativos)
+- Simuladores Educacionais (juros compostos, inflação, custo de oportunidade, independência financeira — gráficos interativos)
 - Trilha de Auditoria (tabela audit_logs, helper fire-and-forget, integração em 10 componentes)
 - Testes E2E com Playwright (auth, dashboard, transações, contas — 4 suites)
 - Security Hardening (HTTP headers, RPC hardening, RLS strengthening, error sanitization, MIME validation, auth guard)
@@ -56,6 +57,7 @@ src/
 │       ├── transacoes/
 │       │   ├── page.tsx
 │       │   └── importar/page.tsx
+│       ├── historico/page.tsx      # Histórico de KPIs (evolução mensal)
 │       ├── fluxo/page.tsx        # Fluxo Diário + Previsto (abas)
 │       ├── investimentos/page.tsx
 │       ├── assistente/page.tsx     # Chat IA (Gemini Flash)
@@ -70,6 +72,7 @@ src/
 │   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison, MonthlyClosing, RecurrenceSuggestions, GoalsSummary, DebtSummary
 │   ├── metas/                    # GoalForm, GoalList
 │   ├── dividas/                  # DebtForm, DebtList, DebtSimulator
+│   ├── historico/                 # KpiHistory
 │   ├── simuladores/              # CompoundInterestSimulator, InflationSimulator, OpportunityCostSimulator
 │   ├── contas/                   # AccountForm, AccountList, AccountReconciliation
 │   ├── categorias/               # CategoryForm, CategoryList, CategoryRules
@@ -121,8 +124,9 @@ src/
 | `goals` | Metas financeiras (prazo, progresso, vínculo a conta opcional) |
 | `debts` | Dívidas (juros, parcelas, simulação de pagamento extra) |
 | `audit_logs` | Trilha de auditoria imutável (ação, entidade, detalhes JSONB) |
+| `monthly_closings` | Fechamento mensal persistente com snapshot de KPIs |
 
-### Migrations (001-017)
+### Migrations (001-018)
 1. `001_initial_schema.sql` — Estrutura base (profiles, accounts, categories, transactions)
 2. `002_seed_categories.sql` — Categorias padrão
 3. `003_add_projection_type.sql` — Campo projection_type em categories
@@ -140,6 +144,7 @@ src/
 15. `015_initial_balance.sql` — initial_balance_cents em accounts + backfill
 16. `016_debts.sql` — Tabela debts com RLS, índice, constraints
 17. `017_audit_logs.sql` — Tabela audit_logs (INSERT + SELECT imutável)
+18. `018_monthly_closings.sql` — Tabela monthly_closings (fechamento mensal + KPIs snapshot)
 
 ## Navegação (Sidebar)
 
@@ -151,11 +156,12 @@ src/
 | 4 | Recorrentes | `/recorrentes` |
 | 5 | Metas | `/metas` |
 | 6 | Dívidas | `/dividas` |
-| 7 | Fluxo | `/fluxo` |
-| 8 | Investimentos | `/investimentos` |
-| 9 | Assistente IA | `/assistente` |
-| 10 | Simuladores | `/simuladores` |
-| 11 | Configurações | `/configuracoes` |
+| 7 | Histórico | `/historico` |
+| 8 | Fluxo | `/fluxo` |
+| 9 | Investimentos | `/investimentos` |
+| 10 | Assistente IA | `/assistente` |
+| 11 | Simuladores | `/simuladores` |
+| 12 | Configurações | `/configuracoes` |
 
 ## Próximos Passos
 

@@ -3,7 +3,7 @@
 Ultima atualizacao: 2026-02-28
 
 ## Status
-Build OK. Lint 0 errors. Deploy Vercel ativo. Migrations 001-018 (018 pendente execucao no Supabase). Redesign UX Fase 3 concluida. Simulador FI/RE implementado (4o simulador educacional). Fechamento mensal persistente implementado (componente + types + migration).
+Build OK. Lint 0 errors. Deploy Vercel ativo. Migrations 001-018 executadas. Redesign UX Fase 3 concluida. Simulador FI/RE implementado. Fechamento mensal persistente ativo. Historico de KPIs implementado (pagina /historico com graficos de evolucao e tabela detalhada).
 
 ## Hipoteses Abertas
 - Nenhuma
@@ -15,7 +15,6 @@ Build OK. Lint 0 errors. Deploy Vercel ativo. Migrations 001-018 (018 pendente e
 - `interest_rate_monthly` retorna como `number` do Supabase JS mas e NUMERIC no Postgres. Conversao com `Number()` feita nos calculos.
 - `next lint` nao funciona no Next.js 16.1.6 (interpreta "lint" como diretorio). Workaround: usar `npx eslint src/` diretamente.
 - Insights do dashboard sao efemeros (ad-hoc em React) — nao ha motor de regras formal nem persistencia de recomendacoes.
-- Migration 018 (monthly_closings) criada mas pendente execucao no Supabase remoto.
 
 ## Proxima Acao Sugerida
-Executar migration 018 no Supabase remoto e testar fechamento mensal end-to-end. Depois: prosseguir para proxima fase do roadmap (historico de KPIs com grafico de evolucao mes a mes).
+Prosseguir para melhorias de robustez: validacoes de formulario mais rigorosas, paginacao server-side para tabelas com muitos registros, ou dark mode.
