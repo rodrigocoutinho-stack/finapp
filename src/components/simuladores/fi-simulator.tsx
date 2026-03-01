@@ -175,11 +175,11 @@ export function FISimulator() {
       </div>
 
       {/* Target Card */}
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-5 border border-emerald-100">
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950 dark:to-teal-950 rounded-xl p-5 border border-emerald-100 dark:border-emerald-800">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Patrimônio alvo (IF)</p>
-            <p className="text-2xl font-bold text-emerald-800">
+            <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-200">
               {formatBRL(result.targetPatrimony)}
             </p>
             <p className="text-xs text-emerald-600 mt-1">
@@ -188,10 +188,10 @@ export function FISimulator() {
           </div>
           <div className="text-right">
             <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Progresso atual</p>
-            <p className="text-2xl font-bold text-emerald-800">
+            <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-200">
               {(result.currentProgress * 100).toFixed(1)}%
             </p>
-            <div className="w-32 bg-emerald-200 rounded-full h-2 mt-1">
+            <div className="w-32 bg-emerald-200 dark:bg-emerald-700 rounded-full h-2 mt-1">
               <div
                 className="bg-emerald-600 h-2 rounded-full transition-all"
                 style={{ width: `${Math.min(100, result.currentProgress * 100)}%` }}
@@ -205,7 +205,7 @@ export function FISimulator() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {result.scenarios.map((scenario, i) => {
           const colors = [
-            { bg: "bg-orange-50", text: "text-orange-700", label: "text-orange-600" },
+            { bg: "bg-orange-50 dark:bg-orange-950", text: "text-orange-700 dark:text-orange-300", label: "text-orange-600 dark:text-orange-400" },
             { bg: "bg-blue-50 dark:bg-blue-950", text: "text-blue-700", label: "text-blue-600" },
             { bg: "bg-emerald-50 dark:bg-emerald-950", text: "text-emerald-700 dark:text-emerald-300", label: "text-emerald-600" },
           ];

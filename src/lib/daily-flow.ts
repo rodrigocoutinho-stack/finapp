@@ -41,28 +41,46 @@ export async function calculateDailyFlow(
   month: number,
   closingDay: number = 1
 ): Promise<DailyFlowResult> {
-  const competencyLabel = getCompetencyLabel(year, month);
-  const { start: firstDay, end: lastDay } = getCompetencyRange(year, month, closingDay);
+  const emptyResult: DailyFlowResult = { days: [], receitas: [], despesas: [], totalEntradas: [], totalSaidas: [] };
+
+  let competencyLabel: string;
+  let firstDay: string;
+  let lastDay: string;
+  try {
+    competencyLabel = getCompetencyLabel(year, month);
+    const range = getCompetencyRange(year, month, closingDay);
+    firstDay = range.start;
+    lastDay = range.end;
+  } catch (err) {
+    console.error("Erro ao calcular período de competência:", err);
+    return emptyResult;
+  }
 
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
 
-  const [accountsRes, transactionsRes, recurringRes, categoriesRes] =
-    await Promise.all([
-      supabase.from("accounts").select("balance_cents"),
-      supabase
-        .from("transactions")
-        .select("category_id, type, amount_cents, date")
-        .gte("date", firstDay)
-        .lte("date", lastDay)
-        .limit(5000),
-      supabase
-        .from("recurring_transactions")
-        .select("*")
-        .eq("is_active", true)
-        .limit(1000),
-      supabase.from("categories").select("id, name, type"),
-    ]);
+  let accountsRes, transactionsRes, recurringRes, categoriesRes;
+  try {
+    [accountsRes, transactionsRes, recurringRes, categoriesRes] =
+      await Promise.all([
+        supabase.from("accounts").select("balance_cents"),
+        supabase
+          .from("transactions")
+          .select("category_id, type, amount_cents, date")
+          .gte("date", firstDay)
+          .lte("date", lastDay)
+          .limit(5000),
+        supabase
+          .from("recurring_transactions")
+          .select("*")
+          .eq("is_active", true)
+          .limit(1000),
+        supabase.from("categories").select("id, name, type"),
+      ]);
+  } catch (err) {
+    console.error("Erro ao carregar dados do fluxo diário:", err);
+    return emptyResult;
+  }
 
   type RecurringRow = Database["public"]["Tables"]["recurring_transactions"]["Row"];
   type CategoryRow = { id: string; name: string; type: "receita" | "despesa" };

@@ -159,7 +159,7 @@ export function RecurringList({
           aria-checked={r.is_active}
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
             r.is_active
-              ? "bg-emerald-100 text-emerald-800"
+              ? "bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200"
               : "bg-tab-bg text-on-surface-secondary"
           }`}
         >

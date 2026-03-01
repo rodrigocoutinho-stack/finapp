@@ -30,6 +30,7 @@ import { getMonthEndBalance } from "@/lib/investment-utils";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
 import { getIPCA12Months } from "@/lib/inflation";
 import { usePreferences } from "@/contexts/preferences-context";
+import { useToast } from "@/contexts/toast-context";
 import type { Account, Debt, Goal, InvestmentEntry, Transaction, RecurringTransaction, MonthlyClosingRow } from "@/types/database";
 
 interface TransactionRow {
@@ -52,6 +53,7 @@ interface InvestmentData {
 export default function DashboardPage() {
   const supabase = createClient();
   const { closingDay, reserveTargetMonths, loading: prefsLoading } = usePreferences();
+  const { addToast } = useToast();
 
   const { year: initYear, month: initMonth } = getCurrentCompetencyMonth(closingDay);
   const [year, setYear] = useState(initYear);
@@ -147,6 +149,7 @@ export default function DashboardPage() {
     if (annualEndMonth > 11) { annualEndMonth -= 12; annualEndYear++; }
     const annualEndRange = getMonthRange(annualEndYear, annualEndMonth, closingDay);
 
+    try {
     const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes, allTxnSummaryRes, debtsRes, closingRes, prevClosingRes, past3mRes, existingRecRes, pastReceitasRes, annualRes] = await Promise.all([
       supabase
         .from("transactions")
@@ -356,66 +359,75 @@ export default function DashboardPage() {
       setAnnualProvisions([]);
     }
 
-    setLoading(false);
+    } catch (err) {
+      console.error("Erro ao carregar dashboard:", err);
+      addToast("Erro ao carregar dados do dashboard.", "error");
+    } finally {
+      setLoading(false);
+    }
   }, [year, month, closingDay]);
 
   // Fetch investment data once (does not depend on month)
   useEffect(() => {
     async function fetchInvestments() {
-      const [investmentsRes, entriesRes, ipca] = await Promise.all([
-        supabase
-          .from("investments")
-          .select("id, product, indexer")
-          .eq("is_active", true),
-        supabase
-          .from("investment_entries")
-          .select("investment_id, type, amount_cents, date")
-          .limit(5000),
-        getIPCA12Months(),
-      ]);
+      try {
+        const [investmentsRes, entriesRes, ipca] = await Promise.all([
+          supabase
+            .from("investments")
+            .select("id, product, indexer")
+            .eq("is_active", true),
+          supabase
+            .from("investment_entries")
+            .select("investment_id, type, amount_cents, date")
+            .limit(5000),
+          getIPCA12Months(),
+        ]);
 
-      const investments = (investmentsRes.data ?? []) as { id: string; product: string; indexer: string }[];
-      const entries = (entriesRes.data ?? []) as InvestmentEntry[];
-      setIpca12m(ipca);
+        const investments = (investmentsRes.data ?? []) as { id: string; product: string; indexer: string }[];
+        const entries = (entriesRes.data ?? []) as InvestmentEntry[];
+        setIpca12m(ipca);
 
-      if (investments.length === 0) {
+        if (investments.length === 0) {
+          setInvestmentData({
+            totalBalance: 0,
+            lastReturn: 0,
+            lastReturnPercent: 0,
+            hasData: false,
+          });
+          return;
+        }
+
+        const today = new Date();
+
+        // Current month and previous month for comparison
+        const currentYM = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+        const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const prevYM = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
+
+        let totalBalance = 0;
+        let totalPrevMonth = 0;
+
+        for (const inv of investments) {
+          const invEntries = entries.filter((e) => e.investment_id === inv.id);
+          totalBalance += getMonthEndBalance(invEntries, currentYM);
+          totalPrevMonth += getMonthEndBalance(invEntries, prevYM);
+        }
+
+        const lastReturn = totalBalance - totalPrevMonth;
+        const lastReturnPercent =
+          totalPrevMonth > 0
+            ? ((totalBalance / totalPrevMonth) - 1) * 100
+            : 0;
+
         setInvestmentData({
-          totalBalance: 0,
-          lastReturn: 0,
-          lastReturnPercent: 0,
-          hasData: false,
+          totalBalance,
+          lastReturn,
+          lastReturnPercent,
+          hasData: true,
         });
-        return;
+      } catch (err) {
+        console.error("Erro ao carregar investimentos:", err);
       }
-
-      const today = new Date();
-
-      // Current month and previous month for comparison
-      const currentYM = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-      const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const prevYM = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
-
-      let totalBalance = 0;
-      let totalPrevMonth = 0;
-
-      for (const inv of investments) {
-        const invEntries = entries.filter((e) => e.investment_id === inv.id);
-        totalBalance += getMonthEndBalance(invEntries, currentYM);
-        totalPrevMonth += getMonthEndBalance(invEntries, prevYM);
-      }
-
-      const lastReturn = totalBalance - totalPrevMonth;
-      const lastReturnPercent =
-        totalPrevMonth > 0
-          ? ((totalBalance / totalPrevMonth) - 1) * 100
-          : 0;
-
-      setInvestmentData({
-        totalBalance,
-        lastReturn,
-        lastReturnPercent,
-        hasData: true,
-      });
     }
 
     fetchInvestments();

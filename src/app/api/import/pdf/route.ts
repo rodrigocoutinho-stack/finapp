@@ -115,13 +115,23 @@ function parseGeminiResponse(raw: string): {
 
 function isOriginAllowed(request: NextRequest): boolean {
   const origin = request.headers.get("origin");
-  if (!origin) return true; // same-origin requests may omit Origin
+  if (origin) {
+    const allowed = [
+      process.env.NEXT_PUBLIC_APP_URL,
+      "https://finapp-kohl.vercel.app",
+      "http://localhost:3000",
+    ].filter(Boolean);
+    return allowed.includes(origin);
+  }
+  // No Origin header — check Referer as fallback (browser same-origin may omit Origin)
+  const referer = request.headers.get("referer");
+  if (!referer) return true; // Non-browser clients (server-to-server); auth check protects further
   const allowed = [
     process.env.NEXT_PUBLIC_APP_URL,
     "https://finapp-kohl.vercel.app",
     "http://localhost:3000",
   ].filter(Boolean);
-  return allowed.includes(origin);
+  return allowed.some((url) => referer.startsWith(url!));
 }
 
 export async function POST(request: NextRequest) {

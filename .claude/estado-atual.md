@@ -3,7 +3,7 @@
 Ultima atualizacao: 2026-03-01
 
 ## Status
-Build OK. Dark mode implementado com next-themes + CSS variables semanticas + Tailwind v4 @theme tokens. Toggle Claro/Escuro/Sistema em Configuracoes > Geral. Persistencia via localStorage (next-themes). Sem flash de tema (suppressHydrationWarning + attribute="class"). ~50 arquivos atualizados. Graficos Recharts com hook useChartColors() responsivo ao tema.
+Build OK. Revisao de codigo completa — 11 problemas corrigidos (2 alta, 6 media, 3 baixa). Dashboard page.tsx com try/catch em fetchData e fetchInvestments. toCents() com guard NaN. daily-flow.ts com error handling. CSRF check com fallback Referer em ambas as rotas API. Dark mode variants corrigidos em fi-simulator, category-rules, recurring-list, import-review-table. server.ts com console.warn no catch. Auth layout decorativo corrigido.
 
 ## Hipoteses Abertas
 - Nenhuma
@@ -21,4 +21,4 @@ Build OK. Dark mode implementado com next-themes + CSS variables semanticas + Ta
 - Paginas de Metas e Dividas mantêm `.limit(100)` sem paginacao server-side (layout de cards, volume naturalmente baixo). Reavaliar se algum usuario ultrapassar 100 itens.
 
 ## Proxima Acao Sugerida
-Verificacao visual do dark mode em todas as paginas (dashboard, transacoes, modais, formularios, graficos, sidebar, login). Criterio de sucesso: sem elementos invisiveis ou ilegíveis no tema escuro.
+Consultar backlog de melhorias (plano-melhorias-codex.md) e escolher proximo item a implementar do Horizonte Longo.

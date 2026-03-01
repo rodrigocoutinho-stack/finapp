@@ -300,8 +300,8 @@ export function ImportReviewTable({
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                         row.type === "receita"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-rose-100 text-rose-800"
+                          ? "bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200"
+                          : "bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200"
                       }`}
                     >
                       {row.type === "receita" ? "Receita" : "Despesa"}

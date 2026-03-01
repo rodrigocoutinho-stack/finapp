@@ -21,7 +21,7 @@ export default function AuthLayout({
 
         {/* Decorative circles */}
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-slate-900/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-black/20 rounded-full blur-3xl" />
 
         {/* Content */}
         <div className="relative z-10">

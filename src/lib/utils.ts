@@ -18,10 +18,12 @@ export function formatCurrency(cents: number): string {
  */
 export function toCents(value: string | number): number {
   if (typeof value === "number") {
-    return Math.round(value * 100);
+    const n = isNaN(value) ? 0 : value;
+    return Math.round(n * 100);
   }
   const cleaned = value.replace(/[^\d,.-]/g, "").replace(",", ".");
-  return Math.round(parseFloat(cleaned) * 100);
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : Math.round(n * 100);
 }
 
 /**
