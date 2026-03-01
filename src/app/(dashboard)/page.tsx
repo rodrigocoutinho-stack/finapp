@@ -30,7 +30,7 @@ import { getMonthEndBalance } from "@/lib/investment-utils";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
 import { getIPCA12Months } from "@/lib/inflation";
 import { usePreferences } from "@/contexts/preferences-context";
-import type { Account, Debt, Goal, InvestmentEntry, Transaction, RecurringTransaction } from "@/types/database";
+import type { Account, Debt, Goal, InvestmentEntry, Transaction, RecurringTransaction, MonthlyClosingRow } from "@/types/database";
 
 interface TransactionRow {
   id: string;
@@ -96,6 +96,8 @@ export default function DashboardPage() {
   const [dashAccounts, setDashAccounts] = useState<Account[]>([]);
   const [dashDebts, setDashDebts] = useState<Debt[]>([]);
   const [hasDivergentAccounts, setHasDivergentAccounts] = useState(false);
+  const [existingClosing, setExistingClosing] = useState<MonthlyClosingRow | null>(null);
+  const [previousClosing, setPreviousClosing] = useState<MonthlyClosingRow | null>(null);
 
   // Sync initial year/month when closingDay loads
   useEffect(() => {
@@ -128,7 +130,13 @@ export default function DashboardPage() {
     const globalStart = pastMonthsRanges[pastMonthsRanges.length - 1]?.start ?? start;
     const globalEnd = pastMonthsRanges[0]?.end ?? end;
 
-    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes, allTxnSummaryRes, debtsRes] = await Promise.all([
+    // Month string for closing (YYYY-MM)
+    const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
+    // Previous month string
+    const prevMonthDate = new Date(year, month - 1, 1);
+    const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, "0")}`;
+
+    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes, allTxnSummaryRes, debtsRes, closingRes, prevClosingRes] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
@@ -176,6 +184,16 @@ export default function DashboardPage() {
         .eq("is_active", true)
         .order("remaining_amount_cents", { ascending: false })
         .limit(20),
+      supabase
+        .from("monthly_closings")
+        .select("*")
+        .eq("month", monthStr)
+        .maybeSingle(),
+      supabase
+        .from("monthly_closings")
+        .select("*")
+        .eq("month", prevMonthStr)
+        .maybeSingle(),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
@@ -234,6 +252,10 @@ export default function DashboardPage() {
       return account.balance_cents !== calculated;
     });
     setHasDivergentAccounts(hasDivergence);
+
+    // Monthly closings
+    setExistingClosing((closingRes.data as MonthlyClosingRow | null) ?? null);
+    setPreviousClosing((prevClosingRes.data as MonthlyClosingRow | null) ?? null);
 
     // Recurrence detection + savings rates + annual provisions
     if (isCurrentMonthSelected) {
@@ -452,6 +474,21 @@ export default function DashboardPage() {
     [currentMonthForecast]
   );
 
+  const budgetDeviation = useMemo(
+    () => forecastDespesas > 0 ? ((totalDespesas - forecastDespesas) / forecastDespesas) * 100 : null,
+    [totalDespesas, forecastDespesas]
+  );
+
+  const fixedExpensePct = useMemo(
+    () => totalDespesas > 0 ? (totalRecurringDespesas / totalDespesas) * 100 : null,
+    [totalRecurringDespesas, totalDespesas]
+  );
+
+  const closingMonthStr = useMemo(
+    () => `${year}-${String(month + 1).padStart(2, "0")}`,
+    [year, month]
+  );
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -642,6 +679,18 @@ export default function DashboardPage() {
             totalReceitas={totalReceitas}
             totalDespesas={totalDespesas}
             savingsRate={savingsRate}
+            month={closingMonthStr}
+            runwayMonths={runway}
+            reserveMonths={reserveMonths}
+            budgetDeviation={budgetDeviation}
+            fixedExpensePct={fixedExpensePct}
+            totalBalance={totalAccountBalance}
+            existingClosing={existingClosing}
+            previousClosing={previousClosing}
+            onSaved={() => {
+              setShowClosing(false);
+              fetchData();
+            }}
           />
         </Modal>
       )}

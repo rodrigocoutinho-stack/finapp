@@ -498,6 +498,62 @@ export type Database = {
           },
         ];
       };
+      monthly_closings: {
+        Row: {
+          id: string;
+          user_id: string;
+          month: string;
+          total_income_cents: number;
+          total_expense_cents: number;
+          savings_rate: number | null;
+          runway_months: number | null;
+          reserve_months: number | null;
+          budget_deviation: number | null;
+          fixed_expense_pct: number | null;
+          total_balance_cents: number | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          month: string;
+          total_income_cents: number;
+          total_expense_cents: number;
+          savings_rate?: number | null;
+          runway_months?: number | null;
+          reserve_months?: number | null;
+          budget_deviation?: number | null;
+          fixed_expense_pct?: number | null;
+          total_balance_cents?: number | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          month?: string;
+          total_income_cents?: number;
+          total_expense_cents?: number;
+          savings_rate?: number | null;
+          runway_months?: number | null;
+          reserve_months?: number | null;
+          budget_deviation?: number | null;
+          fixed_expense_pct?: number | null;
+          total_balance_cents?: number | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "monthly_closings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audit_logs: {
         Row: {
           id: string;
@@ -559,4 +615,5 @@ export type InvestmentEntry = Database["public"]["Tables"]["investment_entries"]
 export type CategoryRule = Database["public"]["Tables"]["category_rules"]["Row"];
 export type Goal = Database["public"]["Tables"]["goals"]["Row"];
 export type Debt = Database["public"]["Tables"]["debts"]["Row"];
+export type MonthlyClosingRow = Database["public"]["Tables"]["monthly_closings"]["Row"];
 export type AuditLog = Database["public"]["Tables"]["audit_logs"]["Row"];
