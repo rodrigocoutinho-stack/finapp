@@ -52,13 +52,13 @@ export function TransactionFilters({
         placeholder="Buscar descrição..."
         value={searchInput}
         onChange={(e) => onSearchInputChange(e.target.value)}
-        className="rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 w-48"
+        className="rounded-lg border border-input-border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 placeholder-slate-400 w-48"
       />
 
       <select
         value={filters.categoryId}
         onChange={(e) => update({ categoryId: e.target.value })}
-        className="rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900"
+        className="rounded-lg border border-input-border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-on-surface"
       >
         <option value="">Todas categorias</option>
         {categories.map((c) => (
@@ -71,7 +71,7 @@ export function TransactionFilters({
       <select
         value={filters.accountId}
         onChange={(e) => update({ accountId: e.target.value })}
-        className="rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900"
+        className="rounded-lg border border-input-border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-on-surface"
       >
         <option value="">Todas contas</option>
         {accounts.map((a) => (
@@ -84,7 +84,7 @@ export function TransactionFilters({
       <select
         value={filters.type}
         onChange={(e) => update({ type: e.target.value })}
-        className="rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900"
+        className="rounded-lg border border-input-border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-on-surface"
       >
         <option value="">Todos tipos</option>
         <option value="receita">Receita</option>

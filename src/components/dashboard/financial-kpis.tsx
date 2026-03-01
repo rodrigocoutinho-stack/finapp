@@ -116,13 +116,13 @@ export function FinancialKPIs({
         }
         sublabel={
           !hasReserveAccount ? (
-            <Link href="/contas" className="text-emerald-600 hover:text-emerald-700 font-medium">
+            <Link href="/contas" className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-300 font-medium">
               Configurar em Contas
             </Link>
           ) : reserveMonths !== null ? (
             <span className="flex flex-col gap-1">
               <span>{reserveMonths.toFixed(1)} / {reserveTargetMonths} meses ({Math.min(reservePercent ?? 0, 100).toFixed(0)}%)</span>
-              <span className="h-1.5 w-full max-w-[100px] rounded-full bg-slate-200 overflow-hidden">
+              <span className="h-1.5 w-full max-w-[100px] rounded-full bg-skeleton overflow-hidden">
                 <span
                   className={`block h-full rounded-full transition-all ${
                     (reservePercent ?? 0) >= 100 ? "bg-emerald-500" : (reservePercent ?? 0) >= 50 ? "bg-yellow-500" : "bg-rose-500"
@@ -219,24 +219,24 @@ function getColorInverse(value: number | null, good: number, warning: number): K
 
 const colorStyles: Record<KPIColor, { bg: string; icon: string; value: string }> = {
   emerald: {
-    bg: "bg-emerald-50 border-emerald-200",
+    bg: "bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800",
     icon: "text-emerald-600 bg-emerald-100",
-    value: "text-emerald-700",
+    value: "text-emerald-700 dark:text-emerald-300",
   },
   yellow: {
-    bg: "bg-yellow-50 border-yellow-200",
+    bg: "bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800",
     icon: "text-yellow-600 bg-yellow-100",
-    value: "text-yellow-700",
+    value: "text-yellow-700 dark:text-yellow-300",
   },
   rose: {
-    bg: "bg-rose-50 border-rose-200",
+    bg: "bg-rose-50 dark:bg-rose-950 border-rose-200 dark:border-rose-800",
     icon: "text-rose-600 bg-rose-100",
-    value: "text-rose-700",
+    value: "text-rose-700 dark:text-rose-300",
   },
   slate: {
-    bg: "bg-slate-50 border-slate-200",
-    icon: "text-slate-500 bg-slate-100",
-    value: "text-slate-600",
+    bg: "bg-surface-alt border-border",
+    icon: "text-on-surface-muted bg-tab-bg",
+    value: "text-on-surface-secondary",
   },
 };
 
@@ -260,9 +260,9 @@ function KPICard({
       <div className="flex items-center gap-3">
         <div className={`p-2 rounded-lg ${styles.icon}`}>{icon}</div>
         <div className="min-w-0">
-          <p className="text-xs font-medium text-slate-500">{label}</p>
+          <p className="text-xs font-medium text-on-surface-muted">{label}</p>
           <p className={`text-lg font-bold ${styles.value}`}>{value}</p>
-          <div className="text-xs text-slate-500 truncate">{sublabel}</div>
+          <div className="text-xs text-on-surface-muted truncate">{sublabel}</div>
         </div>
       </div>
     </div>

@@ -87,12 +87,12 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded, onPDFLoaded }: I
 
   return (
     <div className="max-w-lg mx-auto">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 space-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-on-surface">
             1. Selecione a conta e o arquivo
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-on-surface-muted mt-1">
             Escolha a conta de destino e envie o extrato do seu banco (OFX, QFX, CSV ou PDF).
           </p>
         </div>
@@ -107,7 +107,7 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded, onPDFLoaded }: I
         />
 
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-on-surface-secondary mb-1">
             Arquivo OFX/QFX/CSV/PDF
           </label>
           <input
@@ -116,24 +116,24 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded, onPDFLoaded }: I
             accept=".ofx,.qfx,.csv,.pdf"
             onChange={handleFileChange}
             disabled={parsing}
-            className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 disabled:opacity-50"
+            className="block w-full text-sm text-on-surface-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-50 dark:bg-emerald-950 file:text-emerald-700 dark:text-emerald-300 hover:file:bg-emerald-100 disabled:opacity-50"
           />
         </div>
 
         {parsing && (
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className="flex items-center gap-2 text-sm text-on-surface-secondary">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600" />
             Processando arquivo...
           </div>
         )}
 
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+          <div className="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-300">
             {error}
           </div>
         )}
 
-        <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-500 space-y-1">
+        <div className="rounded-lg bg-surface-alt border border-border p-3 text-xs text-on-surface-muted space-y-1">
           <p><strong>Formatos aceitos:</strong> .ofx, .qfx, .csv, .pdf</p>
           <p><strong>Limite:</strong> 5MB (OFX/CSV) ou 10MB (PDF)</p>
           <p><strong>CSV:</strong> o arquivo deve ter cabeçalho na primeira linha</p>

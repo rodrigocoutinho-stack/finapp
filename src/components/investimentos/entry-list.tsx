@@ -10,8 +10,8 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import type { InvestmentEntry } from "@/types/database";
 
 const typeBadge: Record<InvestmentEntry["type"], { label: string; class: string }> = {
-  aporte: { label: "Aporte", class: "bg-emerald-100 text-emerald-700" },
-  resgate: { label: "Resgate", class: "bg-rose-100 text-rose-700" },
+  aporte: { label: "Aporte", class: "bg-emerald-100 text-emerald-700 dark:text-emerald-300" },
+  resgate: { label: "Resgate", class: "bg-rose-100 text-rose-700 dark:text-rose-300" },
   saldo: { label: "Saldo", class: "bg-blue-100 text-blue-700" },
 };
 
@@ -59,19 +59,19 @@ export function EntryList({ entries, onRefresh }: EntryListProps) {
       key: "amount",
       header: "Valor",
       headerClassName: "text-right",
-      className: "text-right font-medium text-slate-900",
+      className: "text-right font-medium text-on-surface",
       render: (entry: InvestmentEntry) => formatCurrency(entry.amount_cents),
     },
     {
       key: "date",
       header: "Data",
-      className: "text-slate-600",
+      className: "text-on-surface-secondary",
       render: (entry: InvestmentEntry) => formatDate(entry.date),
     },
     {
       key: "notes",
       header: "Obs.",
-      className: "text-slate-500 max-w-[150px] truncate",
+      className: "text-on-surface-muted max-w-[150px] truncate",
       render: (entry: InvestmentEntry) => entry.notes ?? "-",
     },
   ];
@@ -86,7 +86,7 @@ export function EntryList({ entries, onRefresh }: EntryListProps) {
         actions={(entry) => (
           <Button
             variant="ghost"
-            className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 dark:bg-red-950"
             onClick={() => setDeletingEntry(entry)}
           >
             Excluir
@@ -99,7 +99,7 @@ export function EntryList({ entries, onRefresh }: EntryListProps) {
         onClose={() => setDeletingEntry(null)}
         title="Excluir lançamento"
       >
-        <p className="text-slate-600 mb-6">
+        <p className="text-on-surface-secondary mb-6">
           Tem certeza que deseja excluir este lançamento de{" "}
           <strong>{deletingEntry ? formatCurrency(deletingEntry.amount_cents) : ""}</strong>?
         </p>

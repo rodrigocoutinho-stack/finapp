@@ -192,7 +192,7 @@ export function Sidebar() {
     return `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
       active
         ? "bg-slate-800 text-emerald-400"
-        : "text-slate-300 hover:text-white hover:bg-slate-800/60"
+        : "text-on-surface-muted hover:text-white hover:bg-slate-800/60"
     } ${collapsed ? "justify-center" : ""}`;
   }
 
@@ -213,7 +213,7 @@ export function Sidebar() {
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
               isActive(link.href)
                 ? "bg-slate-800 text-emerald-400"
-                : "text-slate-300 hover:text-white hover:bg-slate-800/60"
+                : "text-on-surface-muted hover:text-white hover:bg-slate-800/60"
             }`}
           >
             <svg
@@ -243,7 +243,7 @@ export function Sidebar() {
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="flex items-center gap-3 px-3 py-2.5 mt-1 w-full rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
+          className="flex items-center gap-3 px-3 py-2.5 mt-1 w-full rounded-lg text-sm font-medium text-on-surface-muted hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
         >
           <svg
             className="w-5 h-5 shrink-0"
@@ -280,7 +280,7 @@ export function Sidebar() {
           <button
             onClick={toggleCollapsed}
             aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
-            className={`p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors ${
+            className={`p-1.5 rounded-lg text-on-surface-muted hover:text-white hover:bg-slate-800/60 transition-colors ${
               collapsed ? "hidden" : ""
             }`}
           >
@@ -295,7 +295,7 @@ export function Sidebar() {
           <button
             onClick={toggleCollapsed}
             aria-label="Expandir menu"
-            className="mx-auto mb-2 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+            className="mx-auto mb-2 p-1.5 rounded-lg text-on-surface-muted hover:text-white hover:bg-slate-800/60 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -336,7 +336,7 @@ export function Sidebar() {
                 onClick={handleLogout}
                 disabled={loggingOut}
                 title="Sair"
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
+                className="p-2 rounded-lg text-on-surface-muted hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
               >
                 <svg
                   className="w-5 h-5"
@@ -366,7 +366,7 @@ export function Sidebar() {
               <button
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="flex items-center gap-3 px-3 py-2.5 mt-1 w-full rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
+                className="flex items-center gap-3 px-3 py-2.5 mt-1 w-full rounded-lg text-sm font-medium text-on-surface-muted hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
               >
                 <svg
                   className="w-5 h-5 shrink-0"
@@ -397,7 +397,7 @@ export function Sidebar() {
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Menu de navegação"
           aria-expanded={mobileOpen}
-          className="p-2 text-slate-300 hover:text-white"
+          className="p-2 text-on-surface-muted hover:text-white"
         >
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             {mobileOpen ? (

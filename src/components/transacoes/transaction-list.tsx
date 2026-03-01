@@ -91,28 +91,28 @@ export function TransactionList({
       key: "date",
       header: "Data",
       render: (t: TransactionWithRelations) => (
-        <span className="text-slate-600">{formatDate(t.date)}</span>
+        <span className="text-on-surface-secondary">{formatDate(t.date)}</span>
       ),
     },
     {
       key: "description",
       header: "Descrição",
       render: (t: TransactionWithRelations) => (
-        <span className="text-slate-900">{t.description}</span>
+        <span className="text-on-surface">{t.description}</span>
       ),
     },
     {
       key: "category",
       header: "Categoria",
       render: (t: TransactionWithRelations) => (
-        <span className="text-slate-600">{t.categories?.name ?? "-"}</span>
+        <span className="text-on-surface-secondary">{t.categories?.name ?? "-"}</span>
       ),
     },
     {
       key: "account",
       header: "Conta",
       render: (t: TransactionWithRelations) => (
-        <span className="text-slate-600">{t.accounts?.name ?? "-"}</span>
+        <span className="text-on-surface-secondary">{t.accounts?.name ?? "-"}</span>
       ),
     },
     {
@@ -151,7 +151,7 @@ export function TransactionList({
             </Button>
             <Button
               variant="ghost"
-              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 dark:bg-red-950"
               onClick={() => setDeletingTransaction(t)}
             >
               Excluir
@@ -185,7 +185,7 @@ export function TransactionList({
         onClose={() => setDeletingTransaction(null)}
         title="Excluir transação"
       >
-        <p className="text-slate-600 mb-6">
+        <p className="text-on-surface-secondary mb-6">
           Tem certeza que deseja excluir a transação{" "}
           <strong>{deletingTransaction?.description}</strong>? O saldo da conta
           será ajustado automaticamente.

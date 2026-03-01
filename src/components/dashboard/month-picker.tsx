@@ -34,24 +34,24 @@ export function MonthPicker({ year, month, onPrev, onNext, closingDay = 1 }: Mon
       <button
         onClick={onPrev}
         aria-label="Mês anterior"
-        className="p-2 rounded-lg hover:bg-slate-200 text-slate-600"
+        className="p-2 rounded-lg hover:bg-skeleton text-on-surface-secondary"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
       </button>
       <div className="min-w-[180px] text-center">
-        <span className="text-lg font-semibold text-slate-900">
+        <span className="text-lg font-semibold text-on-surface">
           {getMonthName(month)} {year}
         </span>
         {showRange && (
-          <p className="text-xs text-slate-400 mt-0.5">{rangeLabel}</p>
+          <p className="text-xs text-on-surface-muted mt-0.5">{rangeLabel}</p>
         )}
       </div>
       <button
         onClick={onNext}
         aria-label="Próximo mês"
-        className="p-2 rounded-lg hover:bg-slate-200 text-slate-600"
+        className="p-2 rounded-lg hover:bg-skeleton text-on-surface-secondary"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

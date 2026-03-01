@@ -9,15 +9,15 @@ export function InactivityModal() {
   return (
     <Modal open={showWarning} onClose={dismissWarning} title="Sessão inativa">
       <div className="space-y-4">
-        <p className="text-slate-600">
+        <p className="text-on-surface-secondary">
           Sua sessão expira em{" "}
-          <span className="font-bold text-rose-600 tabular-nums">
+          <span className="font-bold text-rose-600 dark:text-rose-400 tabular-nums">
             {remainingSeconds}
           </span>{" "}
           {remainingSeconds === 1 ? "segundo" : "segundos"} por inatividade.
         </p>
 
-        <div className="w-full bg-slate-200 rounded-full h-2">
+        <div className="w-full bg-skeleton rounded-full h-2">
           <div
             className="bg-rose-500 h-2 rounded-full transition-all duration-1000 ease-linear"
             style={{ width: `${(remainingSeconds / 60) * 100}%` }}

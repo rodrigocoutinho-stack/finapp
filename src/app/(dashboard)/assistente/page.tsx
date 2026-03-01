@@ -154,7 +154,7 @@ export default function AssistentePage() {
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
             {/* Sparkles icon */}
-            <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950 rounded-2xl flex items-center justify-center mb-4">
               <svg
                 className="w-8 h-8 text-emerald-600"
                 fill="none"
@@ -170,10 +170,10 @@ export default function AssistentePage() {
               </svg>
             </div>
 
-            <h2 className="text-lg font-semibold text-slate-900 mb-2">
+            <h2 className="text-lg font-semibold text-on-surface mb-2">
               Olá! Sou o FinAssist
             </h2>
-            <p className="text-sm text-slate-500 mb-6 max-w-md">
+            <p className="text-sm text-on-surface-muted mb-6 max-w-md">
               Analiso seus dados financeiros reais para fornecer diagnósticos
               personalizados, orientações de orçamento e sugestões de carteira.
             </p>
@@ -184,7 +184,7 @@ export default function AssistentePage() {
                   key={question}
                   onClick={() => handleSuggestion(question)}
                   disabled={loading}
-                  className="text-left px-4 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-emerald-300 text-sm text-slate-700 transition-colors disabled:opacity-50"
+                  className="text-left px-4 py-3 rounded-xl border border-border bg-card hover:bg-surface-alt hover:border-emerald-300 text-sm text-on-surface-secondary transition-colors disabled:opacity-50"
                 >
                   {question}
                 </button>
@@ -213,7 +213,7 @@ export default function AssistentePage() {
           onSend={handleSend}
           disabled={loading}
         />
-        <p className="text-xs text-slate-400 text-center mt-1.5">
+        <p className="text-xs text-on-surface-muted text-center mt-1.5">
           Baseado nos seus dados reais. Não substitui aconselhamento financeiro profissional.
         </p>
       </div>

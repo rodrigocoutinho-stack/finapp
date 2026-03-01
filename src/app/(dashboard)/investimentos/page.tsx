@@ -53,8 +53,8 @@ export default function InvestimentosPage() {
   const tabClass = (t: Tab) =>
     `px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
       tab === t
-        ? "bg-emerald-100 text-emerald-700"
-        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+        ? "bg-emerald-100 text-emerald-700 dark:text-emerald-300"
+        : "text-on-surface-secondary hover:text-on-surface hover:bg-hover"
     }`;
 
   return (
@@ -67,7 +67,7 @@ export default function InvestimentosPage() {
             accounts.length > 0 ? (
               <Button onClick={() => setShowForm(true)}>Novo investimento</Button>
             ) : (
-              <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg">
+              <span className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950 border border-amber-200 px-3 py-2 rounded-lg">
                 Cadastre uma conta antes de criar investimentos
               </span>
             )

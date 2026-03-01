@@ -26,11 +26,11 @@ export function GreetingHeader() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">
+      <h1 className="text-2xl font-bold text-on-surface">
         {greeting}
         {firstName ? `, ${firstName}` : ""}
       </h1>
-      <p className="text-slate-500 text-sm mt-1 capitalize">{dateStr}</p>
+      <p className="text-on-surface-muted text-sm mt-1 capitalize">{dateStr}</p>
     </div>
   );
 }

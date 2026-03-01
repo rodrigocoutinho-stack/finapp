@@ -111,7 +111,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {serverError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm">
           {serverError}
         </div>
       )}
@@ -143,7 +143,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
         options={projectionTypeOptions}
         required
       />
-      <p className="text-xs text-slate-500 -mt-2">
+      <p className="text-xs text-on-surface-muted -mt-2">
         Define como calcular a projeção de gastos futuros desta categoria.
       </p>
 
@@ -157,7 +157,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
             placeholder="Opcional — Ex: 500,00"
             error={errors.budget}
           />
-          <p className="text-xs text-slate-500 -mt-2">
+          <p className="text-xs text-on-surface-muted -mt-2">
             Limite máximo de gasto mensal. Se não definido, a projeção será usada como referência.
           </p>
           <Checkbox

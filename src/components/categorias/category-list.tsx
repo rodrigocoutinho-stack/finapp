@@ -64,18 +64,18 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
   function renderGroup(title: string, items: Category[]) {
     return (
       <div>
-        <h2 className="text-lg font-semibold text-slate-800 mb-3">{title}</h2>
+        <h2 className="text-lg font-semibold text-on-surface-heading mb-3">{title}</h2>
         {items.length === 0 ? (
-          <p className="text-slate-500 text-sm">Nenhuma categoria.</p>
+          <p className="text-on-surface-muted text-sm">Nenhuma categoria.</p>
         ) : (
           <div className="space-y-2">
             {items.map((cat) => (
               <div
                 key={cat.id}
-                className="flex items-center justify-between bg-white rounded-lg border border-slate-200 px-4 py-3"
+                className="flex items-center justify-between bg-card rounded-lg border border-border px-4 py-3"
               >
-                <span className="flex items-center gap-2 text-slate-900">
-                  <CategoryIcon name={cat.name} className="w-4 h-4 text-slate-400" />
+                <span className="flex items-center gap-2 text-on-surface">
+                  <CategoryIcon name={cat.name} className="w-4 h-4 text-on-surface-muted" />
                   {cat.name}
                   {cat.is_essential && (
                     <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
@@ -93,7 +93,7 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
                   </Button>
                   <Button
                     variant="ghost"
-                    className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 dark:bg-red-950"
                     onClick={() => {
                       setDeleteError("");
                       setDeletingCategory(cat);
@@ -141,11 +141,11 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
         title="Excluir categoria"
       >
         {deleteError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
+          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm mb-4">
             {deleteError}
           </div>
         )}
-        <p className="text-slate-600 mb-6">
+        <p className="text-on-surface-secondary mb-6">
           Tem certeza que deseja excluir a categoria{" "}
           <strong>{deletingCategory?.name}</strong>?
         </p>

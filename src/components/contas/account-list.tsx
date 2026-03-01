@@ -57,24 +57,24 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
         {accounts.map((account) => (
           <div
             key={account.id}
-            className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"
+            className="bg-card rounded-xl border border-border p-6 shadow-sm"
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-semibold text-slate-900">{account.name}</h3>
+                <h3 className="font-semibold text-on-surface">{account.name}</h3>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                  <span className="text-xs text-on-surface-muted bg-tab-bg px-2 py-0.5 rounded-full">
                     {typeLabels[account.type]}
                   </span>
                   {account.is_emergency_reserve && (
-                    <span className="text-xs text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    <span className="text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-100 px-2 py-0.5 rounded-full">
                       Reserva
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            <p className="text-2xl font-bold text-slate-900 mt-4">
+            <p className="text-2xl font-bold text-on-surface mt-4">
               {formatCurrency(account.balance_cents)}
             </p>
             <div className="flex gap-2 mt-4">
@@ -87,7 +87,7 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
               </Button>
               <Button
                 variant="ghost"
-                className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 dark:bg-red-950"
                 onClick={() => setDeletingAccount(account)}
               >
                 Excluir
@@ -122,7 +122,7 @@ export function AccountList({ accounts, onRefresh }: AccountListProps) {
         onClose={() => setDeletingAccount(null)}
         title="Excluir conta"
       >
-        <p className="text-slate-600 mb-6">
+        <p className="text-on-surface-secondary mb-6">
           Tem certeza que deseja excluir a conta{" "}
           <strong>{deletingAccount?.name}</strong>? Esta ação não pode ser
           desfeita.

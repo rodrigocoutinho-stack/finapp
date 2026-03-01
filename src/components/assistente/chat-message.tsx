@@ -18,7 +18,7 @@ function renderMarkdown(text: string) {
     // Headers
     if (line.startsWith("### ")) {
       elements.push(
-        <h3 key={i} className="text-sm font-bold text-slate-800 mt-3 mb-1">
+        <h3 key={i} className="text-sm font-bold text-on-surface-heading mt-3 mb-1">
           {applyInline(line.slice(4))}
         </h3>
       );
@@ -26,7 +26,7 @@ function renderMarkdown(text: string) {
     }
     if (line.startsWith("## ")) {
       elements.push(
-        <h2 key={i} className="text-base font-bold text-slate-900 mt-4 mb-1">
+        <h2 key={i} className="text-base font-bold text-on-surface mt-4 mb-1">
           {applyInline(line.slice(3))}
         </h2>
       );
@@ -35,14 +35,14 @@ function renderMarkdown(text: string) {
 
     // Horizontal rule
     if (line.trim() === "---") {
-      elements.push(<hr key={i} className="my-2 border-slate-200" />);
+      elements.push(<hr key={i} className="my-2 border-border" />);
       continue;
     }
 
     // List items
     if (line.startsWith("- ") || line.startsWith("* ")) {
       elements.push(
-        <li key={i} className="ml-4 list-disc text-sm text-slate-700">
+        <li key={i} className="ml-4 list-disc text-sm text-on-surface-secondary">
           {applyInline(line.slice(2))}
         </li>
       );
@@ -53,7 +53,7 @@ function renderMarkdown(text: string) {
     const numberedMatch = line.match(/^(\d+)\.\s(.+)/);
     if (numberedMatch) {
       elements.push(
-        <li key={i} className="ml-4 list-decimal text-sm text-slate-700">
+        <li key={i} className="ml-4 list-decimal text-sm text-on-surface-secondary">
           {applyInline(numberedMatch[2])}
         </li>
       );
@@ -68,7 +68,7 @@ function renderMarkdown(text: string) {
 
     // Regular paragraph
     elements.push(
-      <p key={i} className="text-sm text-slate-700">
+      <p key={i} className="text-sm text-on-surface-secondary">
         {applyInline(line)}
       </p>
     );
@@ -83,7 +83,7 @@ function applyInline(text: string): React.ReactNode {
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
-        <strong key={i} className="font-semibold text-slate-900">
+        <strong key={i} className="font-semibold text-on-surface">
           {part.slice(2, -2)}
         </strong>
       );
@@ -114,16 +114,16 @@ export function ChatMessage({ role, content, loading }: ChatMessageProps) {
 
   return (
     <div className="flex justify-start mb-3">
-      <div className="group relative max-w-[85%] bg-white border border-slate-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
+      <div className="group relative max-w-[85%] bg-card border border-border px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
         {isLoading ? (
           <div className="flex items-center gap-1 py-1">
-            <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
+            <span className="w-2 h-2 bg-on-surface-muted rounded-full animate-bounce" />
             <span
-              className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+              className="w-2 h-2 bg-on-surface-muted rounded-full animate-bounce"
               style={{ animationDelay: "0.15s" }}
             />
             <span
-              className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+              className="w-2 h-2 bg-on-surface-muted rounded-full animate-bounce"
               style={{ animationDelay: "0.3s" }}
             />
           </div>
@@ -132,7 +132,7 @@ export function ChatMessage({ role, content, loading }: ChatMessageProps) {
             <div className="space-y-0.5">{renderMarkdown(content)}</div>
             <button
               onClick={handleCopy}
-              className="absolute top-2 right-2 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-2 right-2 p-1 rounded-md text-on-surface-muted hover:text-on-surface-secondary hover:bg-hover opacity-0 group-hover:opacity-100 transition-opacity"
               title="Copiar resposta"
             >
               {copied ? (

@@ -95,28 +95,28 @@ export function RecurringList({
       key: "description",
       header: "Descrição",
       render: (r: RecurringWithRelations) => (
-        <span className="text-slate-900">{r.description}</span>
+        <span className="text-on-surface">{r.description}</span>
       ),
     },
     {
       key: "category",
       header: "Categoria",
       render: (r: RecurringWithRelations) => (
-        <span className="text-slate-600">{r.categories?.name ?? "-"}</span>
+        <span className="text-on-surface-secondary">{r.categories?.name ?? "-"}</span>
       ),
     },
     {
       key: "account",
       header: "Conta",
       render: (r: RecurringWithRelations) => (
-        <span className="text-slate-600">{r.accounts?.name ?? "-"}</span>
+        <span className="text-on-surface-secondary">{r.accounts?.name ?? "-"}</span>
       ),
     },
     {
       key: "day",
       header: "Dia",
       headerClassName: "text-center",
-      className: "text-center text-slate-600",
+      className: "text-center text-on-surface-secondary",
       render: (r: RecurringWithRelations) => r.day_of_month,
     },
     {
@@ -160,7 +160,7 @@ export function RecurringList({
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
             r.is_active
               ? "bg-emerald-100 text-emerald-800"
-              : "bg-slate-100 text-slate-600"
+              : "bg-tab-bg text-on-surface-secondary"
           }`}
         >
           {r.is_active ? "Ativo" : "Inativo"}
@@ -191,7 +191,7 @@ export function RecurringList({
             </Button>
             <Button
               variant="ghost"
-              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 dark:bg-red-950"
               onClick={() => setDeletingRecurring(r)}
             >
               Excluir
@@ -225,7 +225,7 @@ export function RecurringList({
         onClose={() => setDeletingRecurring(null)}
         title="Excluir transação recorrente"
       >
-        <p className="text-slate-600 mb-6">
+        <p className="text-on-surface-secondary mb-6">
           Tem certeza que deseja excluir a transação recorrente{" "}
           <strong>{deletingRecurring?.description}</strong>?
         </p>

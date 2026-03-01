@@ -89,16 +89,16 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="bg-white rounded-xl shadow-xl w-full max-w-md p-6"
+        className="bg-card rounded-xl shadow-xl w-full max-w-md p-6 border border-border"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 id={titleId} className="text-lg font-semibold text-slate-900">
+          <h2 id={titleId} className="text-lg font-semibold text-on-surface">
             {title}
           </h2>
           <button
             onClick={onClose}
             aria-label="Fechar"
-            className="text-slate-500 hover:text-slate-700"
+            className="text-on-surface-muted hover:text-on-surface"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

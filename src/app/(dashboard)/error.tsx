@@ -32,10 +32,10 @@ export default function DashboardError({
             />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-2">
+        <h2 className="text-lg font-semibold text-on-surface mb-2">
           Algo deu errado
         </h2>
-        <p className="text-sm text-slate-500 mb-6">
+        <p className="text-sm text-on-surface-muted mb-6">
           Ocorreu um erro inesperado. Tente recarregar a página.
         </p>
         <Button onClick={reset}>Tentar novamente</Button>

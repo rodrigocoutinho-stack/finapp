@@ -88,7 +88,7 @@ export default function AuthLayout({
       </div>
 
       {/* Right side — form */}
-      <div className="w-full lg:w-1/2 flex flex-col min-h-screen bg-white">
+      <div className="w-full lg:w-1/2 flex flex-col min-h-screen bg-card">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-center gap-2 pt-8 pb-4">
           <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
@@ -96,7 +96,7 @@ export default function AuthLayout({
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <span className="text-xl font-bold text-slate-900">FinApp</span>
+          <span className="text-xl font-bold text-on-surface">FinApp</span>
         </div>
 
         {/* Form area */}
@@ -106,7 +106,7 @@ export default function AuthLayout({
 
         {/* Footer */}
         <div className="py-4 text-center lg:hidden">
-          <p className="text-xs text-slate-400">© 2026 FinApp</p>
+          <p className="text-xs text-on-surface-muted">© 2026 FinApp</p>
         </div>
       </div>
     </div>

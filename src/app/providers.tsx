@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeProvider } from "next-themes";
 import { PreferencesProvider } from "@/contexts/preferences-context";
 import { SidebarProvider } from "@/contexts/sidebar-context";
 import { ToastProvider, useToast } from "@/contexts/toast-context";
@@ -14,16 +15,18 @@ function ToastOutlet() {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <PreferencesProvider>
-      <SidebarProvider>
-        <ToastProvider>
-          <InactivityProvider>
-            {children}
-            <InactivityModal />
-          </InactivityProvider>
-          <ToastOutlet />
-        </ToastProvider>
-      </SidebarProvider>
-    </PreferencesProvider>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+      <PreferencesProvider>
+        <SidebarProvider>
+          <ToastProvider>
+            <InactivityProvider>
+              {children}
+              <InactivityModal />
+            </InactivityProvider>
+            <ToastOutlet />
+          </ToastProvider>
+        </SidebarProvider>
+      </PreferencesProvider>
+    </ThemeProvider>
   );
 }

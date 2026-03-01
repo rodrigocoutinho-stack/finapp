@@ -14,7 +14,7 @@ export function ForecastTable({ months }: ForecastTableProps) {
 
   if (months.length === 0 || months.every((m) => m.byCategory.length === 0)) {
     return (
-      <p className="text-slate-500 text-center py-8 text-sm">
+      <p className="text-on-surface-muted text-center py-8 text-sm">
         Sem dados para projeção.
       </p>
     );
@@ -29,8 +29,8 @@ export function ForecastTable({ months }: ForecastTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200">
-              <th className="text-left py-2 pr-4 font-medium text-slate-600 min-w-[160px]">
+            <tr className="border-b border-border">
+              <th className="text-left py-2 pr-4 font-medium text-on-surface-secondary min-w-[160px]">
                 Categoria
               </th>
               {months.map((m) => (
@@ -38,8 +38,8 @@ export function ForecastTable({ months }: ForecastTableProps) {
                   key={m.label}
                   className={`text-right py-2 px-3 font-medium min-w-[110px] capitalize ${
                     m.isCurrentMonth
-                      ? "text-emerald-700 bg-emerald-50/50"
-                      : "text-slate-600"
+                      ? "text-emerald-700 dark:text-emerald-300 bg-emerald-50/50"
+                      : "text-on-surface-secondary"
                   }`}
                 >
                   {m.label}
@@ -69,7 +69,7 @@ export function ForecastTable({ months }: ForecastTableProps) {
                     }
                   }}
                 >
-                  <td className="py-2.5 pr-4 font-semibold text-emerald-700">
+                  <td className="py-2.5 pr-4 font-semibold text-emerald-700 dark:text-emerald-300">
                     <span className="flex items-center gap-1.5">
                       <ChevronIcon open={showReceitas} />
                       Receitas
@@ -78,13 +78,13 @@ export function ForecastTable({ months }: ForecastTableProps) {
                   {months.map((m) => (
                     <td
                       key={m.label}
-                      className={`text-right py-2.5 px-3 font-semibold text-emerald-700 ${
+                      className={`text-right py-2.5 px-3 font-semibold text-emerald-700 dark:text-emerald-300 ${
                         m.isCurrentMonth ? "bg-emerald-50/50" : ""
                       }`}
                     >
                       {formatCurrency(m.totalReceitas)}
                       {m.isCurrentMonth && (
-                        <div className="text-[10px] font-normal text-slate-400 mt-0.5">
+                        <div className="text-[10px] font-normal text-on-surface-muted mt-0.5">
                           Real {formatCurrency(m.realReceitas)} · Prev{" "}
                           {formatCurrency(m.forecastReceitas)}
                         </div>
@@ -97,9 +97,9 @@ export function ForecastTable({ months }: ForecastTableProps) {
                   receitas.map((cat) => (
                     <tr
                       key={cat.categoryId}
-                      className="hover:bg-slate-50 transition-colors"
+                      className="hover:bg-surface-alt transition-colors"
                     >
-                      <td className="py-1.5 pr-4 pl-6 text-slate-700">
+                      <td className="py-1.5 pr-4 pl-6 text-on-surface-secondary">
                         <span className="flex items-center gap-2">
                           <ProjectionIcon
                             projectionType={cat.projectionType}
@@ -116,7 +116,7 @@ export function ForecastTable({ months }: ForecastTableProps) {
                         return (
                           <td
                             key={m.label}
-                            className={`text-right py-1.5 px-3 text-slate-600 ${
+                            className={`text-right py-1.5 px-3 text-on-surface-secondary ${
                               m.isCurrentMonth ? "bg-emerald-50/50" : ""
                             }`}
                           >
@@ -124,7 +124,7 @@ export function ForecastTable({ months }: ForecastTableProps) {
                               <div>
                                 {formatCurrency(monthCat.projectedAmount)}
                                 {m.isCurrentMonth && (
-                                  <div className="text-[10px] text-slate-400 mt-0.5">
+                                  <div className="text-[10px] text-on-surface-muted mt-0.5">
                                     Real {formatCurrency(monthCat.realAmount)} · Prev{" "}
                                     {formatCurrency(monthCat.forecastAmount)}
                                   </div>
@@ -157,7 +157,7 @@ export function ForecastTable({ months }: ForecastTableProps) {
                     }
                   }}
                 >
-                  <td className="py-2.5 pr-4 font-semibold text-rose-700 border-t border-slate-100">
+                  <td className="py-2.5 pr-4 font-semibold text-rose-700 dark:text-rose-300 border-t border-border-light">
                     <span className="flex items-center gap-1.5">
                       <ChevronIcon open={showDespesas} />
                       Despesas
@@ -166,13 +166,13 @@ export function ForecastTable({ months }: ForecastTableProps) {
                   {months.map((m) => (
                     <td
                       key={m.label}
-                      className={`text-right py-2.5 px-3 font-semibold text-rose-700 border-t border-slate-100 ${
+                      className={`text-right py-2.5 px-3 font-semibold text-rose-700 dark:text-rose-300 border-t border-border-light ${
                         m.isCurrentMonth ? "bg-emerald-50/50" : ""
                       }`}
                     >
                       {formatCurrency(m.totalDespesas)}
                       {m.isCurrentMonth && (
-                        <div className="text-[10px] font-normal text-slate-400 mt-0.5">
+                        <div className="text-[10px] font-normal text-on-surface-muted mt-0.5">
                           Real {formatCurrency(m.realDespesas)} · Prev{" "}
                           {formatCurrency(m.forecastDespesas)}
                         </div>
@@ -185,9 +185,9 @@ export function ForecastTable({ months }: ForecastTableProps) {
                   despesas.map((cat) => (
                     <tr
                       key={cat.categoryId}
-                      className="hover:bg-slate-50 transition-colors"
+                      className="hover:bg-surface-alt transition-colors"
                     >
-                      <td className="py-1.5 pr-4 pl-6 text-slate-700">
+                      <td className="py-1.5 pr-4 pl-6 text-on-surface-secondary">
                         <span className="flex items-center gap-2">
                           <ProjectionIcon
                             projectionType={cat.projectionType}
@@ -204,7 +204,7 @@ export function ForecastTable({ months }: ForecastTableProps) {
                         return (
                           <td
                             key={m.label}
-                            className={`text-right py-1.5 px-3 text-slate-600 ${
+                            className={`text-right py-1.5 px-3 text-on-surface-secondary ${
                               m.isCurrentMonth ? "bg-emerald-50/50" : ""
                             }`}
                           >
@@ -212,7 +212,7 @@ export function ForecastTable({ months }: ForecastTableProps) {
                               <div>
                                 {formatCurrency(monthCat.projectedAmount)}
                                 {m.isCurrentMonth && (
-                                  <div className="text-[10px] text-slate-400 mt-0.5">
+                                  <div className="text-[10px] text-on-surface-muted mt-0.5">
                                     Real {formatCurrency(monthCat.realAmount)} · Prev{" "}
                                     {formatCurrency(monthCat.forecastAmount)}
                                   </div>
@@ -230,8 +230,8 @@ export function ForecastTable({ months }: ForecastTableProps) {
             )}
 
             {/* Saldo */}
-            <tr className="border-t-2 border-slate-200">
-              <td className="py-3 pr-4 font-semibold text-slate-800">Saldo</td>
+            <tr className="border-t-2 border-border">
+              <td className="py-3 pr-4 font-semibold text-on-surface-heading">Saldo</td>
               {months.map((m) => (
                 <td
                   key={m.label}
@@ -242,7 +242,7 @@ export function ForecastTable({ months }: ForecastTableProps) {
                   {m.saldo >= 0 ? "+" : ""}
                   {formatCurrency(m.saldo)}
                   {m.isCurrentMonth && (
-                    <div className="text-[10px] font-normal text-slate-400 mt-0.5">
+                    <div className="text-[10px] font-normal text-on-surface-muted mt-0.5">
                       Real {m.realSaldo >= 0 ? "+" : ""}
                       {formatCurrency(m.realSaldo)} · Prev{" "}
                       {m.forecastSaldo >= 0 ? "+" : ""}
@@ -256,16 +256,16 @@ export function ForecastTable({ months }: ForecastTableProps) {
         </table>
       </div>
 
-      <div className="pt-2 border-t border-slate-100">
-        <p className="text-xs text-slate-500 flex items-center gap-4">
+      <div className="pt-2 border-t border-border-light">
+        <p className="text-xs text-on-surface-muted flex items-center gap-4">
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-slate-500" /> Recorrente
+            <span className="w-2 h-2 rounded-full bg-surface-alt0" /> Recorrente
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-slate-300" /> Histórico
+            <span className="w-2 h-2 rounded-full bg-on-surface-muted" /> Histórico
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rotate-45 bg-slate-500" style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }} /> Pontual
+            <span className="w-2 h-2 rotate-45 bg-surface-alt0" style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }} /> Pontual
           </span>
         </p>
       </div>

@@ -31,7 +31,7 @@ export function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps)
   }
 
   return (
-    <div className="flex items-end gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+    <div className="flex items-end gap-2 bg-card border border-border rounded-xl px-3 py-2 shadow-sm">
       <textarea
         ref={textareaRef}
         value={value}
@@ -42,7 +42,7 @@ export function ChatInput({ value, onChange, onSend, disabled }: ChatInputProps)
         disabled={disabled}
         rows={1}
         aria-label="Mensagem para o assistente financeiro"
-        className="flex-1 resize-none bg-transparent text-sm text-slate-900 placeholder-slate-400 focus:outline-none disabled:opacity-50 py-1.5"
+        className="flex-1 resize-none bg-transparent text-sm text-on-surface placeholder-slate-400 focus:outline-none disabled:opacity-50 py-1.5"
       />
       <Button
         onClick={onSend}

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { fiSimulation } from "@/lib/simulator-utils";
+import { useChartColors } from "@/lib/use-chart-colors";
 
 const LineChart = dynamic(
   () => import("recharts").then((m) => m.LineChart),
@@ -52,6 +53,7 @@ function formatCompact(value: number): string {
 }
 
 export function FISimulator() {
+  const colors = useChartColors();
   const [monthlyExpense, setMonthlyExpense] = useState(5000);
   const [currentPatrimony, setCurrentPatrimony] = useState(50000);
   const [monthlyContribution, setMonthlyContribution] = useState(2000);
@@ -79,7 +81,7 @@ export function FISimulator() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-on-surface-muted">
         Descubra quanto você precisa acumular para viver de renda. O simulador calcula o patrimônio
         alvo com base na taxa de retirada segura (SWR) e projeta 3 cenários de retorno real.
       </p>
@@ -87,7 +89,7 @@ export function FISimulator() {
       {/* Inputs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-on-surface-secondary mb-1">
             Gasto mensal desejado (R$)
           </label>
           <input
@@ -97,14 +99,14 @@ export function FISimulator() {
             step={100}
             value={monthlyExpense}
             onChange={(e) => setMonthlyExpense(Math.max(0, Number(e.target.value)))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-input-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-on-surface-muted mt-1">
             Quanto você quer gastar por mês na independência financeira
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-on-surface-secondary mb-1">
             Patrimônio atual (R$)
           </label>
           <input
@@ -114,11 +116,11 @@ export function FISimulator() {
             step={1000}
             value={currentPatrimony}
             onChange={(e) => setCurrentPatrimony(Math.max(0, Number(e.target.value)))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-input-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-on-surface-secondary mb-1">
             Aporte mensal (R$)
           </label>
           <input
@@ -128,11 +130,11 @@ export function FISimulator() {
             step={100}
             value={monthlyContribution}
             onChange={(e) => setMonthlyContribution(Math.max(0, Number(e.target.value)))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-lg border border-input-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-on-surface-secondary mb-1">
             Retorno real anual (%): {realReturnBase}%
           </label>
           <input
@@ -144,7 +146,7 @@ export function FISimulator() {
             onChange={(e) => setRealReturnBase(Number(e.target.value))}
             className="w-full accent-emerald-600"
           />
-          <div className="flex justify-between text-xs text-slate-400">
+          <div className="flex justify-between text-xs text-on-surface-muted">
             <span>0%</span>
             <span>Poupança ~2%</span>
             <span>CDI ~5%</span>
@@ -152,7 +154,7 @@ export function FISimulator() {
           </div>
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-on-surface-secondary mb-1">
             Taxa de retirada segura (SWR): {swr}% a.a.
           </label>
           <input
@@ -164,7 +166,7 @@ export function FISimulator() {
             onChange={(e) => setSwr(Number(e.target.value))}
             className="w-full accent-emerald-600"
           />
-          <div className="flex justify-between text-xs text-slate-400">
+          <div className="flex justify-between text-xs text-on-surface-muted">
             <span>2% (conservador)</span>
             <span>4% (clássico)</span>
             <span>6% (agressivo)</span>
@@ -176,7 +178,7 @@ export function FISimulator() {
       <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-5 border border-emerald-100">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-emerald-700">Patrimônio alvo (IF)</p>
+            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Patrimônio alvo (IF)</p>
             <p className="text-2xl font-bold text-emerald-800">
               {formatBRL(result.targetPatrimony)}
             </p>
@@ -185,7 +187,7 @@ export function FISimulator() {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium text-emerald-700">Progresso atual</p>
+            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Progresso atual</p>
             <p className="text-2xl font-bold text-emerald-800">
               {(result.currentProgress * 100).toFixed(1)}%
             </p>
@@ -204,8 +206,8 @@ export function FISimulator() {
         {result.scenarios.map((scenario, i) => {
           const colors = [
             { bg: "bg-orange-50", text: "text-orange-700", label: "text-orange-600" },
-            { bg: "bg-blue-50", text: "text-blue-700", label: "text-blue-600" },
-            { bg: "bg-emerald-50", text: "text-emerald-700", label: "text-emerald-600" },
+            { bg: "bg-blue-50 dark:bg-blue-950", text: "text-blue-700", label: "text-blue-600" },
+            { bg: "bg-emerald-50 dark:bg-emerald-950", text: "text-emerald-700 dark:text-emerald-300", label: "text-emerald-600" },
           ];
           const c = colors[i];
           return (
@@ -226,8 +228,8 @@ export function FISimulator() {
 
       {/* Insight */}
       {result.scenarios[1].yearsToTarget !== null && (
-        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-          <p className="text-sm text-slate-700">
+        <div className="bg-surface-alt rounded-xl p-4 border border-border">
+          <p className="text-sm text-on-surface-secondary">
             <span className="font-medium">Alavanca principal:</span>{" "}
             {monthlyContribution > 0 ? (
               <>
@@ -258,45 +260,46 @@ export function FISimulator() {
       )}
 
       {/* Chart */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <h3 className="text-sm font-medium text-slate-700 mb-4">
+      <div className="bg-card rounded-xl border border-border p-4">
+        <h3 className="text-sm font-medium text-on-surface-secondary mb-4">
           Trajetória do patrimônio (valores reais)
         </h3>
         <div className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
               <XAxis
                 dataKey="year"
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 11, fill: colors.text }}
                 tickFormatter={(v) => `${v}a`}
               />
               <YAxis
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 11, fill: colors.text }}
                 tickFormatter={(v) => formatCompact(Number(v))}
               />
               <Tooltip
+                contentStyle={{ backgroundColor: colors.tooltip.bg, borderColor: colors.tooltip.border }}
                 formatter={(value) => formatBRL(Number(value))}
                 labelFormatter={(label) => `Ano ${label}`}
               />
               <Legend />
               <ReferenceLine
                 y={result.targetPatrimony}
-                stroke="#dc2626"
+                stroke={colors.red}
                 strokeDasharray="8 4"
                 strokeWidth={2}
                 label={{
                   value: `Meta: ${formatCompact(result.targetPatrimony)}`,
                   position: "insideTopRight",
                   fontSize: 11,
-                  fill: "#dc2626",
+                  fill: colors.red,
                 }}
               />
               <Line
                 type="monotone"
                 dataKey="conservative"
                 name="Conservador"
-                stroke="#f97316"
+                stroke={colors.orange}
                 strokeWidth={1.5}
                 dot={false}
               />
@@ -304,7 +307,7 @@ export function FISimulator() {
                 type="monotone"
                 dataKey="base"
                 name="Base"
-                stroke="#3b82f6"
+                stroke={colors.blue}
                 strokeWidth={2.5}
                 dot={false}
               />
@@ -312,7 +315,7 @@ export function FISimulator() {
                 type="monotone"
                 dataKey="optimistic"
                 name="Otimista"
-                stroke="#059669"
+                stroke={colors.emerald}
                 strokeWidth={1.5}
                 dot={false}
               />
@@ -322,7 +325,7 @@ export function FISimulator() {
       </div>
 
       {/* Premissas */}
-      <div className="text-xs text-slate-400 space-y-1">
+      <div className="text-xs text-on-surface-muted space-y-1">
         <p><strong>Premissas:</strong></p>
         <p>- Valores em termos reais (já descontada a inflação). Retorno real = retorno nominal − inflação.</p>
         <p>- Cenário conservador usa retorno real {Math.max(0, realReturnBase - 2)}% a.a., base {realReturnBase}% a.a., otimista {realReturnBase + 2}% a.a.</p>

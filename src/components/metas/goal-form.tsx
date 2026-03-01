@@ -163,7 +163,7 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {serverError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm">
           {serverError}
         </div>
       )}
@@ -240,7 +240,7 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
 
       {/* Icon picker */}
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Ícone</label>
+        <label className="block text-sm font-medium text-on-surface-secondary mb-1">Ícone</label>
         <div className="flex flex-wrap gap-2">
           {Object.entries(GOAL_ICONS).map(([key, emoji]) => (
             <button
@@ -249,8 +249,8 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
               onClick={() => setIcon(key)}
               className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all ${
                 icon === key
-                  ? "ring-2 ring-emerald-500 bg-emerald-50 scale-110"
-                  : "bg-slate-100 hover:bg-slate-200"
+                  ? "ring-2 ring-emerald-500 bg-emerald-50 dark:bg-emerald-950 scale-110"
+                  : "bg-tab-bg hover:bg-skeleton"
               }`}
               title={key}
             >
@@ -262,7 +262,7 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
 
       {/* Color picker */}
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Cor</label>
+        <label className="block text-sm font-medium text-on-surface-secondary mb-1">Cor</label>
         <div className="flex flex-wrap gap-2">
           {Object.entries(GOAL_COLORS).map(([key, styles]) => (
             <button

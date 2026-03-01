@@ -7,7 +7,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebar();
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-surface-alt">
       <Sidebar />
       <main
         className={`pt-14 lg:pt-0 transition-all duration-300 ${

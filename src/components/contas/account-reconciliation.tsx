@@ -71,14 +71,14 @@ export function AccountReconciliation({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-on-surface-secondary">
         Compara o saldo registrado de cada conta com o saldo calculado (saldo
         inicial + transações). Divergências podem indicar transações não
         registradas.
       </p>
 
       {!hasDivergence && (
-        <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700 flex items-center gap-2">
+        <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 p-4 text-sm text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
           <svg
             className="w-5 h-5 shrink-0"
             fill="none"
@@ -99,20 +99,20 @@ export function AccountReconciliation({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200">
-              <th className="text-left py-2 px-3 font-medium text-slate-600">
+            <tr className="border-b border-border">
+              <th className="text-left py-2 px-3 font-medium text-on-surface-secondary">
                 Conta
               </th>
-              <th className="text-right py-2 px-3 font-medium text-slate-600">
+              <th className="text-right py-2 px-3 font-medium text-on-surface-secondary">
                 Saldo Registrado
               </th>
-              <th className="text-right py-2 px-3 font-medium text-slate-600">
+              <th className="text-right py-2 px-3 font-medium text-on-surface-secondary">
                 Saldo Calculado
               </th>
-              <th className="text-right py-2 px-3 font-medium text-slate-600">
+              <th className="text-right py-2 px-3 font-medium text-on-surface-secondary">
                 Divergência
               </th>
-              <th className="text-center py-2 px-3 font-medium text-slate-600">
+              <th className="text-center py-2 px-3 font-medium text-on-surface-secondary">
                 Status
               </th>
               <th className="py-2 px-3"></th>
@@ -125,20 +125,20 @@ export function AccountReconciliation({
               return (
                 <tr
                   key={row.account.id}
-                  className="border-b border-slate-100 last:border-0"
+                  className="border-b border-border-light last:border-0"
                 >
-                  <td className="py-2.5 px-3 font-medium text-slate-800">
+                  <td className="py-2.5 px-3 font-medium text-on-surface-heading">
                     {row.account.name}
                   </td>
-                  <td className="py-2.5 px-3 text-right tabular-nums text-slate-700">
+                  <td className="py-2.5 px-3 text-right tabular-nums text-on-surface-secondary">
                     {formatCurrency(row.account.balance_cents)}
                   </td>
-                  <td className="py-2.5 px-3 text-right tabular-nums text-slate-700">
+                  <td className="py-2.5 px-3 text-right tabular-nums text-on-surface-secondary">
                     {formatCurrency(row.calculatedBalance)}
                   </td>
                   <td
                     className={`py-2.5 px-3 text-right tabular-nums font-medium ${
-                      isDivergent ? "text-rose-600" : "text-slate-400"
+                      isDivergent ? "text-rose-600" : "text-on-surface-muted"
                     }`}
                   >
                     {isDivergent
@@ -151,9 +151,9 @@ export function AccountReconciliation({
                         isDivergent
                           ? Math.abs(row.divergence) >
                             row.account.balance_cents * 0.1
-                            ? "bg-rose-100 text-rose-700"
-                            : "bg-yellow-100 text-yellow-700"
-                          : "bg-emerald-100 text-emerald-700"
+                            ? "bg-rose-100 text-rose-700 dark:text-rose-300"
+                            : "bg-yellow-100 text-yellow-700 dark:text-yellow-300"
+                          : "bg-emerald-100 text-emerald-700 dark:text-emerald-300"
                       }`}
                     >
                       {isDivergent ? "Divergência" : "OK"}
@@ -180,7 +180,7 @@ export function AccountReconciliation({
       </div>
 
       {hasDivergence && (
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-on-surface-muted">
           &ldquo;Ajustar&rdquo; atualiza o saldo registrado para o valor
           calculado. Verifique se não há transações pendentes antes de ajustar.
         </p>

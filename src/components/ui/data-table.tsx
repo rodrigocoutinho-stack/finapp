@@ -40,7 +40,7 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="p-4 space-y-3">
           {/* Header skeleton */}
           <div className="flex gap-4 pb-2">
@@ -65,28 +65,28 @@ export function DataTable<T>({
 
   if (data.length === 0) {
     return (
-      <p className="text-slate-500 text-center py-8">
+      <p className="text-on-surface-muted text-center py-8">
         {emptyMessage}
       </p>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
+            <tr className="border-b border-border-light bg-surface-alt">
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`text-left px-4 py-3 font-medium text-slate-600 ${col.headerClassName ?? ""}`}
+                  className={`text-left px-4 py-3 font-medium text-on-surface-secondary ${col.headerClassName ?? ""}`}
                 >
                   {col.header}
                 </th>
               ))}
               {actions && (
-                <th className="text-right px-4 py-3 font-medium text-slate-600">
+                <th className="text-right px-4 py-3 font-medium text-on-surface-secondary">
                   Ações
                 </th>
               )}
@@ -96,7 +96,7 @@ export function DataTable<T>({
             {data.map((item) => (
               <tr
                 key={keyExtractor(item)}
-                className="border-b border-slate-50 hover:bg-slate-50"
+                className="border-b border-border-light hover:bg-hover"
               >
                 {columns.map((col) => (
                   <td key={col.key} className={`px-4 py-3 ${col.className ?? ""}`}>
@@ -114,8 +114,8 @@ export function DataTable<T>({
         </table>
       </div>
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
-          <span className="text-sm text-slate-500">
+        <div className="flex items-center justify-between border-t border-border px-4 py-3">
+          <span className="text-sm text-on-surface-muted">
             {pagination.totalCount} registros
           </span>
           <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export function DataTable<T>({
             >
               Anterior
             </Button>
-            <span className="text-sm text-slate-600">
+            <span className="text-sm text-on-surface-secondary">
               Página {pagination.currentPage} de {pagination.totalPages}
             </span>
             <Button

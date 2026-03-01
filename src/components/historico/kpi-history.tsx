@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { formatCurrency, formatMonthLabel } from "@/lib/utils";
+import { useChartColors } from "@/lib/use-chart-colors";
 import { DataTable } from "@/components/ui/data-table";
 import type { MonthlyClosingRow } from "@/types/database";
 
@@ -49,6 +50,7 @@ function currencyTickFormatter(value: number): string {
 }
 
 export function KpiHistory({ closings }: KpiHistoryProps) {
+  const colors = useChartColors();
   const sorted = useMemo(
     () => [...closings].sort((a, b) => a.month.localeCompare(b.month)),
     [closings]
@@ -113,15 +115,16 @@ export function KpiHistory({ closings }: KpiHistoryProps) {
       {/* Section B: Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Chart 1: Revenue vs Expenses vs Balance */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">
+        <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+          <h3 className="text-sm font-semibold text-on-surface-secondary mb-4">
             Receitas vs Despesas vs Saldo
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-              <YAxis tickFormatter={currencyTickFormatter} tick={{ fontSize: 11 }} />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: colors.text }} />
+              <YAxis tickFormatter={currencyTickFormatter} tick={{ fontSize: 11, fill: colors.text }} />
               <Tooltip
+                contentStyle={{ backgroundColor: colors.tooltip.bg, borderColor: colors.tooltip.border }}
                 formatter={(value, name) => [
                   formatCurrency(Math.round(Number(value) * 100)),
                   name === "receitas" ? "Receitas" : name === "despesas" ? "Despesas" : "Saldo",
@@ -135,21 +138,21 @@ export function KpiHistory({ closings }: KpiHistoryProps) {
               <Line
                 type="monotone"
                 dataKey="receitas"
-                stroke="#10b981"
+                stroke={colors.emerald}
                 strokeWidth={2}
                 dot={{ r: 3 }}
               />
               <Line
                 type="monotone"
                 dataKey="despesas"
-                stroke="#f43f5e"
+                stroke={colors.rose}
                 strokeWidth={2}
                 dot={{ r: 3 }}
               />
               <Line
                 type="monotone"
                 dataKey="saldo"
-                stroke="#3b82f6"
+                stroke={colors.blue}
                 strokeWidth={2}
                 dot={{ r: 3 }}
               />
@@ -158,25 +161,26 @@ export function KpiHistory({ closings }: KpiHistoryProps) {
         </div>
 
         {/* Chart 2: Financial Health */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">
+        <div className="bg-card rounded-xl border border-border p-4 shadow-sm">
+          <h3 className="text-sm font-semibold text-on-surface-secondary mb-4">
             Saude Financeira
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <XAxis dataKey="month" tick={{ fontSize: 12, fill: colors.text }} />
               <YAxis
                 yAxisId="left"
                 tickFormatter={(v: number) => `${v}%`}
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 11, fill: colors.text }}
               />
               <YAxis
                 yAxisId="right"
                 orientation="right"
                 tickFormatter={(v: number) => `${v}m`}
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 11, fill: colors.text }}
               />
               <Tooltip
+                contentStyle={{ backgroundColor: colors.tooltip.bg, borderColor: colors.tooltip.border }}
                 formatter={(value, name) => {
                   const v = Number(value);
                   if (name === "savings_rate") return [`${v.toFixed(1)}%`, "Taxa Poupanca"];
@@ -197,7 +201,7 @@ export function KpiHistory({ closings }: KpiHistoryProps) {
                 yAxisId="left"
                 type="monotone"
                 dataKey="savings_rate"
-                stroke="#10b981"
+                stroke={colors.emerald}
                 strokeWidth={2}
                 dot={{ r: 3 }}
                 connectNulls
@@ -206,7 +210,7 @@ export function KpiHistory({ closings }: KpiHistoryProps) {
                 yAxisId="right"
                 type="monotone"
                 dataKey="runway_months"
-                stroke="#3b82f6"
+                stroke={colors.blue}
                 strokeWidth={2}
                 dot={{ r: 3 }}
                 connectNulls
@@ -215,7 +219,7 @@ export function KpiHistory({ closings }: KpiHistoryProps) {
                 yAxisId="right"
                 type="monotone"
                 dataKey="reserve_months"
-                stroke="#8b5cf6"
+                stroke={colors.violet}
                 strokeWidth={2}
                 dot={{ r: 3 }}
                 connectNulls
@@ -227,7 +231,7 @@ export function KpiHistory({ closings }: KpiHistoryProps) {
 
       {/* Section C: Data Table */}
       <div>
-        <h3 className="text-sm font-semibold text-slate-700 mb-4">
+        <h3 className="text-sm font-semibold text-on-surface-secondary mb-4">
           Historico Detalhado
         </h3>
         <DataTable<MonthlyClosingRow>
@@ -245,7 +249,7 @@ const tableColumns = [
     key: "month",
     header: "Mes",
     render: (row: MonthlyClosingRow) => (
-      <span className="font-medium text-slate-700">
+      <span className="font-medium text-on-surface-secondary">
         {formatMonthLabel(row.month)}
       </span>
     ),
@@ -308,7 +312,7 @@ const tableColumns = [
     key: "notes",
     header: "Notas",
     render: (row: MonthlyClosingRow) => (
-      <span className="text-slate-500 truncate max-w-[150px] block" title={row.notes ?? ""}>
+      <span className="text-on-surface-muted truncate max-w-[150px] block" title={row.notes ?? ""}>
         {row.notes ?? "\u2014"}
       </span>
     ),
@@ -333,9 +337,9 @@ function SummaryCard({
   const showDelta = deltaLabel && delta !== null && delta !== undefined;
 
   return (
-    <div className="rounded-lg bg-slate-50 px-3 py-2">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-lg font-bold text-slate-700 tabular-nums">{value}</p>
+    <div className="rounded-lg bg-surface-alt px-3 py-2">
+      <p className="text-xs text-on-surface-muted">{label}</p>
+      <p className="text-lg font-bold text-on-surface-secondary tabular-nums">{value}</p>
       {showDelta && (
         <p
           className={`text-xs tabular-nums ${

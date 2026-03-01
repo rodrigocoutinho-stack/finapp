@@ -296,17 +296,17 @@ export function FinancialInsights({
 const typeStyles = {
   alert: {
     border: "border-l-rose-500",
-    bg: "bg-rose-50",
+    bg: "bg-rose-50 dark:bg-rose-950",
     icon: "text-rose-500",
   },
   warning: {
     border: "border-l-yellow-500",
-    bg: "bg-yellow-50",
+    bg: "bg-yellow-50 dark:bg-yellow-950",
     icon: "text-yellow-500",
   },
   positive: {
     border: "border-l-emerald-500",
-    bg: "bg-emerald-50",
+    bg: "bg-emerald-50 dark:bg-emerald-950",
     icon: "text-emerald-500",
   },
 };
@@ -339,10 +339,10 @@ function InsightCard({
           </svg>
         )}
       </div>
-      <p className="text-sm text-slate-700 flex-1">{insight.text}</p>
+      <p className="text-sm text-on-surface-secondary flex-1">{insight.text}</p>
       <button
         onClick={onDismiss}
-        className="text-slate-400 hover:text-slate-600 shrink-0"
+        className="text-on-surface-muted hover:text-on-surface-secondary shrink-0"
         aria-label="Dispensar"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

@@ -70,7 +70,7 @@ export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboar
 
   if (investments.length === 0) {
     return (
-      <p className="text-slate-500 text-center py-8 text-sm">
+      <p className="text-on-surface-muted text-center py-8 text-sm">
         Cadastre investimentos na aba Carteira para ver a evolução.
       </p>
     );
@@ -116,14 +116,14 @@ export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboar
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-200">
-            <th className="text-left py-2 pr-4 font-medium text-slate-600 min-w-[180px]">
+          <tr className="border-b border-border">
+            <th className="text-left py-2 pr-4 font-medium text-on-surface-secondary min-w-[180px]">
               Investimento
             </th>
             {months.map((m) => (
               <th
                 key={m}
-                className="text-right py-2 px-3 font-medium text-slate-600 min-w-[110px]"
+                className="text-right py-2 px-3 font-medium text-on-surface-secondary min-w-[110px]"
               >
                 {formatMonthLabel(m)}
               </th>
@@ -152,8 +152,8 @@ export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboar
             })}
 
           {/* Total geral */}
-          <tr className="border-t-2 border-slate-200">
-            <td className="py-3 pr-4 font-semibold text-slate-800">Total</td>
+          <tr className="border-t-2 border-border">
+            <td className="py-3 pr-4 font-semibold text-on-surface-heading">Total</td>
             {months.map((m, idx) => {
               const total = getGrandTotal(m);
               const prevTotal = idx > 0 ? getGrandTotal(months[idx - 1]) : 0;
@@ -169,7 +169,7 @@ export function InvestmentDashboard({ investments, ipca12m }: InvestmentDashboar
                     {formatCurrency(total)}
                   </span>
                   {showReal && idx > 0 && (
-                    <span className="block text-[10px] text-slate-400 tabular-nums">
+                    <span className="block text-[10px] text-on-surface-muted tabular-nums">
                       real: {realPct >= 0 ? "+" : ""}{realPct.toFixed(2)}%
                     </span>
                   )}
@@ -203,17 +203,17 @@ function GroupRows({
   return (
     <>
       <tr
-        className="cursor-pointer hover:bg-slate-50 transition-colors"
+        className="cursor-pointer hover:bg-surface-alt transition-colors"
         onClick={onToggle}
       >
-        <td className="py-2.5 pr-4 font-semibold text-slate-800">
+        <td className="py-2.5 pr-4 font-semibold text-on-surface-heading">
           <span className="flex items-center gap-1.5">
             <ChevronIcon open={expanded} />
             {getGroupLabel(group)}
           </span>
         </td>
         {months.map((m) => (
-          <td key={m} className="text-right py-2.5 px-3 font-semibold text-slate-800">
+          <td key={m} className="text-right py-2.5 px-3 font-semibold text-on-surface-heading">
             {formatCurrency(getGroupTotal(group, m))}
           </td>
         ))}
@@ -221,12 +221,12 @@ function GroupRows({
 
       {expanded &&
         items.map((inv) => (
-          <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
-            <td className="py-1.5 pr-4 pl-6 text-slate-700">{inv.name}</td>
+          <tr key={inv.id} className="hover:bg-surface-alt transition-colors">
+            <td className="py-1.5 pr-4 pl-6 text-on-surface-secondary">{inv.name}</td>
             {months.map((m) => {
               const bal = getBalance(inv.id, m);
               return (
-                <td key={m} className="text-right py-1.5 px-3 text-slate-600">
+                <td key={m} className="text-right py-1.5 px-3 text-on-surface-secondary">
                   {bal > 0 ? formatCurrency(bal) : "-"}
                 </td>
               );

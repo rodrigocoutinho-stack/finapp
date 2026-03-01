@@ -29,10 +29,10 @@ interface GoalListProps {
 }
 
 const statusColors = {
-  green: "bg-emerald-100 text-emerald-700",
-  yellow: "bg-yellow-100 text-yellow-700",
-  red: "bg-rose-100 text-rose-700",
-  gray: "bg-slate-100 text-slate-600",
+  green: "bg-emerald-100 text-emerald-700 dark:text-emerald-300",
+  yellow: "bg-yellow-100 text-yellow-700 dark:text-yellow-300",
+  red: "bg-rose-100 text-rose-700 dark:text-rose-300",
+  gray: "bg-tab-bg text-on-surface-secondary",
 };
 
 export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
@@ -123,7 +123,7 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
           return (
             <div
               key={goal.id}
-              className={`rounded-xl border border-slate-200 shadow-sm overflow-hidden ${
+              className={`rounded-xl border border-border shadow-sm overflow-hidden ${
                 !goal.is_active ? "opacity-60" : ""
               }`}
             >
@@ -136,7 +136,7 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
                   </h3>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/60 text-slate-600 font-medium">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-white/60 dark:bg-white/10 text-on-surface-secondary font-medium">
                     {HORIZON_LABELS[goal.horizon] ?? goal.horizon}
                   </span>
                   <span
@@ -148,25 +148,25 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
               </div>
 
               {/* Body */}
-              <div className="p-4 bg-white space-y-3">
+              <div className="p-4 bg-card space-y-3">
                 {/* Progress bar */}
                 <div>
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                  <div className="flex items-center justify-between text-xs text-on-surface-muted mb-1">
                     <span>{formatCurrency(currentCents)}</span>
                     <span>{formatCurrency(goal.target_cents)}</span>
                   </div>
-                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-tab-bg rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${colorStyles.bar}`}
                       style={{ width: `${Math.min(100, progress)}%` }}
                     />
                   </div>
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs font-medium text-slate-600">
+                    <span className="text-xs font-medium text-on-surface-secondary">
                       {progress.toFixed(1)}%
                     </span>
                     {isLinked && linkedAccount && (
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-on-surface-muted">
                         via {linkedAccount.name}
                       </span>
                     )}
@@ -175,17 +175,17 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
 
                 {/* Info */}
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-slate-50 rounded-lg px-2.5 py-2">
-                    <p className="text-slate-400">Prazo</p>
-                    <p className="text-slate-700 font-medium">
+                  <div className="bg-surface-alt rounded-lg px-2.5 py-2">
+                    <p className="text-on-surface-muted">Prazo</p>
+                    <p className="text-on-surface-secondary font-medium">
                       {new Date(goal.deadline).toLocaleDateString("pt-BR")}
                     </p>
                   </div>
-                  <div className="bg-slate-50 rounded-lg px-2.5 py-2">
-                    <p className="text-slate-400">
+                  <div className="bg-surface-alt rounded-lg px-2.5 py-2">
+                    <p className="text-on-surface-muted">
                       {monthsLeft > 0 ? "Faltam" : "Vencido"}
                     </p>
-                    <p className="text-slate-700 font-medium">
+                    <p className="text-on-surface-secondary font-medium">
                       {monthsLeft > 0
                         ? `${monthsLeft} ${monthsLeft === 1 ? "mês" : "meses"}`
                         : "—"}
@@ -195,9 +195,9 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
 
                 {/* Monthly contribution needed */}
                 {progress < 100 && monthsLeft > 0 && (
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-on-surface-muted">
                     Necessário:{" "}
-                    <span className="font-medium text-slate-700">
+                    <span className="font-medium text-on-surface-secondary">
                       {formatCurrency(monthlyNeeded)}/mês
                     </span>
                   </div>
@@ -213,20 +213,20 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
                           (goal.current_cents / 100).toFixed(2).replace(".", ",")
                         );
                       }}
-                      className="text-xs px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors font-medium"
+                      className="text-xs px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors font-medium"
                     >
                       Atualizar saldo
                     </button>
                   )}
                   <button
                     onClick={() => setEditGoal(goal)}
-                    className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors font-medium"
+                    className="text-xs px-2.5 py-1.5 rounded-lg bg-tab-bg text-on-surface-secondary hover:bg-skeleton transition-colors font-medium"
                   >
                     Editar
                   </button>
                   <button
                     onClick={() => setDeleteGoal(goal)}
-                    className="text-xs px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors font-medium ml-auto"
+                    className="text-xs px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:bg-rose-950 transition-colors font-medium ml-auto"
                   >
                     Excluir
                   </button>
@@ -264,7 +264,7 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
         title="Excluir meta"
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-on-surface-secondary">
             Tem certeza que deseja excluir a meta{" "}
             <strong>&ldquo;{deleteGoal?.name}&rdquo;</strong>? Esta ação não pode
             ser desfeita.
@@ -297,7 +297,7 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
         title="Atualizar saldo da meta"
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-on-surface-secondary">
             Informe o valor atual acumulado para{" "}
             <strong>&ldquo;{updateGoal?.name}&rdquo;</strong>.
           </p>

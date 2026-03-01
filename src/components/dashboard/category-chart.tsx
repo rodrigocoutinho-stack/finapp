@@ -27,9 +27,9 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   const { name, value } = payload[0];
   return (
-    <div className="bg-white rounded-lg border border-slate-200 px-3 py-2 shadow-lg text-[13px]">
-      <p className="font-semibold text-slate-700">{name}</p>
-      <p className="text-slate-600">{formatCurrency(value)}</p>
+    <div className="bg-card rounded-lg border border-border px-3 py-2 shadow-lg text-[13px]">
+      <p className="font-semibold text-on-surface-secondary">{name}</p>
+      <p className="text-on-surface-secondary">{formatCurrency(value)}</p>
     </div>
   );
 }
@@ -37,7 +37,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 export function CategoryChart({ data }: CategoryChartProps) {
   if (data.length === 0) {
     return (
-      <p className="text-slate-500 text-center py-8 text-sm">
+      <p className="text-on-surface-muted text-center py-8 text-sm">
         Nenhuma despesa registrada neste mês.
       </p>
     );
@@ -71,8 +71,8 @@ export function CategoryChart({ data }: CategoryChartProps) {
         </ResponsiveContainer>
         {/* Center label */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-xs text-slate-500">Total</span>
-          <span className="text-base font-bold text-slate-800">
+          <span className="text-xs text-on-surface-muted">Total</span>
+          <span className="text-base font-bold text-on-surface-heading">
             {formatCurrency(total)}
           </span>
         </div>
@@ -90,15 +90,15 @@ export function CategoryChart({ data }: CategoryChartProps) {
               />
               <CategoryIcon
                 name={item.name}
-                className="w-4 h-4 text-slate-400 shrink-0"
+                className="w-4 h-4 text-on-surface-muted shrink-0"
               />
-              <span className="truncate text-slate-700 flex-1 min-w-0">
+              <span className="truncate text-on-surface-secondary flex-1 min-w-0">
                 {item.name}
               </span>
-              <span className="text-slate-500 shrink-0 tabular-nums">
+              <span className="text-on-surface-muted shrink-0 tabular-nums">
                 {pct}%
               </span>
-              <span className="font-medium text-slate-800 shrink-0 tabular-nums">
+              <span className="font-medium text-on-surface-heading shrink-0 tabular-nums">
                 {formatCurrency(item.amount)}
               </span>
             </div>

@@ -173,7 +173,7 @@ export default function ImportarPage() {
         action={
           <button
             onClick={() => router.push("/transacoes")}
-            className="text-sm text-slate-500 hover:text-slate-900"
+            className="text-sm text-on-surface-muted hover:text-on-surface"
           >
             Voltar para Transa\u00e7\u00f5es
           </button>
@@ -188,7 +188,7 @@ export default function ImportarPage() {
               className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
                 i <= currentIndex
                   ? "bg-emerald-600 text-white"
-                  : "bg-slate-200 text-slate-500"
+                  : "bg-skeleton text-on-surface-muted"
               }`}
             >
               {i + 1}
@@ -196,8 +196,8 @@ export default function ImportarPage() {
             <span
               className={`ml-2 text-sm ${
                 i <= currentIndex
-                  ? "text-slate-900 font-medium"
-                  : "text-slate-400"
+                  ? "text-on-surface font-medium"
+                  : "text-on-surface-muted"
               }`}
             >
               {s.label}
@@ -205,7 +205,7 @@ export default function ImportarPage() {
             {i < steps.length - 1 && (
               <div
                 className={`w-12 h-0.5 mx-3 ${
-                  i < currentIndex ? "bg-emerald-600" : "bg-slate-200"
+                  i < currentIndex ? "bg-emerald-600" : "bg-skeleton"
                 }`}
               />
             )}
@@ -215,7 +215,7 @@ export default function ImportarPage() {
 
       {/* Parse warnings */}
       {(step === "review" || (step === "upload" && !pdfProcessing)) && parseWarnings.length > 0 && (
-        <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-700">
+        <div className="mb-4 rounded-lg bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 p-3 text-sm text-yellow-700 dark:text-yellow-300">
           <strong>Avisos do parsing:</strong>
           <ul className="list-disc list-inside mt-1">
             {parseWarnings.map((w, i) => (
@@ -236,13 +236,13 @@ export default function ImportarPage() {
 
       {pdfProcessing && (
         <div className="max-w-lg mx-auto">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center space-y-4">
+          <div className="bg-card rounded-xl shadow-sm border border-border p-8 text-center space-y-4">
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">Extraindo transações com IA...</h3>
-              <p className="text-sm text-slate-500 mt-1">
+              <h3 className="text-lg font-semibold text-on-surface">Extraindo transações com IA...</h3>
+              <p className="text-sm text-on-surface-muted mt-1">
                 Analisando o PDF com inteligência artificial. Isso pode levar alguns segundos.
               </p>
             </div>

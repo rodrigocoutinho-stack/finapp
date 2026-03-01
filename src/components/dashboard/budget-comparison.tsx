@@ -27,7 +27,7 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
 
   if (receitas.length === 0 && despesas.length === 0) {
     return (
-      <p className="text-slate-500 text-center py-4 text-sm">
+      <p className="text-on-surface-muted text-center py-4 text-sm">
         Sem dados de orçamento para comparar.
       </p>
     );
@@ -55,7 +55,7 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
 
   return (
     <div className="space-y-1">
-      <p className="text-xs text-slate-500 mb-3">
+      <p className="text-xs text-on-surface-muted mb-3">
         Comparação proporcional até o dia {elapsed} do período
       </p>
 
@@ -70,7 +70,7 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
             </span>
           )}
           {bustedCount > 0 && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-rose-100 text-rose-700 font-medium">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-rose-100 text-rose-700 dark:text-rose-300 font-medium">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
               </svg>
@@ -78,7 +78,7 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
             </span>
           )}
           {warningCount > 0 && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 font-medium">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 dark:text-yellow-300 font-medium">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.007v.008H12v-.008z" />
               </svg>
@@ -90,17 +90,17 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
 
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-200">
-            <th className="text-left py-2 pr-4 font-medium text-slate-600 min-w-[160px]">
+          <tr className="border-b border-border">
+            <th className="text-left py-2 pr-4 font-medium text-on-surface-secondary min-w-[160px]">
               Categoria
             </th>
-            <th className="text-right py-2 px-3 font-medium text-slate-600 min-w-[100px]">
+            <th className="text-right py-2 px-3 font-medium text-on-surface-secondary min-w-[100px]">
               Previsto
             </th>
-            <th className="text-right py-2 px-3 font-medium text-slate-600 min-w-[100px]">
+            <th className="text-right py-2 px-3 font-medium text-on-surface-secondary min-w-[100px]">
               Realizado
             </th>
-            <th className="text-right py-2 px-3 font-medium text-slate-600 min-w-[110px]">
+            <th className="text-right py-2 px-3 font-medium text-on-surface-secondary min-w-[110px]">
               Diferença
             </th>
           </tr>
@@ -122,16 +122,16 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
                   }
                 }}
               >
-                <td className="py-2.5 pr-4 font-semibold text-emerald-700">
+                <td className="py-2.5 pr-4 font-semibold text-emerald-700 dark:text-emerald-300">
                   <span className="flex items-center gap-1.5">
                     <ChevronIcon open={showReceitas} />
                     Receitas
                   </span>
                 </td>
-                <td className="text-right py-2.5 px-3 font-semibold text-slate-700 tabular-nums">
+                <td className="text-right py-2.5 px-3 font-semibold text-on-surface-secondary tabular-nums">
                   {formatCurrency(month.forecastToDateReceitas)}
                 </td>
-                <td className="text-right py-2.5 px-3 font-semibold text-slate-700 tabular-nums">
+                <td className="text-right py-2.5 px-3 font-semibold text-on-surface-secondary tabular-nums">
                   {formatCurrency(month.realReceitas)}
                 </td>
                 <td className="text-right py-2.5 px-3 font-semibold tabular-nums">
@@ -165,19 +165,19 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
                   }
                 }}
               >
-                <td className="py-2.5 pr-4 font-semibold text-rose-700 border-t border-slate-100">
+                <td className="py-2.5 pr-4 font-semibold text-rose-700 dark:text-rose-300 border-t border-border-light">
                   <span className="flex items-center gap-1.5">
                     <ChevronIcon open={showDespesas} />
                     Despesas
                   </span>
                 </td>
-                <td className="text-right py-2.5 px-3 font-semibold text-slate-700 border-t border-slate-100 tabular-nums">
+                <td className="text-right py-2.5 px-3 font-semibold text-on-surface-secondary border-t border-border-light tabular-nums">
                   {formatCurrency(month.forecastToDateDespesas)}
                 </td>
-                <td className="text-right py-2.5 px-3 font-semibold text-slate-700 border-t border-slate-100 tabular-nums">
+                <td className="text-right py-2.5 px-3 font-semibold text-on-surface-secondary border-t border-border-light tabular-nums">
                   {formatCurrency(month.realDespesas)}
                 </td>
-                <td className="text-right py-2.5 px-3 font-semibold border-t border-slate-100 tabular-nums">
+                <td className="text-right py-2.5 px-3 font-semibold border-t border-border-light tabular-nums">
                   <DiffBadge
                     diff={month.realDespesas - month.forecastToDateDespesas}
                     type="despesa"
@@ -193,13 +193,13 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
           )}
 
           {/* Saldo */}
-          <tr className="border-t-2 border-slate-200">
-            <td className="py-3 pr-4 font-semibold text-slate-800">Saldo</td>
-            <td className="text-right py-3 px-3 font-semibold text-slate-700 tabular-nums">
+          <tr className="border-t-2 border-border">
+            <td className="py-3 pr-4 font-semibold text-on-surface-heading">Saldo</td>
+            <td className="text-right py-3 px-3 font-semibold text-on-surface-secondary tabular-nums">
               {saldoPrevisto >= 0 ? "+" : ""}
               {formatCurrency(saldoPrevisto)}
             </td>
-            <td className="text-right py-3 px-3 font-semibold text-slate-700 tabular-nums">
+            <td className="text-right py-3 px-3 font-semibold text-on-surface-secondary tabular-nums">
               {saldoReal >= 0 ? "+" : ""}
               {formatCurrency(saldoReal)}
             </td>
@@ -247,14 +247,14 @@ function CategoryRow({ cat }: { cat: CategoryForecast }) {
   const hasBudget = cat.budgetCents != null && cat.budgetCents > 0;
 
   return (
-    <tr className="hover:bg-slate-50 transition-colors">
-      <td className="py-1.5 pr-4 pl-6 text-slate-700">
+    <tr className="hover:bg-surface-alt transition-colors">
+      <td className="py-1.5 pr-4 pl-6 text-on-surface-secondary">
         <div>
           <span className="flex items-center gap-1.5 flex-wrap">
-            <CategoryIcon name={cat.categoryName} className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <CategoryIcon name={cat.categoryName} className="w-3.5 h-3.5 text-on-surface-muted shrink-0" />
             {cat.categoryName}
             {hasBudget && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-tab-bg text-on-surface-muted">
                 Teto: {formatCurrency(cat.budgetCents!)}
               </span>
             )}
@@ -264,18 +264,18 @@ function CategoryRow({ cat }: { cat: CategoryForecast }) {
               </span>
             )}
             {usage !== null && usage >= 1.0 && usage < 1.2 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 dark:text-rose-300">
                 Estourado
               </span>
             )}
             {usage !== null && usage >= 0.8 && usage < 1.0 && (
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700">
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 dark:text-yellow-300">
                 Atenção
               </span>
             )}
           </span>
           {ref > 0 && (
-            <div className="mt-1 h-1.5 w-full max-w-[120px] rounded-full bg-slate-100 overflow-hidden">
+            <div className="mt-1 h-1.5 w-full max-w-[120px] rounded-full bg-tab-bg overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${barColor}`}
                 style={{ width: `${Math.min(progress, 100)}%` }}
@@ -284,10 +284,10 @@ function CategoryRow({ cat }: { cat: CategoryForecast }) {
           )}
         </div>
       </td>
-      <td className="text-right py-1.5 px-3 text-slate-600 tabular-nums">
+      <td className="text-right py-1.5 px-3 text-on-surface-secondary tabular-nums">
         {formatCurrency(cat.forecastToDateAmount)}
       </td>
-      <td className="text-right py-1.5 px-3 text-slate-600 tabular-nums">
+      <td className="text-right py-1.5 px-3 text-on-surface-secondary tabular-nums">
         {formatCurrency(cat.realAmount)}
       </td>
       <td className="text-right py-1.5 px-3 tabular-nums">
@@ -310,7 +310,7 @@ function DiffBadge({
   const color = isGood ? "text-emerald-600" : "text-rose-600";
 
   if (diff === 0) {
-    return <span className="text-slate-400">-</span>;
+    return <span className="text-on-surface-muted">-</span>;
   }
 
   return (

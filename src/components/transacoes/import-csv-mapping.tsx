@@ -110,8 +110,8 @@ export function ImportCSVMapping({
   if (preview.headers.length === 0) {
     return (
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <p className="text-sm text-red-600">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+          <p className="text-sm text-red-600 dark:text-red-400">
             Nenhum cabe\u00e7alho encontrado no arquivo CSV.
           </p>
           <Button variant="secondary" onClick={onBack} className="mt-4">
@@ -124,18 +124,18 @@ export function ImportCSVMapping({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6">
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 space-y-6">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-on-surface">
             2. Mapeie as colunas
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-on-surface-muted mt-1">
             Identifique qual coluna do CSV corresponde a cada campo.
             {preview.totalRows > 0 && (
               <span className="ml-1">
                 ({preview.totalRows} linha{preview.totalRows !== 1 ? "s" : ""}{" "}
                 encontrada{preview.totalRows !== 1 ? "s" : ""}, delimitador:{" "}
-                <code className="bg-slate-100 px-1 rounded">
+                <code className="bg-tab-bg px-1 rounded">
                   {preview.delimiter === "\t" ? "TAB" : preview.delimiter}
                 </code>
                 )
@@ -151,16 +151,16 @@ export function ImportCSVMapping({
         </div>
 
         {/* Preview table */}
-        <div className="overflow-x-auto rounded-lg border border-slate-200">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="bg-slate-50">
+              <tr className="bg-surface-alt">
                 {preview.headers.map((h, i) => (
                   <th
                     key={i}
-                    className="px-3 py-2 text-left font-medium text-slate-700 border-b border-slate-200 whitespace-nowrap"
+                    className="px-3 py-2 text-left font-medium text-on-surface-secondary border-b border-border whitespace-nowrap"
                   >
-                    {h || <span className="text-slate-400">Coluna {i + 1}</span>}
+                    {h || <span className="text-on-surface-muted">Coluna {i + 1}</span>}
                   </th>
                 ))}
               </tr>
@@ -169,12 +169,12 @@ export function ImportCSVMapping({
               {preview.rows.map((row, ri) => (
                 <tr
                   key={ri}
-                  className={ri % 2 === 0 ? "bg-white" : "bg-slate-50/50"}
+                  className={ri % 2 === 0 ? "bg-card" : "bg-surface-alt/50"}
                 >
                   {preview.headers.map((_, ci) => (
                     <td
                       key={ci}
-                      className="px-3 py-1.5 text-slate-600 border-b border-slate-100 whitespace-nowrap"
+                      className="px-3 py-1.5 text-on-surface-secondary border-b border-border-light whitespace-nowrap"
                     >
                       {row[ci] || ""}
                     </td>
@@ -224,7 +224,7 @@ export function ImportCSVMapping({
         )}
 
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+          <div className="rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-300">
             {error}
           </div>
         )}
@@ -264,14 +264,14 @@ function MappingSelect({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1">
+      <label className="block text-sm font-medium text-on-surface-secondary mb-1">
         {label}
       </label>
       <select
         className={`block w-full rounded-lg border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
           required && value < 0
-            ? "border-amber-300 text-slate-900"
-            : "border-slate-300 text-slate-900"
+            ? "border-amber-300 text-on-surface"
+            : "border-input-border text-on-surface"
         }`}
         value={value}
         onChange={(e) => onChange(parseInt(e.target.value, 10))}

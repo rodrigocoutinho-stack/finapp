@@ -3,7 +3,7 @@
 Ultima atualizacao: 2026-03-01
 
 ## Status
-Build OK. Lint 0 errors. Deploy Vercel ativo. Migrations 001-018 executadas. Validacoes inline implementadas em todos os 8 formularios.
+Build OK. Dark mode implementado com next-themes + CSS variables semanticas + Tailwind v4 @theme tokens. Toggle Claro/Escuro/Sistema em Configuracoes > Geral. Persistencia via localStorage (next-themes). Sem flash de tema (suppressHydrationWarning + attribute="class"). ~50 arquivos atualizados. Graficos Recharts com hook useChartColors() responsivo ao tema.
 
 ## Hipoteses Abertas
 - Nenhuma
@@ -16,8 +16,9 @@ Build OK. Lint 0 errors. Deploy Vercel ativo. Migrations 001-018 executadas. Val
 - `next lint` nao funciona no Next.js 16.1.6 (interpreta "lint" como diretorio). Workaround: usar `npx eslint src/` diretamente.
 - Insights do dashboard sao efemeros (ad-hoc em React, agora memoizados com useMemo) — nao ha motor de regras formal nem persistencia de recomendacoes.
 - Query de reconciliacao limitada a 10000 transacoes. Usuarios com mais de 10k transacoes podem ver falsos positivos de divergencia. Solucao futura: RPC server-side para agregacao.
-- 5+ tabelas (RecurringList, EntryList, CategoryRules, ForecastTable, DailyFlowTable) usam HTML manual em vez do DataTable reutilizavel.
+- 2 tabelas (ForecastTable, DailyFlowTable) usam HTML manual em vez do DataTable reutilizavel (colunas dinamicas/sticky incompativeis sem expandir API).
 - Exportacao CSV limitada a 1000 rows por query Supabase. Suficiente para v1, mas usuarios com muitas transacoes podem precisar de paginacao na exportacao.
+- Paginas de Metas e Dividas mantêm `.limit(100)` sem paginacao server-side (layout de cards, volume naturalmente baixo). Reavaliar se algum usuario ultrapassar 100 itens.
 
 ## Proxima Acao Sugerida
-Proximo item do backlog (Prioridade 1.2 ou seguinte conforme plano-melhorias-codex.md). Criterio de sucesso: funcionalidade implementada, build OK, sem regressoes.
+Verificacao visual do dark mode em todas as paginas (dashboard, transacoes, modais, formularios, graficos, sidebar, login). Criterio de sucesso: sem elementos invisiveis ou ilegíveis no tema escuro.

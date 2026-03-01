@@ -1,5 +1,60 @@
 @import "tailwindcss";
 
+/* ===== Dark Mode: Semantic CSS Variables ===== */
+
+:root {
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8fafc;       /* slate-50 */
+  --color-card: #ffffff;
+  --color-on-surface: #0f172a;         /* slate-900 */
+  --color-on-surface-secondary: #475569; /* slate-600 */
+  --color-on-surface-muted: #64748b;   /* slate-500 */
+  --color-on-surface-heading: #1e293b; /* slate-800 */
+  --color-border: #e2e8f0;            /* slate-200 */
+  --color-border-light: #f1f5f9;      /* slate-100 */
+  --color-input-border: #cbd5e1;      /* slate-300 */
+  --color-input-bg: #ffffff;
+  --color-hover: #f8fafc;             /* slate-50 */
+  --color-skeleton: #e2e8f0;          /* slate-200 */
+  --color-tab-bg: #f1f5f9;            /* slate-100 */
+}
+
+.dark {
+  --color-surface: #020617;           /* slate-950 */
+  --color-surface-alt: #0f172a;       /* slate-900 */
+  --color-card: #0f172a;              /* slate-900 */
+  --color-on-surface: #f1f5f9;        /* slate-100 */
+  --color-on-surface-secondary: #94a3b8; /* slate-400 */
+  --color-on-surface-muted: #94a3b8;  /* slate-400 */
+  --color-on-surface-heading: #e2e8f0; /* slate-200 */
+  --color-border: #334155;            /* slate-700 */
+  --color-border-light: #1e293b;      /* slate-800 */
+  --color-input-border: #475569;      /* slate-600 */
+  --color-input-bg: #1e293b;          /* slate-800 */
+  --color-hover: #1e293b;             /* slate-800 */
+  --color-skeleton: #334155;          /* slate-700 */
+  --color-tab-bg: #1e293b;            /* slate-800 */
+}
+
+/* ===== Tailwind v4 Theme Tokens ===== */
+
+@theme {
+  --color-surface: var(--color-surface);
+  --color-surface-alt: var(--color-surface-alt);
+  --color-card: var(--color-card);
+  --color-on-surface: var(--color-on-surface);
+  --color-on-surface-secondary: var(--color-on-surface-secondary);
+  --color-on-surface-muted: var(--color-on-surface-muted);
+  --color-on-surface-heading: var(--color-on-surface-heading);
+  --color-border: var(--color-border);
+  --color-border-light: var(--color-border-light);
+  --color-input-border: var(--color-input-border);
+  --color-input-bg: var(--color-input-bg);
+  --color-hover: var(--color-hover);
+  --color-skeleton: var(--color-skeleton);
+  --color-tab-bg: var(--color-tab-bg);
+}
+
 /* Tabular numbers for financial data alignment */
 td, .tabular-nums {
   font-variant-numeric: tabular-nums;

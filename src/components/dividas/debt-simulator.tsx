@@ -36,7 +36,7 @@ export function DebtSimulator({ debt }: DebtSimulatorProps) {
   return (
     <div className="space-y-4">
       {!paymentCoversInterest && (
-        <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700">
+        <div className="rounded-lg bg-rose-50 dark:bg-rose-950 border border-rose-200 dark:border-rose-800 p-3 text-sm text-rose-700 dark:text-rose-300">
           A parcela atual ({formatCurrency(debt.monthly_payment_cents)}) não
           cobre os juros mensais ({formatCurrency(interestCost)}). A dívida está
           crescendo.
@@ -45,29 +45,29 @@ export function DebtSimulator({ debt }: DebtSimulatorProps) {
 
       {/* Current situation */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-slate-50 rounded-lg px-3 py-2.5">
-          <p className="text-xs text-slate-400">Juros/mês estimado</p>
-          <p className="text-sm font-semibold text-slate-800">
+        <div className="bg-surface-alt rounded-lg px-3 py-2.5">
+          <p className="text-xs text-on-surface-muted">Juros/mês estimado</p>
+          <p className="text-sm font-semibold text-on-surface-heading">
             {formatCurrency(interestCost)}
           </p>
         </div>
-        <div className="bg-slate-50 rounded-lg px-3 py-2.5">
-          <p className="text-xs text-slate-400">Meses para quitar</p>
-          <p className="text-sm font-semibold text-slate-800">
+        <div className="bg-surface-alt rounded-lg px-3 py-2.5">
+          <p className="text-xs text-on-surface-muted">Meses para quitar</p>
+          <p className="text-sm font-semibold text-on-surface-heading">
             {baseMonths !== null ? `${baseMonths} meses` : "Indeterminado"}
           </p>
         </div>
-        <div className="bg-slate-50 rounded-lg px-3 py-2.5">
-          <p className="text-xs text-slate-400">Total de juros restante</p>
-          <p className="text-sm font-semibold text-slate-800">
+        <div className="bg-surface-alt rounded-lg px-3 py-2.5">
+          <p className="text-xs text-on-surface-muted">Total de juros restante</p>
+          <p className="text-sm font-semibold text-on-surface-heading">
             {baseInterest !== null
               ? formatCurrency(baseInterest)
               : "Indeterminado"}
           </p>
         </div>
-        <div className="bg-slate-50 rounded-lg px-3 py-2.5">
-          <p className="text-xs text-slate-400">Saldo devedor</p>
-          <p className="text-sm font-semibold text-slate-800">
+        <div className="bg-surface-alt rounded-lg px-3 py-2.5">
+          <p className="text-xs text-on-surface-muted">Saldo devedor</p>
+          <p className="text-sm font-semibold text-on-surface-heading">
             {formatCurrency(debt.remaining_amount_cents)}
           </p>
         </div>
@@ -76,8 +76,8 @@ export function DebtSimulator({ debt }: DebtSimulatorProps) {
       {/* Extra payment simulation */}
       {paymentCoversInterest && baseMonths !== null && baseMonths > 0 && (
         <>
-          <div className="border-t border-slate-200 pt-4">
-            <h4 className="text-sm font-semibold text-slate-700 mb-2">
+          <div className="border-t border-border pt-4">
+            <h4 className="text-sm font-semibold text-on-surface-secondary mb-2">
               E se eu pagar mais por mês?
             </h4>
             <Input
@@ -91,16 +91,16 @@ export function DebtSimulator({ debt }: DebtSimulatorProps) {
 
           {savings && (
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-emerald-50 rounded-lg px-3 py-2.5 border border-emerald-200">
+              <div className="bg-emerald-50 dark:bg-emerald-950 rounded-lg px-3 py-2.5 border border-emerald-200 dark:border-emerald-800">
                 <p className="text-xs text-emerald-600">Meses economizados</p>
-                <p className="text-sm font-semibold text-emerald-700">
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
                   {savings.monthsSaved}{" "}
                   {savings.monthsSaved === 1 ? "mês" : "meses"}
                 </p>
               </div>
-              <div className="bg-emerald-50 rounded-lg px-3 py-2.5 border border-emerald-200">
+              <div className="bg-emerald-50 dark:bg-emerald-950 rounded-lg px-3 py-2.5 border border-emerald-200 dark:border-emerald-800">
                 <p className="text-xs text-emerald-600">Juros economizados</p>
-                <p className="text-sm font-semibold text-emerald-700">
+                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
                   {formatCurrency(savings.interestSaved)}
                 </p>
               </div>

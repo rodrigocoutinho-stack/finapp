@@ -85,15 +85,15 @@ export default function FluxoPage() {
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-100 rounded-lg p-1 mb-6 w-fit">
+      <div className="flex gap-1 bg-tab-bg rounded-lg p-1 mb-6 w-fit">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               tab === t.key
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-card text-on-surface shadow-sm"
+                : "text-on-surface-muted hover:text-on-surface-secondary"
             }`}
           >
             {t.label}
@@ -119,12 +119,12 @@ export default function FluxoPage() {
         <TableSkeleton rows={8} cols={5} />
       ) : tab === "diario" ? (
         dailyFlow && (
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+          <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
             <DailyFlowTable data={dailyFlow} />
           </div>
         )
       ) : forecast ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+        <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
           <ForecastTable months={forecast.months} />
         </div>
       ) : null}

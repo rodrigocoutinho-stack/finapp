@@ -251,19 +251,19 @@ function TransacoesContent() {
         <button
           onClick={prevMonth}
           aria-label="Mês anterior"
-          className="p-2 rounded-lg hover:bg-slate-200 text-slate-600"
+          className="p-2 rounded-lg hover:bg-skeleton text-on-surface-secondary"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <span className="text-lg font-semibold text-slate-900 min-w-[180px] text-center">
+        <span className="text-lg font-semibold text-on-surface min-w-[180px] text-center">
           {getMonthName(month)} {year}
         </span>
         <button
           onClick={nextMonth}
           aria-label="Próximo mês"
-          className="p-2 rounded-lg hover:bg-slate-200 text-slate-600"
+          className="p-2 rounded-lg hover:bg-skeleton text-on-surface-secondary"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

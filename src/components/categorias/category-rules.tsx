@@ -121,11 +121,11 @@ export function CategoryRules() {
   return (
     <div className="space-y-6">
       {/* Add form */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-800 mb-1">
+      <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+        <h3 className="text-sm font-semibold text-on-surface-heading mb-1">
           Nova regra de categorização
         </h3>
-        <p className="text-xs text-slate-500 mb-4">
+        <p className="text-xs text-on-surface-muted mb-4">
           Quando a descrição da transação OFX contiver o padrão, a categoria será atribuída automaticamente.
         </p>
 
@@ -143,7 +143,7 @@ export function CategoryRules() {
           <div className="flex-1">
             <label
               htmlFor="rule-category"
-              className="block text-sm font-medium text-slate-700 mb-1"
+              className="block text-sm font-medium text-on-surface-secondary mb-1"
             >
               Categoria
             </label>
@@ -151,7 +151,7 @@ export function CategoryRules() {
               id="rule-category"
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+              className="w-full rounded-lg border border-input-border bg-card px-3 py-2 text-sm text-on-surface focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
               required
             >
               <option value="">Selecione...</option>
@@ -190,13 +190,13 @@ export function CategoryRules() {
             {
               key: "pattern",
               header: "Padrão",
-              className: "font-mono text-slate-900",
+              className: "font-mono text-on-surface",
               render: (rule: CategoryRuleWithCategory) => rule.pattern,
             },
             {
               key: "category",
               header: "Categoria",
-              className: "text-slate-700",
+              className: "text-on-surface-secondary",
               render: (rule: CategoryRuleWithCategory) => rule.categories?.name ?? "—",
             },
             {
@@ -220,7 +220,7 @@ export function CategoryRules() {
           actions={(rule) => (
             <Button
               variant="ghost"
-              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 dark:bg-red-950"
               onClick={() => setDeletingRuleId(rule.id)}
             >
               Excluir
@@ -234,7 +234,7 @@ export function CategoryRules() {
         onClose={() => setDeletingRuleId(null)}
         title="Excluir regra"
       >
-        <p className="text-slate-600 mb-6">
+        <p className="text-on-surface-secondary mb-6">
           Tem certeza que deseja excluir esta regra de categorização?
         </p>
         <div className="flex gap-3 justify-end">

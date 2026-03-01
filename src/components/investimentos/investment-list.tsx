@@ -149,10 +149,10 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
             return (
               <div key={group}>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-slate-700">
+                  <h3 className="text-sm font-semibold text-on-surface-secondary">
                     {getGroupLabel(group)}
                   </h3>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className="text-sm font-semibold text-on-surface">
                     {formatCurrency(groupTotal)}
                   </span>
                 </div>
@@ -160,29 +160,29 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
                   {items.map((inv) => (
                     <div
                       key={inv.id}
-                      className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm"
+                      className="bg-card rounded-xl border border-border p-4 shadow-sm"
                     >
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <h4 className="font-semibold text-slate-900 truncate">
+                          <h4 className="font-semibold text-on-surface truncate">
                             {inv.name}
                           </h4>
                           <div className="flex flex-wrap gap-1.5 mt-1">
-                            <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                            <span className="text-xs text-on-surface-muted bg-tab-bg px-2 py-0.5 rounded-full">
                               {getProductLabel(inv.product)}
                             </span>
-                            <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                            <span className="text-xs text-on-surface-muted bg-tab-bg px-2 py-0.5 rounded-full">
                               {getIndexerLabel(inv.indexer)}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <p className="text-xl font-bold text-slate-900 mt-3">
+                      <p className="text-xl font-bold text-on-surface mt-3">
                         {formatCurrency(balances[inv.id] ?? 0)}
                       </p>
 
-                      <div className="text-xs text-slate-500 mt-1 space-y-0.5">
+                      <div className="text-xs text-on-surface-muted mt-1 space-y-0.5">
                         <p>Conta: {getAccountName(inv.account_id)}</p>
                         {inv.rate && <p>Taxa: {inv.rate}</p>}
                         {inv.maturity_date && (
@@ -207,7 +207,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
                         </Button>
                         <Button
                           variant="ghost"
-                          className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 dark:bg-red-950"
                           onClick={() => setDeletingInvestment(inv)}
                         >
                           Excluir
@@ -247,7 +247,7 @@ export function InvestmentList({ investments, accounts, onRefresh }: InvestmentL
         onClose={() => setDeletingInvestment(null)}
         title="Excluir investimento"
       >
-        <p className="text-slate-600 mb-6">
+        <p className="text-on-surface-secondary mb-6">
           Tem certeza que deseja excluir{" "}
           <strong>{deletingInvestment?.name}</strong>? Todos os lançamentos
           associados serão excluídos. Esta ação não pode ser desfeita.

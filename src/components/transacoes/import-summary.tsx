@@ -34,26 +34,26 @@ export function ImportSummary({
             />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold text-slate-900">
+        <h2 className="text-xl font-semibold text-on-surface">
           Importação concluída!
         </h2>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-on-surface-muted mt-1">
           Confira o resumo abaixo.
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-center">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-4 text-center">
           <p className="text-2xl font-bold text-emerald-600">{imported}</p>
-          <p className="text-sm text-slate-600 mt-1">Importadas</p>
+          <p className="text-sm text-on-surface-secondary mt-1">Importadas</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-center">
-          <p className="text-2xl font-bold text-slate-500">{ignored}</p>
-          <p className="text-sm text-slate-600 mt-1">Ignoradas</p>
+        <div className="bg-card rounded-xl shadow-sm border border-border p-4 text-center">
+          <p className="text-2xl font-bold text-on-surface-muted">{ignored}</p>
+          <p className="text-sm text-on-surface-secondary mt-1">Ignoradas</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 text-center">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-4 text-center">
           <p className="text-2xl font-bold text-yellow-600">{duplicates}</p>
-          <p className="text-sm text-slate-600 mt-1">Duplicatas</p>
+          <p className="text-sm text-on-surface-secondary mt-1">Duplicatas</p>
         </div>
       </div>
 
