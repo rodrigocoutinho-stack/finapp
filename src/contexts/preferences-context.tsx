@@ -15,6 +15,7 @@ interface PreferencesContextValue {
   fullName: string;
   reserveTargetMonths: number;
   loading: boolean;
+  saving: boolean;
   setClosingDay: (day: number) => Promise<void>;
   setReserveTargetMonths: (months: number) => Promise<void>;
 }
@@ -24,6 +25,7 @@ const PreferencesContext = createContext<PreferencesContextValue>({
   fullName: "",
   reserveTargetMonths: 6,
   loading: true,
+  saving: false,
   setClosingDay: async () => {},
   setReserveTargetMonths: async () => {},
 });
@@ -34,6 +36,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [fullName, setFullName] = useState("");
   const [reserveTargetMonths, setReserveTargetMonthsState] = useState(6);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     async function fetchPreferences() {
@@ -66,18 +69,23 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   const setClosingDay = useCallback(
     async (day: number) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+      setSaving(true);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({ closing_day: day })
-        .eq("id", user.id);
+        const { error } = await supabase
+          .from("profiles")
+          .update({ closing_day: day })
+          .eq("id", user.id);
 
-      if (!error) {
-        setClosingDayState(day);
+        if (!error) {
+          setClosingDayState(day);
+        }
+      } finally {
+        setSaving(false);
       }
     },
     []
@@ -85,18 +93,23 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   const setReserveTargetMonths = useCallback(
     async (months: number) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+      setSaving(true);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
 
-      const { error } = await supabase
-        .from("profiles")
-        .update({ reserve_target_months: months })
-        .eq("id", user.id);
+        const { error } = await supabase
+          .from("profiles")
+          .update({ reserve_target_months: months })
+          .eq("id", user.id);
 
-      if (!error) {
-        setReserveTargetMonthsState(months);
+        if (!error) {
+          setReserveTargetMonthsState(months);
+        }
+      } finally {
+        setSaving(false);
       }
     },
     []
@@ -104,7 +117,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   return (
     <PreferencesContext.Provider
-      value={{ closingDay, fullName, reserveTargetMonths, loading, setClosingDay, setReserveTargetMonths }}
+      value={{ closingDay, fullName, reserveTargetMonths, loading, saving, setClosingDay, setReserveTargetMonths }}
     >
       {children}
     </PreferencesContext.Provider>

@@ -165,6 +165,7 @@ export function AccountReconciliation({
                         variant="secondary"
                         onClick={() => handleAdjust(row)}
                         loading={adjusting === row.account.id}
+                        disabled={adjusting !== null && adjusting !== row.account.id}
                         className="text-xs px-2.5 py-1"
                       >
                         Ajustar

@@ -110,7 +110,6 @@ export function getDelayMonths(goal: Goal, accounts: Account[]): number {
   const gap = getContributionGapPercent(goal, accounts);
   if (gap <= 0) return 0;
 
-  const now = new Date();
   const deadline = new Date(goal.deadline);
   const totalMonths =
     (deadline.getFullYear() - new Date(goal.created_at).getFullYear()) * 12 +
