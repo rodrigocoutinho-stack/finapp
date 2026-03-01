@@ -24,6 +24,16 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!/[A-Z]/.test(password)) {
+      setError("A senha deve conter pelo menos uma letra maiúscula.");
+      return;
+    }
+
+    if (!/\d/.test(password)) {
+      setError("A senha deve conter pelo menos um número.");
+      return;
+    }
+
     setLoading(true);
 
     const { error } = await supabase.auth.signUp({
@@ -147,7 +157,7 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo 8 caracteres"
+              placeholder="Min. 8 caracteres, 1 maiúscula, 1 número"
               required
               minLength={8}
               maxLength={200}

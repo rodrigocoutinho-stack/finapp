@@ -8,7 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GoalForm } from "./goal-form";
 import { useToast } from "@/contexts/toast-context";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, toCents } from "@/lib/utils";
 import {
   GOAL_ICONS,
   GOAL_COLORS,
@@ -68,8 +68,7 @@ export function GoalList({ goals, accounts, onRefresh }: GoalListProps) {
     if (!updateGoal) return;
     setUpdating(true);
 
-    const value = updateAmount.replace(/\./g, "").replace(",", ".");
-    const cents = Math.round(parseFloat(value) * 100);
+    const cents = toCents(updateAmount);
 
     if (isNaN(cents) || cents < 0) {
       addToast("Valor inválido.", "error");

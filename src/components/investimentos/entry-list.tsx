@@ -28,8 +28,12 @@ export function EntryList({ entries, onRefresh }: EntryListProps) {
   async function handleDelete() {
     if (!deletingEntry) return;
     setDeleteLoading(true);
-    await supabase.from("investment_entries").delete().eq("id", deletingEntry.id);
+    const { error } = await supabase.from("investment_entries").delete().eq("id", deletingEntry.id);
     setDeleteLoading(false);
+    if (error) {
+      addToast("Erro ao excluir lançamento.", "error");
+      return;
+    }
     setDeletingEntry(null);
     onRefresh();
     addToast("Lançamento excluído.");

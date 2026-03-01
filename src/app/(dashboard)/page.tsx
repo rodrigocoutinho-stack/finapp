@@ -136,7 +136,18 @@ export default function DashboardPage() {
     const prevMonthDate = new Date(year, month - 1, 1);
     const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, "0")}`;
 
-    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes, allTxnSummaryRes, debtsRes, closingRes, prevClosingRes] = await Promise.all([
+    // Calculate date range for ~12 months ago (for provision detection) — needed for Promise.all
+    let annualYear = curYear - 1;
+    const annualMonth = curMonth;
+    let annualStartMonth = annualMonth - 1;
+    if (annualStartMonth < 0) { annualStartMonth += 12; annualYear--; }
+    const annualStartRange = getMonthRange(annualYear, annualStartMonth, closingDay);
+    let annualEndYear = curYear - 1;
+    let annualEndMonth = curMonth + 1;
+    if (annualEndMonth > 11) { annualEndMonth -= 12; annualEndYear++; }
+    const annualEndRange = getMonthRange(annualEndYear, annualEndMonth, closingDay);
+
+    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes, allTxnSummaryRes, debtsRes, closingRes, prevClosingRes, past3mRes, existingRecRes, pastReceitasRes, annualRes] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
@@ -177,7 +188,7 @@ export default function DashboardPage() {
       supabase
         .from("transactions")
         .select("account_id, type, amount_cents")
-        .limit(50000),
+        .limit(10000),
       supabase
         .from("debts")
         .select("*")
@@ -194,6 +205,40 @@ export default function DashboardPage() {
         .select("*")
         .eq("month", prevMonthStr)
         .maybeSingle(),
+      // Conditional queries (recurrence, savings rates, annual provisions)
+      isCurrentMonthSelected
+        ? supabase
+            .from("transactions")
+            .select("id, user_id, account_id, category_id, type, amount_cents, description, date, created_at")
+            .gte("date", globalStart)
+            .lte("date", end)
+            .limit(5000)
+        : Promise.resolve({ data: null }),
+      isCurrentMonthSelected
+        ? supabase
+            .from("recurring_transactions")
+            .select("*")
+            .eq("is_active", true)
+            .limit(1000)
+        : Promise.resolve({ data: null }),
+      isCurrentMonthSelected
+        ? supabase
+            .from("transactions")
+            .select("type, amount_cents, date")
+            .gte("date", globalStart)
+            .lte("date", globalEnd)
+            .limit(5000)
+        : Promise.resolve({ data: null }),
+      isCurrentMonthSelected
+        ? supabase
+            .from("transactions")
+            .select("type, amount_cents, description")
+            .eq("type", "despesa")
+            .gte("date", annualStartRange.start)
+            .lte("date", annualEndRange.end)
+            .gte("amount_cents", 50000)
+            .limit(500)
+        : Promise.resolve({ data: null }),
     ]);
 
     setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
@@ -259,46 +304,6 @@ export default function DashboardPage() {
 
     // Recurrence detection + savings rates + annual provisions
     if (isCurrentMonthSelected) {
-      // Calculate date range for ~12 months ago (for provision detection)
-      let annualYear = curYear - 1;
-      const annualMonth = curMonth;
-      const annualRange = getMonthRange(annualYear, annualMonth, closingDay);
-      // Widen to ±1 month for fuzzy annual matching
-      let annualStartMonth = annualMonth - 1;
-      if (annualStartMonth < 0) { annualStartMonth += 12; annualYear--; }
-      const annualStartRange = getMonthRange(annualYear, annualStartMonth, closingDay);
-      let annualEndYear = curYear - 1;
-      let annualEndMonth = curMonth + 1;
-      if (annualEndMonth > 11) { annualEndMonth -= 12; annualEndYear++; }
-      const annualEndRange = getMonthRange(annualEndYear, annualEndMonth, closingDay);
-
-      const [past3mRes, existingRecRes, pastReceitasRes, annualRes] = await Promise.all([
-        supabase
-          .from("transactions")
-          .select("id, user_id, account_id, category_id, type, amount_cents, description, date, created_at")
-          .gte("date", globalStart)
-          .lte("date", end)
-          .limit(5000),
-        supabase
-          .from("recurring_transactions")
-          .select("*")
-          .eq("is_active", true)
-          .limit(1000),
-        supabase
-          .from("transactions")
-          .select("type, amount_cents, date")
-          .gte("date", globalStart)
-          .lte("date", globalEnd)
-          .limit(5000),
-        supabase
-          .from("transactions")
-          .select("type, amount_cents, description")
-          .eq("type", "despesa")
-          .gte("date", annualStartRange.start)
-          .lte("date", annualEndRange.end)
-          .gte("amount_cents", 50000)
-          .limit(500),
-      ]);
       const past3mTransactions = (past3mRes.data as Transaction[] | null) ?? [];
       const existingRecs = (existingRecRes.data as RecurringTransaction[] | null) ?? [];
       setRecurrenceSuggestions(detectRecurrences(past3mTransactions, existingRecs));

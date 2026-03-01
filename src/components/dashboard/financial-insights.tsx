@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { formatCurrency } from "@/lib/utils";
 import {
   getContributionGapPercent,
@@ -56,11 +56,12 @@ export function FinancialInsights({
 }: FinancialInsightsProps) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
-  const insights: Insight[] = [];
+  const insights = useMemo(() => {
+  const items: Insight[] = [];
 
   // 1. Poupança negativa
   if (totalDespesas > totalReceitas && totalReceitas > 0) {
-    insights.push({
+    items.push({
       id: "negative-savings",
       type: "alert",
       text: `Suas despesas superaram suas receitas em ${formatCurrency(totalDespesas - totalReceitas)} este mês. Revise gastos variáveis.`,
@@ -69,7 +70,7 @@ export function FinancialInsights({
 
   // 2. Poupança baixa
   if (savingsRate !== null && savingsRate >= 0 && savingsRate < 10) {
-    insights.push({
+    items.push({
       id: "low-savings",
       type: "warning",
       text: `Sua taxa de poupança está em ${savingsRate.toFixed(1)}%. O ideal é acima de 20%.`,
@@ -78,7 +79,7 @@ export function FinancialInsights({
 
   // 3. Sem reserva
   if (reserveMonths === null) {
-    insights.push({
+    items.push({
       id: "no-reserve",
       type: "warning",
       text: `Você não tem reserva de emergência configurada. Especialistas recomendam pelo menos ${reserveTargetMonths} meses de despesas.`,
@@ -87,7 +88,7 @@ export function FinancialInsights({
 
   // 4. Reserva insuficiente
   if (reserveMonths !== null && reserveMonths < reserveTargetMonths * 0.5) {
-    insights.push({
+    items.push({
       id: "low-reserve",
       type: "warning",
       text: `Sua reserva cobre ${reserveMonths.toFixed(1)} meses. Sua meta é ${reserveTargetMonths} meses.`,
@@ -97,7 +98,7 @@ export function FinancialInsights({
   // 4b. Reserva excedente (RESERVE_EXCESS)
   if (reserveMonths !== null && reserveMonths > reserveTargetMonths + 2) {
     const excess = reserveMonths - reserveTargetMonths;
-    insights.push({
+    items.push({
       id: "reserve-excess",
       type: "positive",
       text: `Sua reserva cobre ${reserveMonths.toFixed(1)} meses — ${excess.toFixed(1)} meses acima da meta. Considere realocar o excedente para metas ou investimentos.`,
@@ -106,7 +107,7 @@ export function FinancialInsights({
 
   // 5. Runway curto
   if (runway !== null && runway < 3) {
-    insights.push({
+    items.push({
       id: "short-runway",
       type: "alert",
       text: `Seu saldo total cobre apenas ${runway.toFixed(1)} meses de despesas. Considere reduzir gastos.`,
@@ -129,7 +130,7 @@ export function FinancialInsights({
       const budgetRef = worst.budgetCents != null ? worst.budgetCents : worst.forecastToDateAmount;
       const overPercent = ((worst.realAmount / budgetRef - 1) * 100).toFixed(0);
       const label = worst.budgetCents != null ? "ultrapassou o teto" : "ultrapassou o previsto";
-      insights.push({
+      items.push({
         id: "category-busted",
         type: "alert",
         text: `A categoria "${worst.categoryName}" ${label} em ${overPercent}%.`,
@@ -139,7 +140,7 @@ export function FinancialInsights({
 
   // 7. Sem investimentos
   if (!hasInvestments) {
-    insights.push({
+    items.push({
       id: "no-investments",
       type: "warning",
       text: "Você ainda não registrou investimentos. Comece a construir patrimônio!",
@@ -148,7 +149,7 @@ export function FinancialInsights({
 
   // 8. Boa poupança
   if (savingsRate !== null && savingsRate >= 30) {
-    insights.push({
+    items.push({
       id: "great-savings",
       type: "positive",
       text: `Excelente! Sua taxa de poupança de ${savingsRate.toFixed(1)}% está acima da média brasileira.`,
@@ -169,7 +170,7 @@ export function FinancialInsights({
         .slice(0, 2)
         .map((g) => `"${g.name}"`)
         .join(" e ");
-      insights.push({
+      items.push({
         id: "goal-underfunded",
         type: "warning",
         text: `${behindGoals.length === 1 ? "A meta" : "As metas"} ${names} ${behindGoals.length === 1 ? "está" : "estão"} abaixo do ritmo necessário. Revise suas contribuições.`,
@@ -189,7 +190,7 @@ export function FinancialInsights({
     if (closeGoals.length > 0) {
       const g = closeGoals[0];
       const months = getMonthsRemaining(g);
-      insights.push({
+      items.push({
         id: "goal-deadline-close",
         type: "alert",
         text: `A meta "${g.name}" vence em ${months} ${months === 1 ? "mês" : "meses"} e ainda não foi alcançada.`,
@@ -200,7 +201,7 @@ export function FinancialInsights({
   // 11. Poupança persistentemente baixa (SAVINGS_TOO_LOW)
   if (pastSavingsRates.length >= 3 && pastSavingsRates.every((r) => r < 10)) {
     const avg = pastSavingsRates.reduce((s, r) => s + r, 0) / pastSavingsRates.length;
-    insights.push({
+    items.push({
       id: "savings-too-low",
       type: "alert",
       text: `Sua taxa de poupança ficou abaixo de 10% nos últimos ${pastSavingsRates.length} meses (média ${avg.toFixed(1)}%). Avalie cortar gastos variáveis.`,
@@ -211,7 +212,7 @@ export function FinancialInsights({
   if (annualProvisions.length > 0) {
     const top = annualProvisions[0];
     const monthly = Math.ceil(top.amountCents / 12);
-    insights.push({
+    items.push({
       id: "provision-missing",
       type: "warning",
       text: `Despesa anual detectada: "${top.description}" (${formatCurrency(top.amountCents)}). Provisione ~${formatCurrency(monthly)}/mês para evitar surpresas.`,
@@ -229,7 +230,7 @@ export function FinancialInsights({
     );
     const ratio = (totalPayments / totalReceitas) * 100;
     if (ratio > 30) {
-      insights.push({
+      items.push({
         id: "debt-to-income-high",
         type: "alert",
         text: `Suas parcelas de dívidas consomem ${ratio.toFixed(0)}% da receita. O ideal é abaixo de 30%.`,
@@ -250,7 +251,7 @@ export function FinancialInsights({
         (a, b) =>
           Number(b.interest_rate_monthly) - Number(a.interest_rate_monthly)
       )[0];
-      insights.push({
+      items.push({
         id: "debt-high-interest",
         type: "warning",
         text: `A dívida "${worst.name}" tem juros de ${Number(worst.interest_rate_monthly).toFixed(1)}%/mês. Considere renegociar ou priorizar o pagamento.`,
@@ -260,12 +261,15 @@ export function FinancialInsights({
 
   // 15. Divergência de saldo (BALANCE_DIVERGENCE)
   if (hasDivergentAccounts) {
-    insights.push({
+    items.push({
       id: "balance-divergence",
       type: "warning",
       text: "Há contas com divergência entre saldo registrado e calculado. Acesse Contas → Reconciliar para verificar.",
     });
   }
+
+  return items;
+  }, [totalReceitas, totalDespesas, savingsRate, runway, reserveMonths, forecast, hasInvestments, reserveTargetMonths, goals, accounts, pastSavingsRates, annualProvisions, hasDivergentAccounts, debts]);
 
   // Filter dismissed, show max 2
   const visible = insights

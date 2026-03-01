@@ -24,11 +24,18 @@ function parseOFXDate(raw: string): string {
   return `${y}-${m}-${d}`;
 }
 
+const ALLOWED_OFX_TAGS = new Set([
+  "TRNTYPE", "DTPOSTED", "TRNAMT", "FITID", "NAME", "MEMO",
+  "CHECKNUM", "REFNUM", "SIC", "PAYEEID",
+]);
+
 /**
  * Extracts text content between SGML-style tags.
  * Handles both <TAG>value and <TAG>value</TAG>.
+ * Only accepts whitelisted OFX tags to prevent ReDoS.
  */
 function extractTag(block: string, tag: string): string | null {
+  if (!ALLOWED_OFX_TAGS.has(tag.toUpperCase())) return null;
   const regex = new RegExp(`<${tag}>([^<\\r\\n]+)`, "i");
   const match = block.match(regex);
   return match ? match[1].trim() : null;

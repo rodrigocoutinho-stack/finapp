@@ -26,9 +26,10 @@ export function DebtSimulator({ debt }: DebtSimulatorProps) {
     debt.monthly_payment_cents > interestCost || interestCost === 0;
 
   const extraValue = extraAmount.replace(/\./g, "").replace(",", ".");
-  const extraCents = Math.round(parseFloat(extraValue) * 100);
+  const parsed = parseFloat(extraValue);
+  const extraCents = isNaN(parsed) ? 0 : Math.round(parsed * 100);
   const savings =
-    isNaN(extraCents) || extraCents <= 0
+    extraCents <= 0
       ? null
       : getExtraPaymentSavings(debt, extraCents);
 

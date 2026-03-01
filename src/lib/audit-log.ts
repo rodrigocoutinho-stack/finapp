@@ -31,5 +31,9 @@ export function logAudit(
           console.error("[audit-log]", error.message);
         }
       });
+  }).catch((err) => {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[audit-log] auth error:", err);
+    }
   });
 }

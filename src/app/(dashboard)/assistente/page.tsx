@@ -7,7 +7,7 @@ import { ChatInput } from "@/components/assistente/chat-input";
 import { useToast } from "@/contexts/toast-context";
 
 interface Message {
-  id: number;
+  id: string;
   role: "user" | "assistant";
   content: string;
 }
@@ -18,8 +18,6 @@ const suggestedQuestions = [
   "Minha carteira está diversificada?",
   "Tenho reserva de emergência?",
 ];
-
-let nextMsgId = 0;
 
 export default function AssistentePage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -42,12 +40,12 @@ export default function AssistentePage() {
     if (!text.trim() || loading) return;
 
     const userMsg: Message = {
-      id: nextMsgId++,
+      id: crypto.randomUUID(),
       role: "user",
       content: text.trim(),
     };
     const assistantMsg: Message = {
-      id: nextMsgId++,
+      id: crypto.randomUUID(),
       role: "assistant",
       content: "",
     };
