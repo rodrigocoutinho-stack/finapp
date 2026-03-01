@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,13 @@ import { PageHeader } from "@/components/ui/page-header";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { TransactionForm } from "@/components/transacoes/transaction-form";
 import { TransactionList } from "@/components/transacoes/transaction-list";
-import { getMonthRange, getMonthName } from "@/lib/utils";
+import {
+  TransactionFilters,
+  EMPTY_FILTERS,
+  type TransactionFiltersState,
+} from "@/components/transacoes/transaction-filters";
+import { getMonthRange, getMonthName, formatDate } from "@/lib/utils";
+import { exportToCsv, type CsvColumn } from "@/lib/csv-export";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
 import { usePreferences } from "@/contexts/preferences-context";
 import { useToast } from "@/contexts/toast-context";
@@ -58,6 +64,12 @@ function TransacoesContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
+  // Filters
+  const [filters, setFilters] = useState<TransactionFiltersState>(EMPTY_FILTERS);
+  const [searchInput, setSearchInput] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const prevMonth = useCallback(() => {
     setCurrentPage(1);
     setMonth((prev) => {
@@ -93,6 +105,54 @@ function TransacoesContent() {
     }
   }, [closingDay, prefsLoading]);
 
+  // Debounce search input → filters.search
+  const handleSearchInputChange = useCallback((value: string) => {
+    setSearchInput(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setFilters((prev) => ({ ...prev, search: value.trim() }));
+      setCurrentPage(1);
+    }, 400);
+  }, []);
+
+  // Reset page when filters change (except search, handled by debounce)
+  const handleFiltersChange = useCallback((newFilters: TransactionFiltersState) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+    // Sync searchInput if filters were cleared
+    if (!newFilters.search && searchInput) {
+      setSearchInput("");
+    }
+  }, [searchInput]);
+
+  // Build filtered Supabase query (shared between fetch and export)
+  const buildFilteredQuery = useCallback(
+    (start: string, end: string) => {
+      let query = supabase
+        .from("transactions")
+        .select("*, accounts(name), categories(name)", { count: "exact" })
+        .gte("date", start)
+        .lte("date", end)
+        .order("date", { ascending: false });
+
+      if (filters.categoryId) {
+        query = query.eq("category_id", filters.categoryId);
+      }
+      if (filters.accountId) {
+        query = query.eq("account_id", filters.accountId);
+      }
+      if (filters.type === "receita" || filters.type === "despesa") {
+        query = query.eq("type", filters.type);
+      }
+      if (filters.search) {
+        query = query.ilike("description", `%${filters.search}%`);
+      }
+
+      return query;
+    },
+    [filters]
+  );
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     const { start, end } = getMonthRange(year, month, closingDay);
@@ -100,13 +160,7 @@ function TransacoesContent() {
     const to = from + PAGE_SIZE - 1;
 
     const [txRes, accRes, catRes] = await Promise.all([
-      supabase
-        .from("transactions")
-        .select("*, accounts(name), categories(name)", { count: "exact" })
-        .gte("date", start)
-        .lte("date", end)
-        .order("date", { ascending: false })
-        .range(from, to),
+      buildFilteredQuery(start, end).range(from, to),
       supabase.from("accounts").select("*").order("name"),
       supabase.from("categories").select("*").order("name"),
     ]);
@@ -116,13 +170,49 @@ function TransacoesContent() {
     setAccounts((accRes.data as Account[]) ?? []);
     setCategories((catRes.data as Category[]) ?? []);
     setLoading(false);
-  }, [year, month, closingDay, currentPage]);
+  }, [year, month, closingDay, currentPage, buildFilteredQuery]);
 
   useEffect(() => {
     if (!prefsLoading) {
       fetchData();
     }
   }, [fetchData, prefsLoading]);
+
+  // Export CSV
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+    try {
+      const { start, end } = getMonthRange(year, month, closingDay);
+      const { data, error } = await buildFilteredQuery(start, end).limit(1000);
+
+      if (error) {
+        addToast("Erro ao exportar transações.", "error");
+        return;
+      }
+
+      const rows = (data as TransactionWithRelations[]) ?? [];
+
+      if (rows.length === 0) {
+        addToast("Nenhuma transação para exportar.", "info");
+        return;
+      }
+
+      const columns: CsvColumn<TransactionWithRelations>[] = [
+        { header: "Data", accessor: (r) => formatDate(r.date) },
+        { header: "Descrição", accessor: (r) => r.description },
+        { header: "Tipo", accessor: (r) => r.type === "receita" ? "Receita" : "Despesa" },
+        { header: "Valor", accessor: (r) => (r.amount_cents / 100).toFixed(2).replace(".", ",") },
+        { header: "Conta", accessor: (r) => r.accounts?.name ?? "" },
+        { header: "Categoria", accessor: (r) => r.categories?.name ?? "" },
+      ];
+
+      const monthStr = String(month + 1).padStart(2, "0");
+      exportToCsv(`transacoes-${year}-${monthStr}.csv`, columns, rows);
+      addToast(`${rows.length} transações exportadas.`);
+    } finally {
+      setExporting(false);
+    }
+  }, [year, month, closingDay, buildFilteredQuery, addToast]);
 
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
@@ -180,6 +270,18 @@ function TransacoesContent() {
           </svg>
         </button>
       </div>
+
+      {/* Filters */}
+      <TransactionFilters
+        accounts={accounts}
+        categories={categories}
+        filters={filters}
+        searchInput={searchInput}
+        onSearchInputChange={handleSearchInputChange}
+        onFiltersChange={handleFiltersChange}
+        onExport={handleExport}
+        exporting={exporting}
+      />
 
       {loading || prefsLoading ? (
         <TableSkeleton rows={6} cols={5} />
