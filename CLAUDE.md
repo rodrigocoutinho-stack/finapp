@@ -11,7 +11,7 @@ FinApp - Gestão Financeira Pessoal
 
 ### Stack
 - Next.js 16 (App Router) + TypeScript
-- Tailwind CSS v4
+- Tailwind CSS v4 + CSS variables semânticas + `next-themes` (dark mode)
 - Supabase (Auth + PostgreSQL + RLS)
 - Recharts (gráficos)
 - Google Generative AI (`@google/generative-ai`) — Gemini 2.5 Flash
@@ -25,7 +25,7 @@ FinApp - Gestão Financeira Pessoal
 - Autenticação (login, registro, logout, auto-logout por inatividade 30 min)
 - CRUD Contas (banco, cartão, carteira, reserva de emergência, saldo inicial, reconciliação)
 - CRUD Categorias (receita/despesa, teto de orçamento, flag essencial — dentro de Configurações)
-- CRUD Transações (filtro mensal, atualização automática de saldo via RPC atômico)
+- CRUD Transações (filtro mensal + filtros avançados por categoria/conta/tipo/busca, paginação server-side, exportação CSV, atualização automática de saldo via RPC atômico)
 - Transações Planejadas (recorrentes, pontuais, com período, detecção automática de padrões)
 - Importação OFX/CSV/PDF (mapeamento CSV, extração PDF via IA Gemini, auto-categorização por regras)
 - Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
@@ -39,7 +39,8 @@ FinApp - Gestão Financeira Pessoal
 - Trilha de Auditoria (tabela audit_logs, helper fire-and-forget, integração em 10 componentes)
 - Testes E2E com Playwright (auth, dashboard, transações, contas — 4 suites)
 - Security Hardening (HTTP headers, RPC hardening, RLS strengthening, error sanitization, MIME validation, auth guard)
-- Configurações (abas Geral + Categorias + Regras de Importação, closing day 1-28, meta reserva de emergência)
+- Configurações (abas Geral + Categorias + Regras de Importação, closing day 1-28, meta reserva de emergência, tema claro/escuro/sistema)
+- Dark Mode (CSS variables semânticas, tokens Tailwind v4 via @theme, next-themes com localStorage, hook useChartColors para gráficos)
 
 ## Estrutura do Projeto
 
@@ -77,7 +78,7 @@ src/
 │   ├── contas/                   # AccountForm, AccountList, AccountReconciliation
 │   ├── categorias/               # CategoryForm, CategoryList, CategoryRules
 │   ├── assistente/               # ChatMessage, ChatInput
-│   ├── transacoes/               # TransactionForm, TransactionList, Import*
+│   ├── transacoes/               # TransactionForm, TransactionList, TransactionFilters, Import*
 │   ├── recorrentes/              # RecurringForm, RecurringList
 │   └── investimentos/            # InvestmentForm, InvestmentList, EntryForm, EntryList, InvestmentDashboard
 ├── contexts/
@@ -103,7 +104,9 @@ src/
 │   ├── goal-utils.ts             # Cálculos de metas
 │   ├── debt-utils.ts             # Cálculos de dívidas
 │   ├── simulator-utils.ts        # Cálculos de simuladores
-│   └── audit-log.ts              # Helper logAudit fire-and-forget
+│   ├── csv-export.ts             # Exportação CSV genérica (BOM UTF-8, separador ;)
+│   ├── audit-log.ts              # Helper logAudit fire-and-forget
+│   └── use-chart-colors.ts       # Hook useChartColors() — cores Recharts responsivas ao tema
 └── types/
     └── database.ts               # Types do Supabase
 ```
@@ -187,6 +190,9 @@ src/
 - Componentes UI reutilizáveis em `src/components/ui/`
 - Componentes de domínio em `src/components/<domínio>/`
 - Usar `"use client"` apenas quando necessário
+- Usar tokens semânticos de cor (`bg-card`, `text-on-surface`, `border-border`, etc.) em vez de cores hardcoded (`bg-white`, `text-slate-900`)
+- Cores semânticas com significado (emerald, rose, amber) usam `dark:` variants pontuais (ex: `bg-emerald-50 dark:bg-emerald-950`)
+- Gráficos Recharts usam `useChartColors()` de `@/lib/use-chart-colors`
 
 ### Padrões
 - Não usar `any` — tipar tudo
