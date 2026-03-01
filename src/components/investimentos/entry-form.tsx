@@ -22,23 +22,38 @@ export function EntryForm({ investmentId, onSuccess, onCancel }: EntryFormProps)
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState("");
+
+  function clearFieldError(field: string) {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setErrors({});
+    setServerError("");
+
+    const newErrors: Record<string, string> = {};
 
     const dateObj = new Date(date);
     const minDate = new Date("2000-01-01");
     const maxDate = new Date(new Date().getFullYear() + 5, 11, 31);
     if (isNaN(dateObj.getTime()) || dateObj < minDate || dateObj > maxDate) {
-      setError("Data inválida. Informe uma data entre 2000 e daqui a 5 anos.");
-      return;
+      newErrors.date = "Data inválida. Informe uma data entre 2000 e daqui a 5 anos.";
     }
 
     const cents = toCents(amount);
     if (cents <= 0) {
-      setError("Informe um valor maior que zero.");
+      newErrors.amount = "Informe um valor maior que zero.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -46,7 +61,7 @@ export function EntryForm({ investmentId, onSuccess, onCancel }: EntryFormProps)
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setError("Usuário não autenticado.");
+      setServerError("Usuário não autenticado.");
       setLoading(false);
       return;
     }
@@ -61,7 +76,7 @@ export function EntryForm({ investmentId, onSuccess, onCancel }: EntryFormProps)
     });
 
     if (err) {
-      setError("Erro ao registrar lançamento.");
+      setServerError("Erro ao registrar lançamento.");
       setLoading(false);
       return;
     }
@@ -71,9 +86,9 @@ export function EntryForm({ investmentId, onSuccess, onCancel }: EntryFormProps)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
+      {serverError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+          {serverError}
         </div>
       )}
 
@@ -93,8 +108,9 @@ export function EntryForm({ investmentId, onSuccess, onCancel }: EntryFormProps)
         step="0.01"
         min="0.01"
         value={amount}
-        onChange={(e) => setAmount(e.target.value)}
+        onChange={(e) => { setAmount(e.target.value); clearFieldError("amount"); }}
         placeholder="0,00"
+        error={errors.amount}
         required
       />
 
@@ -103,7 +119,8 @@ export function EntryForm({ investmentId, onSuccess, onCancel }: EntryFormProps)
         label="Data"
         type="date"
         value={date}
-        onChange={(e) => setDate(e.target.value)}
+        onChange={(e) => { setDate(e.target.value); clearFieldError("date"); }}
+        error={errors.date}
         required
       />
 

@@ -46,7 +46,8 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
   const [icon, setIcon] = useState(goal?.icon ?? "default");
   const [color, setColor] = useState(goal?.color ?? "emerald");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState("");
 
   const accountOptions = [
     { value: "", label: "Sem conta vinculada (manual)" },
@@ -58,43 +59,51 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
 
   const showManualAmount = !accountId;
 
+  function clearFieldError(field: string) {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setErrors({});
+    setServerError("");
+
+    const newErrors: Record<string, string> = {};
 
     if (!name.trim()) {
-      setError("Informe o nome da meta.");
-      return;
+      newErrors.name = "Informe o nome da meta.";
     }
 
     const targetCents = toCents(targetAmount);
     if (targetCents <= 0) {
-      setError("O valor alvo deve ser maior que zero.");
-      return;
-    }
-
-    if (targetCents > 100_000_000_000) {
-      setError("O valor alvo excede o limite máximo.");
-      return;
+      newErrors.targetAmount = "O valor alvo deve ser maior que zero.";
+    } else if (targetCents > 100_000_000_000) {
+      newErrors.targetAmount = "O valor alvo excede o limite máximo.";
     }
 
     if (!deadline) {
-      setError("Informe o prazo da meta.");
-      return;
-    }
-
-    const deadlineDate = new Date(deadline);
-    const minDate = new Date("2000-01-01");
-    const maxDate = new Date();
-    maxDate.setFullYear(maxDate.getFullYear() + 50);
-    if (deadlineDate < minDate || deadlineDate > maxDate) {
-      setError("Data do prazo fora do intervalo válido.");
-      return;
+      newErrors.deadline = "Informe o prazo da meta.";
+    } else {
+      const deadlineDate = new Date(deadline);
+      const minDate = new Date("2000-01-01");
+      const maxDate = new Date();
+      maxDate.setFullYear(maxDate.getFullYear() + 50);
+      if (deadlineDate < minDate || deadlineDate > maxDate) {
+        newErrors.deadline = "Data do prazo fora do intervalo válido.";
+      }
     }
 
     const currentCents = showManualAmount ? toCents(currentAmount) : 0;
     if (showManualAmount && currentCents < 0) {
-      setError("O valor atual não pode ser negativo.");
+      newErrors.currentAmount = "O valor atual não pode ser negativo.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -105,7 +114,7 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Usuário não autenticado.");
+      setServerError("Usuário não autenticado.");
       setLoading(false);
       return;
     }
@@ -129,7 +138,7 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
         .eq("id", goal.id);
 
       if (dbError) {
-        setError("Erro ao atualizar meta.");
+        setServerError("Erro ao atualizar meta.");
         setLoading(false);
         return;
       }
@@ -141,7 +150,7 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
       });
 
       if (dbError) {
-        setError("Erro ao criar meta.");
+        setServerError("Erro ao criar meta.");
         setLoading(false);
         return;
       }
@@ -153,9 +162,9 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
+      {serverError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+          {serverError}
         </div>
       )}
 
@@ -163,9 +172,10 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
         id="name"
         label="Nome da meta"
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => { setName(e.target.value); clearFieldError("name"); }}
         placeholder="Ex: Viagem para Europa"
         maxLength={200}
+        error={errors.name}
         required
       />
 
@@ -173,8 +183,9 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
         id="targetAmount"
         label="Valor alvo (R$)"
         value={targetAmount}
-        onChange={(e) => setTargetAmount(e.target.value)}
+        onChange={(e) => { setTargetAmount(e.target.value); clearFieldError("targetAmount"); }}
         placeholder="0,00"
+        error={errors.targetAmount}
         required
       />
 
@@ -183,7 +194,8 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
         label="Prazo"
         type="date"
         value={deadline}
-        onChange={(e) => setDeadline(e.target.value)}
+        onChange={(e) => { setDeadline(e.target.value); clearFieldError("deadline"); }}
+        error={errors.deadline}
         required
       />
 
@@ -220,8 +232,9 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
           id="currentAmount"
           label="Valor atual (R$)"
           value={currentAmount}
-          onChange={(e) => setCurrentAmount(e.target.value)}
+          onChange={(e) => { setCurrentAmount(e.target.value); clearFieldError("currentAmount"); }}
           placeholder="0,00"
+          error={errors.currentAmount}
         />
       )}
 

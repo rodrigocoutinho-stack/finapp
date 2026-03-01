@@ -30,16 +30,32 @@ export function InvestmentForm({
   const [maturityDate, setMaturityDate] = useState(investment?.maturity_date ?? "");
   const [notes, setNotes] = useState(investment?.notes ?? "");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState("");
 
   const accountOptions = accounts.map((a) => ({ value: a.id, label: a.name }));
 
+  function clearFieldError(field: string) {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setErrors({});
+    setServerError("");
+
+    const newErrors: Record<string, string> = {};
 
     if (!accountId) {
-      setError("Selecione uma conta. Cadastre uma conta antes de criar investimentos.");
+      newErrors.account = "Selecione uma conta. Cadastre uma conta antes de criar investimentos.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -47,7 +63,7 @@ export function InvestmentForm({
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setError("Usuário não autenticado.");
+      setServerError("Usuário não autenticado.");
       setLoading(false);
       return;
     }
@@ -69,7 +85,7 @@ export function InvestmentForm({
         .eq("id", investment.id);
 
       if (err) {
-        setError("Erro ao atualizar investimento.");
+        setServerError("Erro ao atualizar investimento.");
         setLoading(false);
         return;
       }
@@ -79,7 +95,7 @@ export function InvestmentForm({
         .insert({ ...payload, user_id: user.id });
 
       if (err) {
-        setError("Erro ao criar investimento.");
+        setServerError("Erro ao criar investimento.");
         setLoading(false);
         return;
       }
@@ -90,9 +106,9 @@ export function InvestmentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
+      {serverError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+          {serverError}
         </div>
       )}
 
@@ -110,8 +126,9 @@ export function InvestmentForm({
         id="inv-account"
         label="Conta / Corretora"
         value={accountId}
-        onChange={(e) => setAccountId(e.target.value)}
+        onChange={(e) => { setAccountId(e.target.value); clearFieldError("account"); }}
         options={accountOptions}
+        error={errors.account}
         required
       />
 

@@ -29,11 +29,11 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
   const [initialBalance, setInitialBalance] = useState("");
   const [isEmergencyReserve, setIsEmergencyReserve] = useState(account?.is_emergency_reserve ?? false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [serverError, setServerError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setServerError("");
     setLoading(true);
 
     const {
@@ -41,7 +41,7 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Usuário não autenticado.");
+      setServerError("Usuário não autenticado.");
       setLoading(false);
       return;
     }
@@ -53,7 +53,7 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
         .eq("id", account.id);
 
       if (error) {
-        setError("Erro ao atualizar conta.");
+        setServerError("Erro ao atualizar conta.");
         setLoading(false);
         return;
       }
@@ -72,7 +72,7 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
         });
 
       if (error) {
-        setError("Erro ao criar conta.");
+        setServerError("Erro ao criar conta.");
         setLoading(false);
         return;
       }
@@ -84,9 +84,9 @@ export function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
+      {serverError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+          {serverError}
         </div>
       )}
 

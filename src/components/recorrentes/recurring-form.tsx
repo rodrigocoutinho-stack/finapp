@@ -74,7 +74,8 @@ export function RecurringForm({
   const [startMonth, setStartMonth] = useState(recurring?.start_month ?? "");
   const [endMonth, setEndMonth] = useState(recurring?.end_month ?? "");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState("");
 
   const filteredCategories = categories.filter((c) => c.type === type);
 
@@ -104,44 +105,53 @@ export function RecurringForm({
     };
   }
 
+  function clearFieldError(field: string) {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setErrors({});
+    setServerError("");
+
+    const newErrors: Record<string, string> = {};
 
     const amountCents = toCents(amount);
     if (amountCents <= 0) {
-      setError("O valor deve ser maior que zero.");
-      return;
+      newErrors.amount = "O valor deve ser maior que zero.";
     }
 
     if (!accountId) {
-      setError("Selecione uma conta.");
-      return;
+      newErrors.account = "Selecione uma conta.";
     }
 
     if (!categoryId) {
-      setError("Selecione uma categoria.");
-      return;
+      newErrors.category = "Selecione uma categoria.";
     }
 
     const day = parseInt(dayOfMonth, 10);
     if (isNaN(day) || day < 1 || day > 31) {
-      setError("O dia deve ser entre 1 e 31.");
-      return;
+      newErrors.dayOfMonth = "O dia deve ser entre 1 e 31.";
     }
 
     if (scheduleType === "pontual" && !startMonth) {
-      setError("Selecione o mês da transação pontual.");
-      return;
+      newErrors.startMonth = "Selecione o mês da transação pontual.";
     }
 
     if (scheduleType === "period" && !startMonth) {
-      setError("Selecione o mês de início.");
-      return;
+      newErrors.startMonth = "Selecione o mês de início.";
     }
 
     if (scheduleType === "period" && endMonth && endMonth < startMonth) {
-      setError("O mês de término deve ser igual ou posterior ao mês de início.");
+      newErrors.endMonth = "O mês de término deve ser igual ou posterior ao mês de início.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -152,7 +162,7 @@ export function RecurringForm({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Usuário não autenticado.");
+      setServerError("Usuário não autenticado.");
       setLoading(false);
       return;
     }
@@ -175,7 +185,7 @@ export function RecurringForm({
         .eq("id", recurring.id);
 
       if (error) {
-        setError("Erro ao atualizar transação.");
+        setServerError("Erro ao atualizar transação.");
         setLoading(false);
         return;
       }
@@ -193,7 +203,7 @@ export function RecurringForm({
       });
 
       if (error) {
-        setError("Erro ao criar transação.");
+        setServerError("Erro ao criar transação.");
         setLoading(false);
         return;
       }
@@ -204,9 +214,9 @@ export function RecurringForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
+      {serverError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+          {serverError}
         </div>
       )}
 
@@ -226,8 +236,9 @@ export function RecurringForm({
         id="amount"
         label="Valor (R$)"
         value={amount}
-        onChange={(e) => setAmount(e.target.value)}
+        onChange={(e) => { setAmount(e.target.value); clearFieldError("amount"); }}
         placeholder="0,00"
+        error={errors.amount}
         required
       />
 
@@ -235,9 +246,10 @@ export function RecurringForm({
         id="account"
         label="Conta"
         value={accountId}
-        onChange={(e) => setAccountId(e.target.value)}
+        onChange={(e) => { setAccountId(e.target.value); clearFieldError("account"); }}
         options={accountOptions}
         placeholder="Selecione a conta"
+        error={errors.account}
         required
       />
 
@@ -245,9 +257,10 @@ export function RecurringForm({
         id="category"
         label="Categoria"
         value={categoryId}
-        onChange={(e) => setCategoryId(e.target.value)}
+        onChange={(e) => { setCategoryId(e.target.value); clearFieldError("category"); }}
         options={categoryOptions}
         placeholder="Selecione a categoria"
+        error={errors.category}
         required
       />
 
@@ -276,7 +289,8 @@ export function RecurringForm({
           label="Mês"
           type="month"
           value={startMonth}
-          onChange={(e) => setStartMonth(e.target.value)}
+          onChange={(e) => { setStartMonth(e.target.value); clearFieldError("startMonth"); }}
+          error={errors.startMonth}
           required
         />
       )}
@@ -288,7 +302,8 @@ export function RecurringForm({
             label="Mês de início"
             type="month"
             value={startMonth}
-            onChange={(e) => setStartMonth(e.target.value)}
+            onChange={(e) => { setStartMonth(e.target.value); clearFieldError("startMonth"); }}
+            error={errors.startMonth}
             required
           />
           <Input
@@ -296,7 +311,8 @@ export function RecurringForm({
             label="Mês de término (opcional)"
             type="month"
             value={endMonth}
-            onChange={(e) => setEndMonth(e.target.value)}
+            onChange={(e) => { setEndMonth(e.target.value); clearFieldError("endMonth"); }}
+            error={errors.endMonth}
           />
         </div>
       )}
@@ -308,8 +324,9 @@ export function RecurringForm({
         min={1}
         max={31}
         value={dayOfMonth}
-        onChange={(e) => setDayOfMonth(e.target.value)}
+        onChange={(e) => { setDayOfMonth(e.target.value); clearFieldError("dayOfMonth"); }}
         placeholder="Ex: 5"
+        error={errors.dayOfMonth}
         required
       />
 

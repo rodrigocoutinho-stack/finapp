@@ -48,69 +48,74 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
     debt ? String(debt.paid_installments) : "0"
   );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState("");
+
+  function clearFieldError(field: string) {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setErrors({});
+    setServerError("");
+
+    const newErrors: Record<string, string> = {};
 
     if (!name.trim()) {
-      setError("Informe o nome da dívida.");
-      return;
+      newErrors.name = "Informe o nome da dívida.";
     }
 
     const originalCents = toCents(originalAmount);
     if (originalCents <= 0) {
-      setError("O valor original deve ser maior que zero.");
-      return;
-    }
-
-    if (originalCents > 100_000_000_000) {
-      setError("O valor excede o limite máximo.");
-      return;
+      newErrors.originalAmount = "O valor original deve ser maior que zero.";
+    } else if (originalCents > 100_000_000_000) {
+      newErrors.originalAmount = "O valor excede o limite máximo.";
     }
 
     const remainingCents = debt ? toCents(remainingAmount) : originalCents;
-    if (remainingCents < 0) {
-      setError("O saldo devedor não pode ser negativo.");
-      return;
+    if (debt && remainingCents < 0) {
+      newErrors.remainingAmount = "O saldo devedor não pode ser negativo.";
     }
 
     const paymentCents = toCents(monthlyPayment);
     if (paymentCents < 0) {
-      setError("A parcela não pode ser negativa.");
-      return;
+      newErrors.monthlyPayment = "A parcela não pode ser negativa.";
     }
 
     const rate = interestRate ? parseFloat(interestRate.replace(",", ".")) : 0;
     if (isNaN(rate) || rate < 0) {
-      setError("Taxa de juros inválida.");
-      return;
+      newErrors.interestRate = "Taxa de juros inválida.";
     }
 
     if (!startDate) {
-      setError("Informe a data de início.");
-      return;
-    }
-
-    const startDateObj = new Date(startDate);
-    const minDate = new Date("2000-01-01");
-    const maxDate = new Date();
-    maxDate.setFullYear(maxDate.getFullYear() + 50);
-    if (startDateObj < minDate || startDateObj > maxDate) {
-      setError("Data de início fora do intervalo válido.");
-      return;
+      newErrors.startDate = "Informe a data de início.";
+    } else {
+      const startDateObj = new Date(startDate);
+      const minDate = new Date("2000-01-01");
+      const maxDate = new Date();
+      maxDate.setFullYear(maxDate.getFullYear() + 50);
+      if (startDateObj < minDate || startDateObj > maxDate) {
+        newErrors.startDate = "Data de início fora do intervalo válido.";
+      }
     }
 
     const installments = totalInstallments ? parseInt(totalInstallments, 10) : null;
     if (installments !== null && (isNaN(installments) || installments <= 0)) {
-      setError("Número de parcelas inválido.");
-      return;
+      newErrors.totalInstallments = "Número de parcelas inválido.";
     }
 
     const paid = parseInt(paidInstallments, 10);
     if (isNaN(paid) || paid < 0) {
-      setError("Parcelas pagas inválidas.");
+      newErrors.paidInstallments = "Parcelas pagas inválidas.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -121,7 +126,7 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Usuário não autenticado.");
+      setServerError("Usuário não autenticado.");
       setLoading(false);
       return;
     }
@@ -146,7 +151,7 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
         .eq("id", debt.id);
 
       if (dbError) {
-        setError("Erro ao atualizar dívida.");
+        setServerError("Erro ao atualizar dívida.");
         setLoading(false);
         return;
       }
@@ -158,7 +163,7 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
       });
 
       if (dbError) {
-        setError("Erro ao criar dívida.");
+        setServerError("Erro ao criar dívida.");
         setLoading(false);
         return;
       }
@@ -170,9 +175,9 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
+      {serverError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+          {serverError}
         </div>
       )}
 
@@ -180,9 +185,10 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
         id="name"
         label="Nome da dívida"
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => { setName(e.target.value); clearFieldError("name"); }}
         placeholder="Ex: Financiamento carro"
         maxLength={200}
+        error={errors.name}
         required
       />
 
@@ -202,9 +208,11 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
           value={originalAmount}
           onChange={(e) => {
             setOriginalAmount(e.target.value);
+            clearFieldError("originalAmount");
             if (!debt) setRemainingAmount(e.target.value);
           }}
           placeholder="0,00"
+          error={errors.originalAmount}
           required
         />
 
@@ -212,8 +220,9 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
           id="remainingAmount"
           label="Saldo devedor (R$)"
           value={remainingAmount}
-          onChange={(e) => setRemainingAmount(e.target.value)}
+          onChange={(e) => { setRemainingAmount(e.target.value); clearFieldError("remainingAmount"); }}
           placeholder="0,00"
+          error={errors.remainingAmount}
           required
         />
       </div>
@@ -223,16 +232,18 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
           id="monthlyPayment"
           label="Parcela mensal (R$)"
           value={monthlyPayment}
-          onChange={(e) => setMonthlyPayment(e.target.value)}
+          onChange={(e) => { setMonthlyPayment(e.target.value); clearFieldError("monthlyPayment"); }}
           placeholder="0,00"
+          error={errors.monthlyPayment}
         />
 
         <Input
           id="interestRate"
           label="Juros (% a.m.)"
           value={interestRate}
-          onChange={(e) => setInterestRate(e.target.value)}
+          onChange={(e) => { setInterestRate(e.target.value); clearFieldError("interestRate"); }}
           placeholder="0,00"
+          error={errors.interestRate}
         />
       </div>
 
@@ -242,7 +253,8 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
           label="Data de início"
           type="date"
           value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
+          onChange={(e) => { setStartDate(e.target.value); clearFieldError("startDate"); }}
+          error={errors.startDate}
           required
         />
 
@@ -261,8 +273,9 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
           label="Total de parcelas"
           type="number"
           value={totalInstallments}
-          onChange={(e) => setTotalInstallments(e.target.value)}
+          onChange={(e) => { setTotalInstallments(e.target.value); clearFieldError("totalInstallments"); }}
           placeholder="Opcional"
+          error={errors.totalInstallments}
         />
 
         <Input
@@ -270,8 +283,9 @@ export function DebtForm({ debt, onSuccess, onCancel }: DebtFormProps) {
           label="Parcelas pagas"
           type="number"
           value={paidInstallments}
-          onChange={(e) => setPaidInstallments(e.target.value)}
+          onChange={(e) => { setPaidInstallments(e.target.value); clearFieldError("paidInstallments"); }}
           placeholder="0"
+          error={errors.paidInstallments}
         />
       </div>
 

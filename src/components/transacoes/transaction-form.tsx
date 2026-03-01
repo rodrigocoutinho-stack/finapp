@@ -45,7 +45,8 @@ export function TransactionForm({
     transaction?.date ?? new Date().toISOString().split("T")[0]
   );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState("");
 
   const filteredCategories = categories.filter((c) => c.type === type);
 
@@ -59,31 +60,43 @@ export function TransactionForm({
     label: c.name,
   }));
 
+  function clearFieldError(field: string) {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setErrors({});
+    setServerError("");
+
+    const newErrors: Record<string, string> = {};
 
     const dateObj = new Date(date);
     const minDate = new Date("2000-01-01");
     const maxDate = new Date(new Date().getFullYear() + 5, 11, 31);
     if (isNaN(dateObj.getTime()) || dateObj < minDate || dateObj > maxDate) {
-      setError("Data inválida. Informe uma data entre 2000 e daqui a 5 anos.");
-      return;
+      newErrors.date = "Data inválida. Informe uma data entre 2000 e daqui a 5 anos.";
     }
 
     const amountCents = toCents(amount);
     if (amountCents <= 0) {
-      setError("O valor deve ser maior que zero.");
-      return;
+      newErrors.amount = "O valor deve ser maior que zero.";
     }
 
     if (!accountId) {
-      setError("Selecione uma conta.");
-      return;
+      newErrors.account = "Selecione uma conta.";
     }
 
     if (!categoryId) {
-      setError("Selecione uma categoria.");
+      newErrors.category = "Selecione uma categoria.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -94,7 +107,7 @@ export function TransactionForm({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Usuário não autenticado.");
+      setServerError("Usuário não autenticado.");
       setLoading(false);
       return;
     }
@@ -111,7 +124,7 @@ export function TransactionForm({
       });
 
       if (revertError) {
-        setError("Erro ao ajustar saldo da conta.");
+        setServerError("Erro ao ajustar saldo da conta.");
         setLoading(false);
         return;
       }
@@ -130,7 +143,7 @@ export function TransactionForm({
         .eq("id", transaction.id);
 
       if (error) {
-        setError("Erro ao atualizar transação.");
+        setServerError("Erro ao atualizar transação.");
         setLoading(false);
         return;
       }
@@ -143,7 +156,7 @@ export function TransactionForm({
       });
 
       if (applyError) {
-        setError("Transação atualizada, mas houve erro ao ajustar o saldo.");
+        setServerError("Transação atualizada, mas houve erro ao ajustar o saldo.");
         setLoading(false);
         return;
       }
@@ -161,7 +174,7 @@ export function TransactionForm({
       });
 
       if (error) {
-        setError("Erro ao criar transação.");
+        setServerError("Erro ao criar transação.");
         setLoading(false);
         return;
       }
@@ -174,7 +187,7 @@ export function TransactionForm({
       });
 
       if (balanceError) {
-        setError("Transação criada, mas houve erro ao ajustar o saldo.");
+        setServerError("Transação criada, mas houve erro ao ajustar o saldo.");
         setLoading(false);
         return;
       }
@@ -186,9 +199,9 @@ export function TransactionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
+      {serverError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+          {serverError}
         </div>
       )}
 
@@ -208,8 +221,9 @@ export function TransactionForm({
         id="amount"
         label="Valor (R$)"
         value={amount}
-        onChange={(e) => setAmount(e.target.value)}
+        onChange={(e) => { setAmount(e.target.value); clearFieldError("amount"); }}
         placeholder="0,00"
+        error={errors.amount}
         required
       />
 
@@ -217,9 +231,10 @@ export function TransactionForm({
         id="account"
         label="Conta"
         value={accountId}
-        onChange={(e) => setAccountId(e.target.value)}
+        onChange={(e) => { setAccountId(e.target.value); clearFieldError("account"); }}
         options={accountOptions}
         placeholder="Selecione a conta"
+        error={errors.account}
         required
       />
 
@@ -227,9 +242,10 @@ export function TransactionForm({
         id="category"
         label="Categoria"
         value={categoryId}
-        onChange={(e) => setCategoryId(e.target.value)}
+        onChange={(e) => { setCategoryId(e.target.value); clearFieldError("category"); }}
         options={categoryOptions}
         placeholder="Selecione a categoria"
+        error={errors.category}
         required
       />
 
@@ -248,7 +264,8 @@ export function TransactionForm({
         label="Data"
         type="date"
         value={date}
-        onChange={(e) => setDate(e.target.value)}
+        onChange={(e) => { setDate(e.target.value); clearFieldError("date"); }}
+        error={errors.date}
         required
       />
 

@@ -39,11 +39,37 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
   );
   const [isEssential, setIsEssential] = useState(category?.is_essential ?? false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState("");
+
+  function clearFieldError(field: string) {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setErrors({});
+    setServerError("");
+
+    const newErrors: Record<string, string> = {};
+
+    const budgetCents = type === "despesa" && budget.trim() !== ""
+      ? toCents(budget)
+      : null;
+
+    if (budgetCents !== null && budgetCents <= 0) {
+      newErrors.budget = "O teto mensal deve ser maior que zero.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     setLoading(true);
 
     const {
@@ -51,17 +77,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
     } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Usuário não autenticado.");
-      setLoading(false);
-      return;
-    }
-
-    const budgetCents = type === "despesa" && budget.trim() !== ""
-      ? toCents(budget)
-      : null;
-
-    if (budgetCents !== null && budgetCents <= 0) {
-      setError("O teto mensal deve ser maior que zero.");
+      setServerError("Usuário não autenticado.");
       setLoading(false);
       return;
     }
@@ -73,7 +89,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
         .eq("id", category.id);
 
       if (error) {
-        setError("Erro ao atualizar categoria.");
+        setServerError("Erro ao atualizar categoria.");
         setLoading(false);
         return;
       }
@@ -83,7 +99,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
         .insert({ user_id: user.id, name, type, projection_type: projectionType, budget_cents: budgetCents, is_essential: type === "despesa" ? isEssential : false });
 
       if (error) {
-        setError("Erro ao criar categoria.");
+        setServerError("Erro ao criar categoria.");
         setLoading(false);
         return;
       }
@@ -94,9 +110,9 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
+      {serverError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+          {serverError}
         </div>
       )}
 
@@ -137,8 +153,9 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
             id="budget"
             label="Teto mensal (R$)"
             value={budget}
-            onChange={(e) => setBudget(e.target.value)}
+            onChange={(e) => { setBudget(e.target.value); clearFieldError("budget"); }}
             placeholder="Opcional — Ex: 500,00"
+            error={errors.budget}
           />
           <p className="text-xs text-slate-500 -mt-2">
             Limite máximo de gasto mensal. Se não definido, a projeção será usada como referência.
