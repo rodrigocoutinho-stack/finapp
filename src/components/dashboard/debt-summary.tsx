@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import {
-  DEBT_TYPE_LABELS,
   getDebtProgress,
   getDebtStatus,
 } from "@/lib/debt-utils";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -25,12 +25,12 @@ export function DebtSimulator({ debt }: DebtSimulatorProps) {
   const paymentCoversInterest =
     debt.monthly_payment_cents > interestCost || interestCost === 0;
 
-  const savings = useMemo(() => {
-    const value = extraAmount.replace(/\./g, "").replace(",", ".");
-    const cents = Math.round(parseFloat(value) * 100);
-    if (isNaN(cents) || cents <= 0) return null;
-    return getExtraPaymentSavings(debt, cents);
-  }, [debt, extraAmount]);
+  const extraValue = extraAmount.replace(/\./g, "").replace(",", ".");
+  const extraCents = Math.round(parseFloat(extraValue) * 100);
+  const savings =
+    isNaN(extraCents) || extraCents <= 0
+      ? null
+      : getExtraPaymentSavings(debt, extraCents);
 
   return (
     <div className="space-y-4">

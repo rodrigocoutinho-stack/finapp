@@ -22,11 +22,7 @@ import { RecurrenceSuggestions } from "@/components/dashboard/recurrence-suggest
 import { GoalsSummary } from "@/components/dashboard/goals-summary";
 import { DebtSummary } from "@/components/dashboard/debt-summary";
 import { detectRecurrences, type RecurrenceSuggestion } from "@/lib/recurrence-detection";
-import {
-  getGoalProgressPercent,
-  getContributionGapPercent,
-  getMonthsRemaining,
-} from "@/lib/goal-utils";
+
 import { CardsSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
 import { calculateForecast, type MonthForecast } from "@/lib/forecast";
@@ -110,6 +106,7 @@ export default function DashboardPage() {
     }
   }, [closingDay, prefsLoading]);
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const fetchData = useCallback(async () => {
     setLoading(true);
     const { start, end } = getMonthRange(year, month, closingDay);
@@ -242,7 +239,7 @@ export default function DashboardPage() {
     if (isCurrentMonthSelected) {
       // Calculate date range for ~12 months ago (for provision detection)
       let annualYear = curYear - 1;
-      let annualMonth = curMonth;
+      const annualMonth = curMonth;
       const annualRange = getMonthRange(annualYear, annualMonth, closingDay);
       // Widen to ±1 month for fuzzy annual matching
       let annualStartMonth = annualMonth - 1;
