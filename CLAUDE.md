@@ -3,565 +3,42 @@
 ## Projeto
 FinApp - Gestão Financeira Pessoal
 
-## Estado Atual (Atualizado: 28/02/2026)
-
-**MVP completo + Metas Financeiras + Codex Quick Wins + Reconciliação de Saldo + Gestão de Dívidas + Redesign UX Fase 2 + Assistente IA + Fase 3A Quick Wins + Importação CSV/PDF + Robustez/Performance + Codex P1 + Auto-logout + Security Hardening + Code Review (26/26 corrigidos) + Bateria de Testes (tudo OK) + Simuladores Educacionais + AuditLog + Testes E2E.** Todas as funcionalidades implementadas. Build OK. Deploy Vercel ativo.
-
-- [x] Scaffolding (Next.js 16, Tailwind v4, Supabase)
-- [x] Database schema + migrations 001-017 (RLS ativo + security hardening + audit logs)
-- [x] Autenticação (login, registro com confirmação por email, logout)
-- [x] CRUD Contas (banco, cartão, carteira, tag reserva de emergência, saldo inicial, reconciliação)
-- [x] CRUD Categorias (receita/despesa, proteção contra exclusão em uso, tipo de projeção, teto de orçamento — dentro de Configurações)
-- [x] CRUD Transações (filtro mensal, atualização automática de saldo)
-- [x] Transações Planejadas (recorrentes, pontuais, com período, detecção automática de padrões)
-- [x] Importação OFX/CSV/PDF (extrato bancário, cartão de crédito, CSV com mapeamento de colunas, PDF via IA Gemini, auto-categorização por regras)
-- [x] Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
-- [x] Metas Financeiras (CRUD + progresso + vínculo a conta + cards visuais + widget dashboard + insights automáticos)
-- [x] Gestão de Dívidas (CRUD + simulador pagamento extra + widget dashboard + insights juros/renda)
-- [x] Dashboard (hero cards, 5 KPIs, insights proativos, alertas orçamento com tetos, previsto vs realizado, investimentos, recorrências sugeridas, metas, dívidas, fechamento mensal, últimas transações)
-- [x] Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
-- [x] Dia de fechamento (competência personalizada por usuário)
-- [x] Configurações (abas Geral + Categorias + Regras de Importação, closing day 1-28, meta reserva de emergência)
-- [x] Redesign UX Fase 1 (paleta slate/rose, componentes UI, skeleton, toast, acessibilidade)
-- [x] Redesign UX Fase 2 (sidebar, hero cards, ícones categorias, greeting, layout 2 colunas)
-- [x] Assistente Financeiro IA (Gemini 2.5 Flash, streaming, contexto conversacional, botão copiar)
-- [x] Fase 3A Quick Wins (KPIs, alertas orçamento, insights, reserva emergência, regras categorização, retorno real)
-- [x] Robustez e Performance (índices compostos, timeouts APIs, singleton client, memory leak fix, lazy loading, rate limiting, error boundaries, query limits, validação numérica)
-- [x] Codex P1 (tetos orçamento, fechamento mensal, KPIs desvio/gasto fixo, meta reserva, detecção recorrências)
-- [x] Auto-logout por inatividade (30 min timeout, modal com contagem regressiva 60s, cross-tab via localStorage)
-- [x] Security Hardening (HTTP headers, RPC hardening, RLS strengthening, error sanitization, MIME validation, auth guard)
-- [x] Simuladores Educacionais (juros compostos, inflação, custo de oportunidade — gráficos interativos)
-- [x] Trilha de Auditoria (tabela audit_logs, helper fire-and-forget, integração em 10 componentes)
-- [x] Testes E2E com Playwright (auth, dashboard, transações, contas — 4 suites)
-
-**Supabase:** Projeto `knwbotsyztakseriiwtv`
-- [x] Migrations 001-016 executadas no SQL Editor
-- [ ] Migration 017 (audit_logs) — executar no SQL Editor
-
-**Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
-- [x] `GEMINI_API_KEY` configurada nas Environment Variables
-
-**GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
-
-## Últimas Alterações (28/02/2026)
-
-### Simuladores Educacionais + AuditLog + Testes E2E
-
-**Feature 1 — Simuladores Educacionais:**
-
-**Novos arquivos:**
-- `src/lib/simulator-utils.ts` — Funções puras: `compoundInterest` (juros compostos mês a mês), `inflationImpact` (perda de poder de compra), `opportunityCost` (custo de oportunidade de gastos recorrentes). 100% client-side, sem dependências
-- `src/components/simuladores/compound-interest-simulator.tsx` — Simulador com inputs (valor inicial, aporte, taxa, período slider), 3 cards resultado, LineChart Recharts (montante vs investido)
-- `src/components/simuladores/inflation-simulator.tsx` — Simulador com IPCA real como default (via `getIPCA12Months()`), BarChart (nominal vs real), perda de poder de compra em %
-- `src/components/simuladores/opportunity-cost-simulator.tsx` — Simulador "E se investisse em vez de gastar?", AreaChart (gasto acumulado vs patrimônio potencial)
-- `src/app/(dashboard)/simuladores/page.tsx` — Página com tabs pill (padrão Fluxo): Juros Compostos | Inflação | Custo de Oportunidade
-
-**Arquivos modificados:**
-- `src/components/layout/sidebar.tsx` — Link "Simuladores" adicionado (ícone calculator) entre Assistente IA e Configurações (sidebar 10→11 itens)
-
-**Feature 2 — Trilha de Auditoria (AuditLog):**
-
-**Migration 017:** `supabase/migrations/017_audit_logs.sql`
-- Tabela `audit_logs` com UUID PK, user_id FK, action TEXT, entity_type TEXT, entity_id UUID (nullable), details JSONB, created_at TIMESTAMPTZ
-- RLS: somente INSERT e SELECT (imutável — sem UPDATE/DELETE)
-- Índice `idx_audit_user_created` (user_id, created_at DESC)
-
-**Novos arquivos:**
-- `src/lib/audit-log.ts` — Helper `logAudit(supabase, action, entityType, entityId?, details?)` fire-and-forget, erros silenciados (console.error em dev)
-
-**Arquivos modificados:**
-- `src/types/database.ts` — Tipo `AuditLog` adicionado (Row/Insert/Update/Relationships)
-- `src/components/contas/account-list.tsx` — logAudit em account.delete
-- `src/components/contas/account-form.tsx` — logAudit em account.create e account.update
-- `src/components/transacoes/transaction-form.tsx` — logAudit em transaction.create e transaction.update
-- `src/components/transacoes/transaction-list.tsx` — logAudit em transaction.delete
-- `src/components/transacoes/import-review-table.tsx` — logAudit em transaction.import (count)
-- `src/components/dividas/debt-form.tsx` — logAudit em debt.create e debt.update
-- `src/components/dividas/debt-list.tsx` — logAudit em debt.delete
-- `src/components/metas/goal-form.tsx` — logAudit em goal.create e goal.update
-- `src/components/metas/goal-list.tsx` — logAudit em goal.delete e goal.update_balance
-- `src/app/(dashboard)/configuracoes/page.tsx` — logAudit em settings.update_closing_day e settings.update_reserve_target
-
-**Feature 3 — Testes E2E com Playwright:**
-
-**Novos arquivos:**
-- `playwright.config.ts` — baseURL localhost:3000, webServer npm run dev, projects setup + chromium com storageState
-- `e2e/auth.setup.ts` — Login com E2E_USER_EMAIL/E2E_USER_PASSWORD, salva storageState
-- `e2e/auth.spec.ts` — Testes: página login, credenciais inválidas, página registro, redirect sem auth
-- `e2e/dashboard.spec.ts` — Testes: carrega dashboard, hero cards, KPIs, navegação sidebar, simuladores
-- `e2e/transactions.spec.ts` — Testes: página transações, abrir form, criar despesa, excluir
-- `e2e/accounts.spec.ts` — Testes: página contas, abrir form, criar conta, excluir
-
-**Arquivos modificados:**
-- `package.json` — Scripts `test:e2e` e `test:e2e:ui`
-- `.gitignore` — Adicionado test-results/, playwright-report/, playwright/.cache/, .playwright/.auth/
-
-**Dependências adicionadas:**
-- `@playwright/test` (devDependency)
-
-**Pré-requisitos para rodar E2E:**
-1. Criar usuário de teste no Supabase
-2. Definir env vars `E2E_USER_EMAIL` e `E2E_USER_PASSWORD`
-3. Executar migration 017 no SQL Editor do Supabase
-4. `npx playwright install chromium`
-5. `npm run test:e2e`
-
-### Alterações anteriores (28/02/2026)
-
-### Reconciliação de Saldo + Gestão de Dívidas
-
-**Migration 015:** `supabase/migrations/015_initial_balance.sql`
-- `accounts.initial_balance_cents` (INTEGER, NOT NULL, DEFAULT 0) — saldo inicial para reconciliação
-- Backfill: `initial_balance_cents = balance_cents - SUM(transações)` para contas existentes
-
-**Migration 016:** `supabase/migrations/016_debts.sql`
-- Tabela `debts` com UUID PK, user_id FK, name, type (emprestimo/financiamento/cartao/cheque_especial/outro), original_amount_cents, remaining_amount_cents, monthly_payment_cents, interest_rate_monthly (NUMERIC 8,4), start_date, due_date, total_installments, paid_installments, is_active
-- RLS completo (SELECT/INSERT/UPDATE/DELETE) com `auth.uid() = user_id`
-- Índice `idx_debts_user_active` (user_id, is_active)
-- CHECK constraints: original > 0 e <= 100B, remaining >= 0, payment >= 0, rate >= 0, installments > 0
-
-**Novos arquivos:**
-- `src/lib/debt-utils.ts` — Funções puras: `getDebtProgress`, `getMonthlyInterestCost`, `getTimeToPayoff` (iterativo, max 600), `getTotalInterestCost`, `getExtraPaymentSavings`, `getDebtStatus`. Constantes: `DEBT_TYPE_LABELS` (5 tipos)
-- `src/components/dividas/debt-form.tsx` — Formulário de criação/edição com campos: nome, tipo, valor original, saldo devedor, parcela mensal, juros % a.m., data início, data vencimento (opcional), total parcelas (opcional), parcelas pagas. Validação completa
-- `src/components/dividas/debt-list.tsx` — Grid de cards `md:grid-cols-2 xl:grid-cols-3` com barra de progresso, badge de status (Em dia/Vencida/Juros altos/Quitada), juros/mês, previsão de quitação. Ações: Simular, Editar, Excluir (com confirmação)
-- `src/components/dividas/debt-simulator.tsx` — Modal "E se eu pagar X a mais?" com cálculo em tempo real: meses economizados, juros economizados. Alerta quando parcela não cobre juros
-- `src/app/(dashboard)/dividas/page.tsx` — Página CRUD completa com PageHeader, botão "Nova dívida", modal de criação, loading skeleton
-- `src/components/dashboard/debt-summary.tsx` — Widget compacto no dashboard: total devedor, parcelas/mês, nº ativas, top 3 dívidas com barra de progresso, link "Ver todas"
-- `src/components/contas/account-reconciliation.tsx` — Modal com tabela: Conta | Saldo Registrado | Saldo Calculado | Divergência | Status (OK/Divergência) | Botão Ajustar. Mensagem verde quando tudo reconciliado
-
-**Arquivos modificados:**
-- `src/types/database.ts` — `initial_balance_cents` no tipo Account + tipo `Debt` completo (Row/Insert/Update/Relationships)
-- `src/components/contas/account-form.tsx` — Campo "Saldo inicial (R$)" na criação de conta, importação de `toCents`
-- `src/app/(dashboard)/contas/page.tsx` — Botão "Reconciliar" no header, query de transações para reconciliação, modal AccountReconciliation
-- `src/components/layout/sidebar.tsx` — Link "Dívidas" adicionado (ícone cartão de crédito) entre Metas e Fluxo (sidebar 9→10 itens)
-- `src/app/(dashboard)/page.tsx` — Query debts + allTxnSummary, calcula `hasDivergentAccounts`, renderiza DebtSummary, passa `hasDivergentAccounts` e `debts` para FinancialInsights
-- `src/components/dashboard/financial-insights.tsx` — 3 novos insights: DEBT_TO_INCOME_HIGH (parcelas > 30% receita), DEBT_HIGH_INTEREST (taxa > 3%/mês), BALANCE_DIVERGENCE (contas com divergência)
-
-**Design decisions:**
-- Simulação de payoff usa loop iterativo (max 600 meses = 50 anos) para flexibilidade com pagamento extra variável
-- `interest_rate_monthly` como NUMERIC(8,4) no Postgres, convertido com `Number()` no JS
-- Reconciliação compara `initial_balance_cents + SUM(receitas) - SUM(despesas)` vs `balance_cents`
-- Nenhuma dependência nova adicionada
-
-### Alterações anteriores (28/02/2026)
-
-### Metas Financeiras (Goals)
-
-**Migration 013:** `supabase/migrations/013_goals.sql`
-- Tabela `goals` com UUID PK, user_id FK, name, target_cents, current_cents, deadline, horizon, priority, account_id (opcional), icon, color, is_active
-- RLS completo (SELECT/INSERT/UPDATE/DELETE) com validação de account_id pertence ao user
-- Índice `idx_goals_user_active` (user_id, is_active)
-- CHECK constraints: target_cents > 0 e <= 100B, current_cents >= 0, priority 1-5, horizon IN ('short','medium','long')
-
-**Novos arquivos:**
-- `src/lib/goal-utils.ts` — Funções puras: `getGoalProgress`, `getGoalProgressPercent`, `getExpectedProgressPercent`, `getContributionGapPercent`, `getRequiredMonthlyContribution`, `getDelayMonths`, `getGoalStatus`, `getMonthsRemaining`. Constantes: `GOAL_ICONS` (12 ícones), `GOAL_COLORS` (7 cores), `HORIZON_LABELS`
-- `src/components/metas/goal-form.tsx` — Formulário de criação/edição com campos: nome, valor alvo, prazo, horizonte, prioridade, conta vinculada (opcional), valor atual (manual), ícone (grid emoji), cor (grid círculos). Validação completa
-- `src/components/metas/goal-list.tsx` — Grid de cards `md:grid-cols-2 xl:grid-cols-3` com barra de progresso colorida, badge de status (No prazo/Atenção/Atrasada/Concluída/Vencida), info de prazo/meses restantes, contribuição mensal necessária. Ações: Editar, Excluir (com confirmação), Atualizar saldo (metas manuais)
-- `src/app/(dashboard)/metas/page.tsx` — Página CRUD completa com PageHeader, botão "Nova meta", modal de criação, loading skeleton
-- `src/components/dashboard/goals-summary.tsx` — Widget compacto no dashboard: top 3 metas ativas por prioridade, mini barra de progresso, link "Ver todas"
-
-**Arquivos modificados:**
-- `src/types/database.ts` — Tipo `Goal` adicionado (Row/Insert/Update/Relationships)
-- `src/components/layout/sidebar.tsx` — Link "Metas" adicionado (ícone flag) entre Recorrentes e Fluxo (sidebar 8→9 itens)
-- `src/app/(dashboard)/page.tsx` — Query goals + accounts completos, renderiza GoalsSummary, passa goals/accounts para FinancialInsights
-- `src/components/dashboard/financial-insights.tsx` — 2 novos insights: GOAL_UNDERFUNDED (metas abaixo do ritmo, gap > 15%) e GOAL_DEADLINE_CLOSE (prazo < 3 meses e meta não alcançada)
-
-**Design decisions:**
-- Quando `account_id` está preenchido, o progresso usa `balance_cents` da conta (tempo real). Sem conta, o usuário atualiza `current_cents` manualmente
-- Nenhuma dependência nova adicionada
-
-### Codex Quick Wins — 3 Melhorias de Prioridade 1
-
-**Migration 014:** `supabase/migrations/014_essential_categories.sql`
-- `categories.is_essential` (BOOLEAN, DEFAULT FALSE) — flag para despesas essenciais
-
-**Quick Win 1 — Custo Essencial Configurável:**
-- `src/types/database.ts` — `is_essential` adicionado ao tipo Category
-- `src/components/categorias/category-form.tsx` — Checkbox "Despesa essencial" (visível apenas para tipo despesa), com texto explicativo
-- `src/components/categorias/category-list.tsx` — Badge "Essencial" (azul) nas categorias marcadas
-- `src/app/(dashboard)/page.tsx` — Query categorias essenciais, calcula `avgEssentialExpense` filtrando despesas passadas por category_id essencial, passa para KPIs
-- `src/components/dashboard/financial-kpis.tsx` — Reserva e Runway agora usam custo essencial quando configurado (fallback: média total). Sublabel "(essencial)" no Runway
-
-**Quick Win 2 — Tempo até Meta da Reserva:**
-- `src/components/dashboard/financial-kpis.tsx` — Sublabel "~X meses p/ completar" no KPI de Reserva quando reserva < meta. Cálculo: `(target - current) / poupança_mensal`. Exibe "Sem poupança para aportar" quando poupança <= 0
-
-**Quick Win 3 — Alerta 120% no Orçamento:**
-- `src/components/dashboard/budget-comparison.tsx` — Régua completa de alertas: 80% Atenção (amarelo) / 100% Estourado (vermelho) / 120% Crítico (vermelho escuro). Badge "Crítico" inline nas categorias + resumo no topo com contagem separada
-
-### Alterações anteriores (25/02/2026)
-
-### Bateria de Testes Completa
-
-**Resultado:** Build OK, Lint 0 erros (17 warnings esperados), Imports OK, Tipos OK, Rotas OK, Integridade 4/4.
-
-**Correções durante teste:**
-- `src/components/layout/sidebar.tsx` — Loading state (`loggingOut`) adicionado aos 3 botões de logout (expanded desktop, collapsed desktop, mobile drawer) com `disabled:opacity-50`
-- `src/components/layout/navbar.tsx` — Deletado (legado, não importado)
-- `src/components/dashboard/forecast-chart.tsx` — Deletado (órfão, não importado)
-- `src/components/ui/card.tsx` — Deletado (órfão, não importado)
-- `src/components/ui/badge.tsx` — Deletado (órfão, não importado)
-- `src/hooks/use-month-navigation.ts` — Deletado (criado no code review mas nunca importado; páginas usam useCallback inline)
-
-### Code Review — Correções de Alta e Média Severidade (20 problemas)
-
-**Alta Severidade (9 correções):**
-- `src/app/(dashboard)/recorrentes/page.tsx` — URL params sanitizados: desc limitado a 200 chars, tipo validado como enum, valor/dia com isNaN + bounds check
-- `next.config.ts` — Content-Security-Policy adicionado (default-src, script-src, connect-src para Supabase/Gemini/BCB, frame-ancestors none)
-- `src/components/recorrentes/recurring-list.tsx` — handleDelete e handleToggleActive agora verificam `{ error }` e exibem toast de erro
-- `src/components/investimentos/investment-list.tsx` — handleDelete agora verifica `{ error }` e exibe toast de erro
-- `src/contexts/preferences-context.tsx` — `supabase` removido das dep arrays de 2 useCallback (regra do projeto: singleton)
-- `src/components/transacoes/import-review-table.tsx` — Typo `autoCategorizied` renomeado para `autoCategorized` (5 ocorrências)
-- Formulários (transaction-form, account-form, recurring-form, category-form, investment-form, entry-form) — `maxLength` adicionado em todos os campos de texto
-- `src/components/dashboard/category-chart.tsx` — `any` removido, tipado com `CustomYTickProps` interface
-
-**Média Severidade (11 correções):**
-- `src/components/transacoes/transaction-list.tsx` — Delete agora verifica erro e reverte saldo se falhar (race condition fix)
-- `src/lib/ai/financial-context.ts` — Usa apenas primeiro nome (privacidade/LGPD)
-- `src/app/api/ai/analyze/route.ts` + `src/app/api/import/pdf/route.ts` — Validação de Origin header (CSRF protection)
-- `src/components/investimentos/investment-list.tsx` — `supabase` removido de dep array; `today` envolvido em `useMemo`
-- `src/contexts/preferences-context.tsx` + `investment-list.tsx` + `investment-dashboard.tsx` — console.error condicionado a `NODE_ENV === "development"`
-- `src/lib/utils.ts` — `isRecurringActiveInMonth()` extraída e exportada; duplicatas removidas de `forecast.ts` e `daily-flow.ts`
-- `src/contexts/inactivity-context.tsx` — `startCountdown(initialSeconds)` refatorado para aceitar tempo inicial; countdown duplicado substituído por chamada à função
-- 3 páginas (dashboard, transações, fluxo) — Navegação de meses refatorada com `useCallback` inline
-- `src/components/transacoes/transaction-form.tsx` + `entry-form.tsx` — Validação de data (range 2000 a +5 anos)
-- `src/contexts/inactivity-context.tsx` — Timestamp do localStorage validado (numérico, positivo, não-futuro)
-
-**Baixa Severidade (6 correções):**
-- `src/app/api/import/pdf/route.ts` — MIME validation por magic bytes `%PDF-` (removido fallback extensão); amount bound superior 10M BRL
-- `src/components/investimentos/investment-dashboard.tsx` — `formatMonthShort` local removida, usa `formatMonthLabel` de utils
-- `src/components/layout/navbar.tsx` — Arquivo legado deletado (não era importado em lugar nenhum)
-- `src/app/(dashboard)/transacoes/importar/page.tsx` — console.error condicionado a dev + toast de erro ao usuário
-- `src/app/api/health/route.ts` — Cache-Control header adicionado (max-age=10)
-
-### Alterações anteriores (21/02/2026)
-
-### Security Hardening (Auditoria de Segurança)
-
-**Migration 012:** `supabase/migrations/012_security_hardening.sql`
-- `adjust_account_balance` reescrita: `SET search_path = ''`, `GET DIAGNOSTICS` + `RAISE EXCEPTION` se 0 linhas, magnitude guard (max 10M BRL)
-- RLS transactions INSERT fortalecida: valida `account_id` e `category_id` pertencem ao mesmo `user_id`
-- RLS category_rules fortalecida: valida `category_id` pertence ao `user_id`
-- CHECK constraint em `reserve_target_months` (1-60)
-
-**HTTP Security Headers:** `next.config.ts`
-- X-Frame-Options: DENY (anti-clickjacking)
-- X-Content-Type-Options: nosniff
-- Referrer-Policy: strict-origin-when-cross-origin
-- Permissions-Policy: camera=(), microphone=(), geolocation=()
-- Strict-Transport-Security: max-age=63072000 (HSTS)
-
-**Error Sanitization:**
-- `src/app/api/ai/analyze/route.ts` — mensagem genérica quando GEMINI_API_KEY ausente; erro streaming sanitizado; history[].content limitado a 4000 chars; Retry-After header no 429
-- `src/app/api/import/pdf/route.ts` — erro genérico no catch (não vaza Gemini SDK); mensagem genérica quando API key ausente; Retry-After header no 429
-
-**PDF Route Hardening:** `src/app/api/import/pdf/route.ts`
-- Auth check movido para ANTES do `arrayBuffer()` (previne consumo de CPU/memória por não-autenticados)
-- Validação de MIME type (`application/pdf` ou extensão `.pdf`)
-
-**Dashboard Auth Guard:**
-- `src/app/(dashboard)/layout.tsx` — convertido para server component com `getUser()` + `redirect("/login")` (defesa em profundidade)
-- `src/components/layout/dashboard-shell.tsx` (NOVO) — client component extraído com Sidebar + padding dinâmico
-
-**Senha Mínima:** `src/app/(auth)/register/page.tsx`
-- Aumentada de 6 para 8 caracteres (validação client-side + atributo HTML)
-
-### Alterações anteriores (20/02/2026)
-
-### Auto-logout por Inatividade
-
-**Novos arquivos:**
-- `src/contexts/inactivity-context.tsx` — `InactivityProvider` + `useInactivity()` hook. Rastreia última atividade via event listeners (mousemove, click, keydown, scroll, touchstart) com throttle 1s. Timer de 29 min → exibe modal de aviso. Timer de 30 min (60s após aviso) → executa `supabase.auth.signOut()` + redirect `/login`. Persiste `lastActivity` em localStorage (`finapp_last_activity`) para detectar inatividade cross-tab/refresh. Verifica autenticação via `getUser()` + `onAuthStateChange` — só ativa quando logado.
-- `src/components/ui/inactivity-modal.tsx` — Modal de aviso com contagem regressiva visual (barra de progresso + número de segundos), texto "Sua sessão expira em X segundos por inatividade", botão "Continuar usando" que reseta o timer. Usa `<Modal>` existente.
-
-**Arquivos modificados:**
-- `src/app/providers.tsx` — `InactivityProvider` + `<InactivityModal />` adicionados wrapping o conteúdo dentro do `ToastProvider`
-
-**Detalhes técnicos:**
-- Timeout: 30 minutos de inatividade total (29 min silencioso + 60s com aviso)
-- Eventos: mousemove, click, keydown, scroll, touchstart (no `window`, passive)
-- Throttle: 1 evento/segundo via timestamp check (sem dependência externa)
-- localStorage key: `finapp_last_activity` — persistência cross-tab
-- Cleanup: remove listeners e limpa todos os timers no unmount
-- Nenhuma dependência nova adicionada
-
-### Alterações anteriores (18/02/2026)
-
-### Codex P1 — 5 Itens de Prioridade 1
-
-**Migration 011:** `supabase/migrations/011_budgets_and_reserve_target.sql`
-- `categories.budget_cents` (INTEGER, NULL) — teto de orçamento por categoria (null = sem teto)
-- `profiles.reserve_target_months` (INTEGER, DEFAULT 6) — meta de reserva de emergência em meses
-
-**Feature 1 — Tetos de Orçamento por Categoria:**
-- `src/components/categorias/category-form.tsx` — Campo "Teto mensal (R$)" para categorias despesa, converte via `toCents()`
-- `src/lib/forecast.ts` — `CategoryForecast.budgetCents` adicionado ao tipo e preenchido no cálculo
-- `src/components/dashboard/budget-comparison.tsx` — `getEffectiveBudget()` usa budget como referência quando definido; badge "Teto: R$ X"
-- `src/components/dashboard/financial-insights.tsx` — Insight de estourado compara contra budget (texto "ultrapassou o teto")
-- `src/types/database.ts` — `budget_cents` em Category
-
-**Feature 2 — Fechamento Mensal:**
-- `src/components/dashboard/monthly-closing.tsx` (NOVO) — Modal com 3 seções: Resumo (receitas/despesas/saldo/poupança), Top 3 Desvios (categorias com maior diferença), Sugestões (regras baseadas em thresholds)
-- `src/app/(dashboard)/page.tsx` — Botão "Revisar mês" no header, state `showClosing`, Modal com MonthlyClosing
-
-**Feature 3 — KPIs Faltantes:**
-- `src/components/dashboard/financial-kpis.tsx` — 2 novos KPIs (total 5): Desvio Orçamentário (% com thresholds <10%/<25%) e % Gasto Fixo (recorrentes/receitas com thresholds <50%/<70%)
-- Grid atualizado: `grid-cols-1 sm:grid-cols-3 lg:grid-cols-5`
-- Função `getColorInverse()` para KPIs onde menor é melhor
-- `src/app/(dashboard)/page.tsx` — Fetch recurring despesas, calcula `forecastDespesas` e `totalRecurringDespesas`, passa como props
-
-**Feature 4 — Meta de Reserva de Emergência:**
-- `src/contexts/preferences-context.tsx` — `reserveTargetMonths` + `setReserveTargetMonths` no context; fetch `reserve_target_months` do profile
-- `src/app/(dashboard)/configuracoes/page.tsx` — Novo card "Meta de Reserva de Emergência" com Select (3/6/9/12 meses) + Salvar
-- `src/components/dashboard/financial-kpis.tsx` — KPI Reserva com sublabel "X.X / Y meses (ZZ%)" + mini barra de progresso; thresholds dinâmicos
-- `src/components/dashboard/financial-insights.tsx` — Usa `reserveTargetMonths` em vez de hardcoded 3/6
-- `src/types/database.ts` — `reserve_target_months` em Profile
-
-**Feature 5 — Detecção de Recorrências:**
-- `src/lib/recurrence-detection.ts` (NOVO) — `detectRecurrences()` agrupa por descrição normalizada, filtra 2+ meses, valida ±10% variação de valor, exclui já existentes, estima dia do mês
-- `src/components/dashboard/recurrence-suggestions.tsx` (NOVO) — Card com até 3 sugestões, botão "Criar" redireciona para `/recorrentes?novo=1&desc=...&valor=...&tipo=...&dia=...`
-- `src/app/(dashboard)/page.tsx` — Fetch transações 3 meses + recorrentes existentes, detecta padrões, renderiza RecurrenceSuggestions
-- `src/app/(dashboard)/recorrentes/page.tsx` — `useSearchParams()` com Suspense boundary; auto-abre form quando `?novo=1`; passa `initial*` props
-- `src/components/recorrentes/recurring-form.tsx` — Props opcionais `initialDescription`, `initialAmountCents`, `initialType`, `initialDay` para pré-preenchimento
-
-### Alterações anteriores (18/02/2026)
-
-### Robustez e Performance para Escala (100-500 usuários)
-
-**Migration 010:** `supabase/migrations/010_composite_indexes.sql`
-- Índice `idx_transactions_user_date` — (user_id, date DESC) para queries de dashboard e transações
-- Índice `idx_transactions_account_date` — (account_id, date DESC) para detecção de duplicatas e histórico por conta
-- Índice `idx_recurring_user_active` — (user_id, is_active) para transações recorrentes
-- Índice `idx_investment_entries_investment_date` — (investment_id, date DESC) para evolução de investimentos
-- Índice `idx_category_rules_user` — (user_id) para regras de categorização
-
-**Timeouts em APIs externas:**
-- `src/lib/inflation.ts` — AbortController com timeout de 10s na chamada à API BCB (IPCA)
-- `src/app/api/ai/analyze/route.ts` — Timeout de 30s nas chamadas Gemini (assistente IA) via SDK `RequestOptions`
-- `src/app/api/import/pdf/route.ts` — Timeout de 60s nas chamadas Gemini (importação PDF) via SDK `RequestOptions`
-
-**Supabase browser client singleton:**
-- `src/lib/supabase/client.ts` — `createClient()` agora retorna instância cached (evita re-criação a cada render)
-- Removido `supabase` das dependency arrays de 13 hooks em 12 arquivos (páginas, contexts, componentes) — elimina re-renders desnecessários causados por referência instável
-
-**Fix memory leak no toast:**
-- `src/contexts/toast-context.tsx` — Timers agora rastreados via `useRef<Map>` e limpos individualmente ao dismiss/remove, com cleanup geral no `useEffect` de unmount
-
-**Queries do assistente IA limitadas:**
-- `src/app/api/ai/analyze/route.ts` — `investment_entries` filtrado aos últimos 12 meses, `investments` filtrado por `is_active` (evita carregar dados históricos irrelevantes)
-
-**Dashboard memoizado:**
-- `src/app/(dashboard)/page.tsx` — `totalReceitas`, `totalDespesas`, `chartData`, `recentTransactions`, `savingsRate`, `runway`, `reserveMonths` todos envolvidos em `useMemo`
-
-**Lazy loading de Recharts:**
-- `src/app/(dashboard)/page.tsx` — `CategoryChart` carregado via `next/dynamic` com `ssr: false` (reduz bundle inicial do dashboard)
-
-**Rate limiting nas API routes:**
-- `src/lib/rate-limit.ts` (NOVO) — Rate limiter in-memory com sliding window, auto-cleanup a cada 5 min
-- `src/app/api/ai/analyze/route.ts` — 5 requisições/minuto por usuário (retorna 429)
-- `src/app/api/import/pdf/route.ts` — 2 requisições/5 minutos por usuário (retorna 429)
-
-**Error Boundary + try-catch em hooks:**
-- `src/app/(dashboard)/error.tsx` (NOVO) — Next.js Error Boundary para o layout dashboard com botão "Tentar novamente"
-- `src/contexts/preferences-context.tsx` — try-catch em `fetchPreferences`
-- `src/components/investimentos/investment-dashboard.tsx` — try-catch em `fetchEntries`
-- `src/components/investimentos/investment-list.tsx` — try-catch em `fetchAllEntries` e `fetchEntries`
-- `src/components/categorias/category-rules.tsx` — try-catch em `fetchData` com toast de erro
-- `src/app/(dashboard)/transacoes/importar/page.tsx` — try-catch em `fetchData`
-- `src/lib/forecast.ts` — try-catch em `calculateForecast` (retorna `{ months: [] }` em caso de falha)
-
-**LIMIT em queries Supabase:**
-- `transactions` (mensal): `.limit(2000)` — dashboard, transações, daily-flow
-- `transactions` (3 meses): `.limit(5000)` — despesas passadas, daily-flow passado
-- `investment_entries`: `.limit(5000)` — dashboard, investment-dashboard, investment-list
-- `investment_entries` (por investimento): `.limit(1000)` — investment-list modal
-- `recurring_transactions` (ativas): `.limit(1000)` — forecast, daily-flow, recorrentes, API IA
-- `investments` (ativos, API IA): `.limit(500)`
-
-**Atomicidade na importação:**
-- `src/components/transacoes/import-review-table.tsx` — Verifica erro do `rpc("adjust_account_balance")` e exibe toast de alerta se saldo não for atualizado
-
-**Validação numérica (divisão por zero):**
-- `src/components/dashboard/investment-summary.tsx` — Calcula deflator IPCA com guard `deflator > 0`
-- `src/components/investimentos/investment-dashboard.tsx` — Calcula deflator IPCA com guard `deflator > 0`
-
-### Alterações anteriores (17/02/2026)
-
-### Importação de PDF via IA (Faturas de Cartão)
-
-**Novos arquivos:**
-- `src/app/api/import/pdf/route.ts` — API Route POST que recebe PDF em base64, autentica usuário, envia ao Gemini como `inlineData` com prompt de extração, parseia resposta JSON, valida cada transação e retorna `{ success, transactions, errors }` (mesmo shape de `OFXParseResult`)
-- `src/lib/pdf-import.ts` — Helper client `parsePDFImport(file)` que converte File → base64 via FileReader, faz fetch POST para `/api/import/pdf`, retorna resultado tipado
-
-**Arquivos modificados:**
-- `src/components/transacoes/import-upload.tsx` — Aceita `.pdf` no filtro de arquivo, limite dinâmico (10MB PDF / 5MB outros), nova prop `onPDFLoaded(file, accountId)`, textos atualizados
-- `src/app/(dashboard)/transacoes/importar/page.tsx` — Handler `handlePDFLoaded` com loading overlay ("Extraindo transações com IA..."), integração com `parsePDFImport`, warnings exibidos no step upload em caso de falha, descrição do page header atualizada
-
-**Fluxo PDF (novo):** Upload → Processamento IA (loading) → Revisão → Resumo
-**Fluxo OFX (inalterado):** Upload → Revisão → Resumo
-**Fluxo CSV (inalterado):** Upload → Mapeamento → Revisão → Resumo
-
-**Detalhes técnicos:**
-- Usa `@google/generative-ai` (já instalado) com `inlineData` para enviar PDF nativo ao Gemini
-- Prompt especializado para faturas brasileiras (formato YYYY-MM-DD, valores positivos, tipo receita/despesa)
-- Validação robusta: regex de data, amount > 0, type enum, strip de markdown code fences
-- Nenhuma dependência nova adicionada
-
-### Alterações anteriores (15/02/2026)
-
-### Importação CSV com Mapeamento de Colunas
-
-**Novos arquivos:**
-- `src/lib/csv-parser.ts` — Parser CSV com detecção automática de delimitador (`;`, `,`, TAB), parsing de valores BR (`1.234,56`) e US (`1234.56`), parsing de datas multi-formato (DD/MM/YYYY, YYYY-MM-DD), inferência de tipo por sinal ou coluna
-- `src/components/transacoes/import-csv-mapping.tsx` — UI de mapeamento com preview de tabela (headers + 5 primeiras linhas), 3 dropdowns obrigatórios (data, valor, descrição) + 1 opcional (tipo), auto-detecção de colunas por nome de header
-
-**Arquivos modificados:**
-- `src/components/transacoes/import-upload.tsx` — Aceita `.csv` além de `.ofx/.qfx`, detecta tipo por extensão, novo callback `onCSVLoaded`
-- `src/app/(dashboard)/transacoes/importar/page.tsx` — Wizard com step dinâmico: OFX (3 steps) vs CSV (4 steps com mapeamento), navegação back inteligente entre flows
-
-**Fluxo CSV:** Upload → Mapeamento de Colunas → Revisão → Resumo
-**Fluxo OFX (inalterado):** Upload → Revisão → Resumo
-
-### Alterações anteriores (15/02/2026)
-
-### Revisão de Código + Correções de Qualidade
-
-**Migration 009:** `supabase/migrations/009_adjust_balance_rpc.sql`
-- Função RPC atômica `adjust_account_balance(p_account_id, p_delta)` — elimina race condition no padrão read-then-write de saldo
-- `SECURITY DEFINER` com filtro `user_id = auth.uid()`
-
-**Correções de alta severidade:**
-- `src/components/transacoes/transaction-form.tsx` — 3 pontos de atualização de saldo migrados para RPC atômico + tratamento de erro em cada chamada
-- `src/components/transacoes/transaction-list.tsx` — Saldo revertido via RPC atômico no delete + tratamento de erro (aborta antes de excluir se RPC falhar)
-- `src/components/transacoes/import-review-table.tsx` — Saldo atualizado via RPC atômico na importação OFX
-- `src/components/contas/account-list.tsx` — Erro na exclusão de conta agora capturado e exibido via toast
-- `src/types/database.ts` — Tipo `Functions` adicionado para `adjust_account_balance`
-
-**Correções de média severidade:**
-- `src/components/transacoes/transaction-form.tsx` — Erro das 3 chamadas RPC capturado com mensagens contextuais
-- `src/components/transacoes/transaction-list.tsx` — Erro da RPC no delete capturado, aborta antes de excluir
-
-**Correções de qualidade (lint + UX):**
-- `src/components/assistente/chat-message.tsx` — `useState` movido antes do early return (violação rules-of-hooks)
-- `src/components/categorias/category-rules.tsx` — Loading state na exclusão + modal de confirmação (era delete direto)
-- `src/components/recorrentes/recurring-list.tsx` — Loading state no toggle ativo/inativo + botão disabled durante operação
-
-**Deploy Vercel:**
-- `GEMINI_API_KEY` configurada nas Environment Variables do Vercel
-- App live em `finapp-kohl.vercel.app`
-
-### Alterações anteriores (14/02/2026)
-
-### Fase 3A — Quick Wins (6 funcionalidades)
-
-**Migration 008:** `supabase/migrations/008_quick_wins.sql`
-- `accounts.is_emergency_reserve` (boolean) — tag de reserva de emergência
-- Tabela `category_rules` (pattern + category_id) — regras de categorização automática, com RLS
-
-**Quick Win 1 — KPIs no Dashboard:**
-- `src/components/dashboard/financial-kpis.tsx` — 3 mini-cards: Taxa de Poupança (%), Runway Financeiro (meses), Reserva de Emergência (meses)
-- Cores dinâmicas (verde/amarelo/vermelho) baseadas em thresholds
-- `src/app/(dashboard)/page.tsx` — Fetch saldo total contas, saldo reserva, média despesas 3 meses
-
-**Quick Win 2 — Alertas de Orçamento:**
-- `src/components/dashboard/budget-comparison.tsx` — Badges inline "Estourado" (>= 100%) e "Atenção" (>= 80%) por categoria despesa
-- Resumo no topo: "X estouradas, Y em atenção"
-
-**Quick Win 3 — Insights Proativos:**
-- `src/components/dashboard/financial-insights.tsx` — Motor de 8 insights priorizados, exibe max 2
-- Cards com borda colorida (alerta/warning/positivo), botão dispensar, ícones contextais
-
-**Quick Win 4 — Reserva de Emergência:**
-- `src/components/contas/account-form.tsx` — Checkbox "Conta de reserva de emergência"
-- `src/components/contas/account-list.tsx` — Badge "Reserva" (emerald) nos cards
-- `src/types/database.ts` — `is_emergency_reserve` em Account
-
-**Quick Win 5 — Regras de Categorização Automática:**
-- `src/components/categorias/category-rules.tsx` — CRUD de regras (padrão → categoria), form inline
-- `src/app/(dashboard)/configuracoes/page.tsx` — Terceira aba "Regras de Importação"
-- `src/components/transacoes/import-review-table.tsx` — Auto-categorização por regras no import OFX, badge "Auto"
-
-**Quick Win 6 — Retorno Real de Investimentos:**
-- `src/lib/inflation.ts` — `getIPCA12Months()` via API BCB (série 13522), cache em variável
-- `src/components/dashboard/investment-summary.tsx` — Retorno real mensal abaixo do nominal
-- `src/components/investimentos/investment-dashboard.tsx` — Retorno real na linha Total
-- `src/app/(dashboard)/investimentos/page.tsx` — Fetch IPCA e passa para InvestmentDashboard
-
-### Contexto Conversacional + Botão Copiar no Assistente IA
-
-**Arquivos modificados:**
-- `src/app/(dashboard)/assistente/page.tsx` — Monta array `history` (últimas 10 mensagens finalizadas) e envia no body do fetch para manter contexto multi-turno
-- `src/app/api/ai/analyze/route.ts` — Aceita campo `history`, valida (max 10, roles válidos), monta `contents` multi-turn para Gemini (dados financeiros só na 1ª mensagem)
-- `src/components/assistente/chat-message.tsx` — Botão copiar no balão assistant (clipboard → check por 2s), visível no hover (`opacity-0 group-hover:opacity-100`)
-
-### Assistente Financeiro IA (Gemini 2.5 Flash)
-
-**Novos arquivos:**
-- `src/lib/ai/system-prompt.ts` — Persona "FinAssist", regras de resposta em pt-BR, áreas de atuação (diagnóstico, orçamento, fluxo, investimentos, reserva)
-- `src/lib/ai/financial-context.ts` — `buildFinancialContext()` serializa dados financeiros do usuário em texto estruturado (~2000 tokens)
-- `src/app/api/ai/analyze/route.ts` — POST handler: autentica, busca dados via RLS, chama Gemini com streaming, retorna ReadableStream
-- `src/app/(dashboard)/assistente/page.tsx` — Chat full-height com welcome state, 4 sugestões clicáveis, streaming progressivo
-- `src/components/assistente/chat-message.tsx` — Balões user (emerald) / assistant (branco), markdown inline, loading dots
-- `src/components/assistente/chat-input.tsx` — Textarea auto-resize, Enter envia, Shift+Enter nova linha, botão enviar
-
-**Arquivos modificados:**
-- `src/components/layout/sidebar.tsx` — Link "Assistente IA" adicionado (ícone sparkles), sidebar 7→8 itens
-
-**Dependências:**
-- `@google/generative-ai` adicionado ao package.json
-
-**Configuração necessária:**
-- `.env.local` → `GEMINI_API_KEY=<chave>` (server-only, sem NEXT_PUBLIC_)
-
-### Categorias movidas para Configurações
-- `src/app/(dashboard)/configuracoes/page.tsx` — Reescrito com tabs "Geral" / "Categorias" (pill toggle, mesmo padrão visual do Fluxo)
-- `src/app/(dashboard)/categorias/page.tsx` — Substituído por redirect para `/configuracoes`
-- `src/components/layout/sidebar.tsx` — Link Categorias removido (sidebar 8→7 itens)
-- `src/components/layout/navbar.tsx` — Link Categorias removido (consistência)
-
-### Redesign UX — Fase 2: 5 Ações Prioritárias + Extras
-
-**Novos componentes:**
-- `src/lib/category-icons.tsx` — `<CategoryIcon>` SVG inline (~13 ícones + fallback), normalização de acentos + alias map
-- `src/components/layout/sidebar.tsx` — Sidebar fixa desktop (`w-60 bg-slate-900`) + drawer mobile (`w-72`), colapsável (`w-[68px]`)
-- `src/components/layout/user-avatar.tsx` — Avatar circular com iniciais (`emerald-100/700`)
-- `src/components/layout/greeting-header.tsx` — Saudação por hora + data formatada pt-BR
-- `src/contexts/sidebar-context.tsx` — `SidebarProvider` + `useSidebar()`, persistência localStorage
-
-**Arquivos modificados:**
-- `src/app/(dashboard)/layout.tsx` — `<Sidebar />` substitui `<Navbar />`, padding dinâmico `lg:pl-60` / `lg:pl-[68px]`
-- `src/app/(dashboard)/page.tsx` — GreetingHeader, layout 2 colunas (`lg:grid-cols-5`), DailyFlowTable removido
-- `src/app/providers.tsx` — `SidebarProvider` adicionado
-- `src/contexts/preferences-context.tsx` — `fullName` adicionado ao context
-- `src/components/dashboard/summary-cards.tsx` — Hero cards com ícones circulares coloridos
-- `src/components/categorias/category-list.tsx` — CategoryIcon antes do nome
-- `src/components/dashboard/budget-comparison.tsx` — CategoryIcon nas linhas
-- `src/components/dashboard/category-chart.tsx` — CategoryIcon no eixo Y (foreignObject)
-- `src/components/dashboard/daily-flow-table.tsx` — CategoryIcon nas células
-
-### Unificação Fluxo Diário + Fluxo Previsto
-- `src/app/(dashboard)/fluxo/page.tsx` — Página NOVA com abas "Fluxo Diário" / "Fluxo Previsto"
-- `src/app/(dashboard)/fluxo-previsto/` — Diretório REMOVIDO
-
-### Sidebar Collapsível
-- Toggle chevron `<` / `>`, transição `duration-300`
-- Expandido: logo "FinApp", links com ícone + texto, avatar + nome
-- Recolhido: logo "F", só ícones centralizados, tooltips
-
-### Alterações anteriores (13/02/2026)
-
-- Dia de fechamento — competência personalizada (migration 007, closing-day.ts, PreferencesProvider, página Config.)
-- Previsto vs Realizado — BudgetComparison com barras de progresso por categoria
-- Redesign UX Fase 1 — paleta slate/rose, componentes UI, skeleton loaders, whitespace
-- Acessibilidade — ARIA em modais, focus trap, keyboard support, toast acessível
-- Sistema de Toast — feedback visual em todas as operações CRUD
-
-### Alterações anteriores (12/02/2026)
-
-- Reestruturação Dashboard + Fluxo Previsto (includeCurrentMonth, InvestmentSummary widget)
-- Investimentos (migration 006, CRUD + lançamentos + quadro evolução)
-- Fluxo Diário (daily-flow.ts, DailyFlowTable)
-- Transações Planejadas com período (migration 005, start_month/end_month)
-- Importação OFX (parser custom, wizard 3 passos, detecção duplicatas)
+## ESTADO ATUAL — Ver .claude/estado-atual.md
+
+## DECISÕES CONSOLIDADAS — Ver .claude/decisoes-consolidadas.md
+
+## Contexto do Projeto
+
+### Stack
+- Next.js 16 (App Router) + TypeScript
+- Tailwind CSS v4
+- Supabase (Auth + PostgreSQL + RLS)
+- Recharts (gráficos)
+- Google Generative AI (`@google/generative-ai`) — Gemini 2.5 Flash
+
+### Infraestrutura
+- **Supabase:** Projeto `knwbotsyztakseriiwtv`, Migrations 001-017
+- **Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
+- **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
+
+### Funcionalidades Implementadas
+- Autenticação (login, registro, logout, auto-logout por inatividade 30 min)
+- CRUD Contas (banco, cartão, carteira, reserva de emergência, saldo inicial, reconciliação)
+- CRUD Categorias (receita/despesa, teto de orçamento, flag essencial — dentro de Configurações)
+- CRUD Transações (filtro mensal, atualização automática de saldo via RPC atômico)
+- Transações Planejadas (recorrentes, pontuais, com período, detecção automática de padrões)
+- Importação OFX/CSV/PDF (mapeamento CSV, extração PDF via IA Gemini, auto-categorização por regras)
+- Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
+- Metas Financeiras (CRUD + progresso + vínculo a conta + cards visuais + widget dashboard + insights)
+- Gestão de Dívidas (CRUD + simulador pagamento extra + widget dashboard + insights juros/renda)
+- Dashboard (hero cards, 5 KPIs, insights proativos, alertas orçamento, previsto vs realizado, investimentos, recorrências sugeridas, metas, dívidas, fechamento mensal, últimas transações)
+- Fluxo unificado (Fluxo Diário + Fluxo Previsto em abas)
+- Assistente Financeiro IA (Gemini 2.5 Flash, streaming, contexto conversacional)
+- Simuladores Educacionais (juros compostos, inflação, custo de oportunidade — gráficos interativos)
+- Trilha de Auditoria (tabela audit_logs, helper fire-and-forget, integração em 10 componentes)
+- Testes E2E com Playwright (auth, dashboard, transações, contas — 4 suites)
+- Security Hardening (HTTP headers, RPC hardening, RLS strengthening, error sanitization, MIME validation, auth guard)
+- Configurações (abas Geral + Categorias + Regras de Importação, closing day 1-28, meta reserva de emergência)
 
 ## Estrutura do Projeto
 
@@ -585,43 +62,45 @@ src/
 │       ├── metas/page.tsx          # CRUD metas financeiras
 │       ├── dividas/page.tsx        # CRUD dívidas + simulador
 │       ├── simuladores/page.tsx    # 3 simuladores educacionais (abas)
-│       ├── configuracoes/page.tsx  # Abas: Geral + Categorias
+│       ├── configuracoes/page.tsx  # Abas: Geral + Categorias + Regras
 │       └── recorrentes/page.tsx
 ├── components/
 │   ├── ui/                       # Button, Input, Select, Modal, Card, Badge, PageHeader, EmptyState, Skeleton
-│   ├── layout/                   # Sidebar, DashboardShell, UserAvatar, GreetingHeader, Navbar (legado)
+│   ├── layout/                   # Sidebar, DashboardShell, UserAvatar, GreetingHeader
 │   ├── dashboard/                # SummaryCards, FinancialKPIs, FinancialInsights, CategoryChart, MonthPicker, ForecastTable, DailyFlowTable, InvestmentSummary, BudgetComparison, MonthlyClosing, RecurrenceSuggestions, GoalsSummary, DebtSummary
 │   ├── metas/                    # GoalForm, GoalList
 │   ├── dividas/                  # DebtForm, DebtList, DebtSimulator
 │   ├── simuladores/              # CompoundInterestSimulator, InflationSimulator, OpportunityCostSimulator
-│   ├── contas/
-│   ├── categorias/
+│   ├── contas/                   # AccountForm, AccountList, AccountReconciliation
+│   ├── categorias/               # CategoryForm, CategoryList, CategoryRules
 │   ├── assistente/               # ChatMessage, ChatInput
 │   ├── transacoes/               # TransactionForm, TransactionList, Import*
-│   ├── recorrentes/
+│   ├── recorrentes/              # RecurringForm, RecurringList
 │   └── investimentos/            # InvestmentForm, InvestmentList, EntryForm, EntryList, InvestmentDashboard
 ├── contexts/
 │   ├── toast-context.tsx         # Context + Provider + useToast()
 │   ├── preferences-context.tsx   # closingDay + fullName + PreferencesProvider
-│   └── sidebar-context.tsx       # collapsed + toggleCollapsed + SidebarProvider
+│   ├── sidebar-context.tsx       # collapsed + toggleCollapsed + SidebarProvider
+│   └── inactivity-context.tsx    # Auto-logout 30 min + modal aviso
 ├── lib/
-│   ├── supabase/                 # client.ts, server.ts
+│   ├── supabase/                 # client.ts (singleton), server.ts
 │   ├── ai/                       # system-prompt.ts, financial-context.ts
 │   ├── inflation.ts              # getIPCA12Months (API BCB), calcRealReturn
 │   ├── utils.ts                  # formatCurrency, toCents, formatDate, getMonthRange, etc.
-│   ├── forecast.ts               # Lógica de projeção mensal (recurring + historical + forecast vs real)
-│   ├── daily-flow.ts             # Lógica de fluxo diário (real + planejado por dia)
+│   ├── forecast.ts               # Projeção mensal (recurring + historical + forecast vs real)
+│   ├── daily-flow.ts             # Fluxo diário (real + planejado por dia)
 │   ├── closing-day.ts            # Matemática de competência/fechamento
 │   ├── category-icons.tsx        # CategoryIcon SVG component + alias map
 │   ├── investment-utils.ts       # Labels, agrupamento, cálculo de saldo
 │   ├── ofx-parser.ts             # Parser OFX/QFX
+│   ├── csv-parser.ts             # Parser CSV com detecção de delimitador
 │   ├── pdf-import.ts             # Client helper para importação PDF via Gemini
 │   ├── rate-limit.ts             # Rate limiter in-memory sliding window
-│   ├── recurrence-detection.ts   # detectRecurrences — detecta padrões de transações repetidas
-│   ├── goal-utils.ts             # Cálculos de metas (progresso, gap, contribuição, status)
-│   ├── debt-utils.ts             # Cálculos de dívidas (progresso, juros, payoff, simulador, status)
-│   ├── simulator-utils.ts        # Cálculos de simuladores (juros compostos, inflação, custo de oportunidade)
-│   └── audit-log.ts              # Helper logAudit fire-and-forget para trilha de auditoria
+│   ├── recurrence-detection.ts   # detectRecurrences
+│   ├── goal-utils.ts             # Cálculos de metas
+│   ├── debt-utils.ts             # Cálculos de dívidas
+│   ├── simulator-utils.ts        # Cálculos de simuladores
+│   └── audit-log.ts              # Helper logAudit fire-and-forget
 └── types/
     └── database.ts               # Types do Supabase
 ```
@@ -631,9 +110,9 @@ src/
 ### Tabelas
 | Tabela | Descrição |
 |--------|-----------|
-| `profiles` | Perfis de usuário (extends auth.users), inclui `closing_day` |
-| `accounts` | Contas (banco, cartão, carteira) |
-| `categories` | Categorias com `projection_type` (recurring/historical) |
+| `profiles` | Perfis de usuário (extends auth.users), inclui `closing_day`, `reserve_target_months` |
+| `accounts` | Contas (banco, cartão, carteira), `is_emergency_reserve`, `initial_balance_cents` |
+| `categories` | Categorias com `projection_type`, `budget_cents`, `is_essential` |
 | `transactions` | Transações (receita/despesa) |
 | `recurring_transactions` | Transações planejadas (recorrentes, pontuais, com período) |
 | `investments` | Investimentos (CDB, Tesouro, Ações, etc.) |
@@ -643,110 +122,57 @@ src/
 | `debts` | Dívidas (juros, parcelas, simulação de pagamento extra) |
 | `audit_logs` | Trilha de auditoria imutável (ação, entidade, detalhes JSONB) |
 
-### Migrations
-1. `001_initial_schema.sql` - Estrutura base (profiles, accounts, categories, transactions)
-2. `002_seed_categories.sql` - Categorias padrão
-3. `003_add_projection_type.sql` - Campo projection_type em categories
-4. `004_recurring_transactions.sql` - Tabela recurring_transactions
-5. `005_recurring_period.sql` - Campos start_month/end_month em recurring_transactions
-6. `006_investments.sql` - Tabelas investments e investment_entries
-7. `007_closing_day.sql` - Campo closing_day em profiles
-8. `008_quick_wins.sql` - is_emergency_reserve em accounts + tabela category_rules
-9. `009_adjust_balance_rpc.sql` - Função RPC atômica adjust_account_balance
-10. `010_composite_indexes.sql` - Índices compostos para performance (user+date, account+date, etc.)
-11. `011_budgets_and_reserve_target.sql` - budget_cents em categories + reserve_target_months em profiles
-12. `012_security_hardening.sql` - RPC hardening + RLS strengthening + CHECK constraints
-13. `013_goals.sql` - Tabela goals com RLS, índices, constraints
-14. `014_essential_categories.sql` - Flag is_essential em categories
-15. `015_initial_balance.sql` - initial_balance_cents em accounts + backfill
-16. `016_debts.sql` - Tabela debts com RLS, índice, constraints
-17. `017_audit_logs.sql` - Tabela audit_logs com RLS (INSERT + SELECT imutável), índice user+created_at
+### Migrations (001-017)
+1. `001_initial_schema.sql` — Estrutura base (profiles, accounts, categories, transactions)
+2. `002_seed_categories.sql` — Categorias padrão
+3. `003_add_projection_type.sql` — Campo projection_type em categories
+4. `004_recurring_transactions.sql` — Tabela recurring_transactions
+5. `005_recurring_period.sql` — Campos start_month/end_month
+6. `006_investments.sql` — Tabelas investments e investment_entries
+7. `007_closing_day.sql` — Campo closing_day em profiles
+8. `008_quick_wins.sql` — is_emergency_reserve + tabela category_rules
+9. `009_adjust_balance_rpc.sql` — Função RPC atômica adjust_account_balance
+10. `010_composite_indexes.sql` — Índices compostos para performance
+11. `011_budgets_and_reserve_target.sql` — budget_cents + reserve_target_months
+12. `012_security_hardening.sql` — RPC hardening + RLS strengthening + CHECK constraints
+13. `013_goals.sql` — Tabela goals com RLS, índices, constraints
+14. `014_essential_categories.sql` — Flag is_essential em categories
+15. `015_initial_balance.sql` — initial_balance_cents em accounts + backfill
+16. `016_debts.sql` — Tabela debts com RLS, índice, constraints
+17. `017_audit_logs.sql` — Tabela audit_logs (INSERT + SELECT imutável)
 
 ## Navegação (Sidebar)
 
-| # | Label | Rota | Página |
-|---|-------|------|--------|
-| 1 | Dashboard | `/` | Hero cards, 5 KPIs (poupança/runway/reserva/desvio/gasto fixo), Insights (15 regras), Previsto vs Realizado (com alertas e tetos), Categorias, Investimentos (com retorno real), Recorrências Sugeridas, Metas, Dívidas, Fechamento Mensal, Últimas Transações |
-| 2 | Contas | `/contas` | CRUD contas bancárias (tag reserva de emergência, saldo inicial, reconciliação) |
-| 3 | Transações | `/transacoes` | CRUD transações + importação OFX/CSV/PDF (mapeamento CSV, extração PDF via IA, auto-categorização por regras) |
-| 4 | Recorrentes | `/recorrentes` | Transações planejadas (recorrentes/pontuais) |
-| 5 | Metas | `/metas` | CRUD metas financeiras (prazo, progresso, vínculo a conta, cards visuais) |
-| 6 | Dívidas | `/dividas` | CRUD dívidas (juros, parcelas, simulador pagamento extra, cards visuais) |
-| 7 | Fluxo | `/fluxo` | Abas: Fluxo Diário (grid dia a dia) + Fluxo Previsto (projeção mensal) |
-| 8 | Investimentos | `/investimentos` | Abas: Carteira (CRUD) + Evolução (quadro mensal + retorno real IPCA) |
-| 9 | Assistente IA | `/assistente` | Chat com Gemini 2.5 Flash, contexto conversacional, botão copiar, streaming |
-| 10 | Simuladores | `/simuladores` | Abas: Juros Compostos + Inflação + Custo de Oportunidade (gráficos interativos, IPCA real) |
-| 11 | Configurações | `/configuracoes` | Abas: Geral (dia de fechamento, meta reserva) + Categorias (CRUD receita/despesa, teto orçamento) + Regras de Importação |
+| # | Label | Rota |
+|---|-------|------|
+| 1 | Dashboard | `/` |
+| 2 | Contas | `/contas` |
+| 3 | Transações | `/transacoes` |
+| 4 | Recorrentes | `/recorrentes` |
+| 5 | Metas | `/metas` |
+| 6 | Dívidas | `/dividas` |
+| 7 | Fluxo | `/fluxo` |
+| 8 | Investimentos | `/investimentos` |
+| 9 | Assistente IA | `/assistente` |
+| 10 | Simuladores | `/simuladores` |
+| 11 | Configurações | `/configuracoes` |
 
 ## Próximos Passos
 
 ### Redesign UX — Fase 3: Refinamento
 - [ ] Chart upgrade — CategoryChart horizontal → donut/pie com legenda lateral
 - [ ] Form styling — inputs com melhor hierarquia visual
-- [ ] DataTable — extrair componente reutilizável para tabelas padronizadas
-- [ ] Remover navbar.tsx (legado, substituído por sidebar)
+- [ ] DataTable — componente reutilizável para tabelas padronizadas
 
 ### Robustez e Qualidade
-- [x] Tratamento de erros nas operações de saldo (RPC atômico + captura de erro)
-- [x] Loading states em todas as operações assíncronas
-- [x] Confirmação modal em todas as exclusões
-- [x] Lint limpo (rules-of-hooks corrigido)
-- [x] Índices compostos no banco (migration 010)
-- [x] Timeouts em APIs externas (Gemini 30s/60s, BCB 10s)
-- [x] Supabase browser client singleton (evita re-renders)
-- [x] Memory leak fix nos timers do toast
-- [x] Queries do assistente IA limitadas (12 meses entries, investments ativos)
-- [x] Dashboard memoizado (useMemo nos cálculos derivados)
-- [x] Lazy loading de Recharts (next/dynamic, ssr: false)
-- [x] Rate limiting nas API routes (in-memory sliding window)
-- [x] Error boundaries + try-catch em todos os hooks assíncronos
-- [x] LIMIT em todas as queries Supabase (proteção contra crescimento descontrolado)
-- [x] Atomicidade na importação (tratamento de erro RPC)
-- [x] Validação numérica (guard contra divisão por zero em cálculos IPCA)
 - [ ] Validações de formulário mais rigorosas
 - [ ] Paginação server-side para tabelas com muitos registros
 - [ ] Connection pooling (Supabase Pooler)
-- [x] Testes automatizados (E2E com Playwright — 4 suites: auth, dashboard, transações, contas)
 
 ### Futuro
-- [x] Deploy na Vercel (finapp-kohl.vercel.app)
 - [ ] Filtros avançados, exportar dados, metas de orçamento
 - [ ] Dark mode
 - [ ] PWA / mobile responsivo avançado
-
-## Stack
-- Next.js 16 (App Router) + TypeScript
-- Tailwind CSS v4
-- Supabase (Auth + PostgreSQL + RLS)
-- Recharts (gráficos)
-- Google Generative AI (`@google/generative-ai`) — Gemini 2.5 Flash
-
-## Segurança e Operação
-
-### Dados Financeiros
-- Este projeto lida com dados financeiros sensíveis — assumir postura conservadora por padrão
-- Nunca executar comandos destrutivos sem confirmação explícita do usuário:
-  - `rm -rf`, `del /s`, `truncate`, `drop`, `reset --hard`, `prune`
-  - Migrations que removam colunas, alterem tipos ou afetem dados existentes
-  - Qualquer comando que afete produção, credenciais ou dados persistentes
-
-### Schema e Migrations
-- Nunca alterar schema, constraints, RLS ou criar migrations destrutivas sem:
-  - Explicar o impacto da mudança
-  - Descrever como reverter (rollback)
-  - Pedir confirmação explícita do usuário
-- Migrations aditivas simples (ADD COLUMN, CREATE TABLE) podem ser propostas diretamente
-
-### Autonomia do Agente
-- **Pode executar sozinho:** leitura/escrita de arquivos, ajustes de código, `npm test`, `npm run build`, `npm run lint`
-- **Precisa de confirmação:** migrations destrutivas, comandos que afetem dados persistentes, ações irreversíveis, push para produção
-
-### Validação Pós-Tarefa
-- Antes de concluir tarefas que envolvam mais de 3 arquivos ou alterações estruturais, verificar:
-  - O código compila? (`npm run build`)
-  - Houve impacto em dados ou schema? Se sim, explicitar
-  - Existe risco de segurança introduzido? Se sim, explicitar
-  - Existe rollback claro? Se não, alertar o usuário
 
 ## Regras
 
@@ -778,21 +204,41 @@ src/
 - Confirmação antes de excluir registros
 
 ### Documentação
-- Ao final de toda sessão com alteração de código, atualizar a seção "Últimas Alterações" do CLAUDE.md do projeto antes de encerrar
-- Incluir: o que mudou, quais arquivos foram afetados e a data
+- Ao final de toda sessão com alteração de código, atualizar `.claude/estado-atual.md`
+- Registrar decisões técnicas em `.claude/decisoes-consolidadas.md`
+
+## Segurança e Operação
+
+### Dados Financeiros
+- Este projeto lida com dados financeiros sensíveis — assumir postura conservadora por padrão
+- Nunca executar comandos destrutivos sem confirmação explícita do usuário:
+  - `rm -rf`, `del /s`, `truncate`, `drop`, `reset --hard`, `prune`
+  - Migrations que removam colunas, alterem tipos ou afetem dados existentes
+  - Qualquer comando que afete produção, credenciais ou dados persistentes
+
+### Schema e Migrations
+- Nunca alterar schema, constraints, RLS ou criar migrations destrutivas sem:
+  - Explicar o impacto da mudança
+  - Descrever como reverter (rollback)
+  - Pedir confirmação explícita do usuário
+- Migrations aditivas simples (ADD COLUMN, CREATE TABLE) podem ser propostas diretamente
+
+### Autonomia do Agente
+- **Pode executar sozinho:** leitura/escrita de arquivos, ajustes de código, `npm test`, `npm run build`, `npm run lint`
+- **Precisa de confirmação:** migrations destrutivas, comandos que afetem dados persistentes, ações irreversíveis, push para produção
+
+### Validação Pós-Tarefa
+- Antes de concluir tarefas que envolvam mais de 3 arquivos ou alterações estruturais, verificar:
+  - O código compila? (`npm run build`)
+  - Houve impacto em dados ou schema? Se sim, explicitar
+  - Existe risco de segurança introduzido? Se sim, explicitar
+  - Existe rollback claro? Se não, alertar o usuário
 
 ## Comandos Úteis
 
 ```bash
-# Desenvolvimento
-npm run dev
-
-# Build
-npm run build
-
-# Git
-git status
-git add .
-git commit -m "mensagem"
-git push
+npm run dev          # Desenvolvimento
+npm run build        # Build
+npm run test:e2e     # Testes E2E (requer env vars E2E_USER_EMAIL/E2E_USER_PASSWORD)
+git status && git add . && git commit -m "mensagem" && git push
 ```
