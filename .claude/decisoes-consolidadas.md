@@ -15,3 +15,6 @@
 - **[2026-02-28]** — `logAudit()` fire-and-forget (sem await). Motivo: nao bloquear a operacao principal do usuario; erros de auditoria nao devem impactar a UX.
 - **[2026-02-28]** — Simuladores 100% client-side, sem persistencia em banco. Motivo: ferramentas educacionais que nao precisam salvar estado; simplifica implementacao e evita complexidade desnecessaria.
 - **[2026-02-28]** — Testes E2E com Playwright dependem de usuario de teste manual no Supabase. Motivo: nao ha API publica para criar usuarios no Supabase sem service_role key, e expor essa key no CI e inseguro.
+- **[2026-02-28]** — CLAUDE.md reestruturado: estado atual e historico de alteracoes movidos para `.claude/estado-atual.md`, decisoes para `.claude/decisoes-consolidadas.md`. Motivo: conformidade com regras do CLAUDE.md global — CLAUDE.md do projeto deve conter apenas regras, contexto e referencias.
+- **[2026-02-28]** — `useMemo` removido do `debt-simulator.tsx` (calculo de savings). Motivo: React Compiler (Next.js 16) nao conseguia preservar a memoizacao manual; calculo direto e equivalente pois o componente re-renderiza apenas com mudanca de input.
+- **[2026-02-28]** — `eslint-disable preserve-manual-memoization` no `fetchData` do dashboard. Motivo: useCallback legitimo em funcao de 200+ linhas que o React Compiler nao consegue otimizar; suprimir o erro e a abordagem recomendada.
