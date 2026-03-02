@@ -1,9 +1,9 @@
 # Estado Atual — FinApp
 
-Ultima atualizacao: 2026-03-01
+Ultima atualizacao: 2026-03-02
 
 ## Status
-Build OK. Revisao de codigo completa — 11 problemas corrigidos (2 alta, 6 media, 3 baixa). Dashboard page.tsx com try/catch em fetchData e fetchInvestments. toCents() com guard NaN. daily-flow.ts com error handling. CSRF check com fallback Referer em ambas as rotas API. Dark mode variants corrigidos em fi-simulator, category-rules, recurring-list, import-review-table. server.ts com console.warn no catch. Auth layout decorativo corrigido.
+Build OK. Revisao de codigo completa — 11 problemas corrigidos. Teste E2E completo: 46/46 passos OK (22 basicos + 24 complementares cobrindo Dividas, Metas, Simuladores, Assistente IA, Historico, Importacao). Skill `/e2e-test` atualizado com cobertura total de todas as 12 funcionalidades do sistema (60 screenshots, 12 links de navegacao, 14 paginas de QA visual).
 
 ## Hipoteses Abertas
 - Nenhuma
@@ -18,7 +18,8 @@ Build OK. Revisao de codigo completa — 11 problemas corrigidos (2 alta, 6 medi
 - Query de reconciliacao limitada a 10000 transacoes. Usuarios com mais de 10k transacoes podem ver falsos positivos de divergencia. Solucao futura: RPC server-side para agregacao.
 - 2 tabelas (ForecastTable, DailyFlowTable) usam HTML manual em vez do DataTable reutilizavel (colunas dinamicas/sticky incompativeis sem expandir API).
 - Exportacao CSV limitada a 1000 rows por query Supabase. Suficiente para v1, mas usuarios com muitas transacoes podem precisar de paginacao na exportacao.
-- Paginas de Metas e Dividas mantêm `.limit(100)` sem paginacao server-side (layout de cards, volume naturalmente baixo). Reavaliar se algum usuario ultrapassar 100 itens.
+- Paginas de Metas e Dividas mantem `.limit(100)` sem paginacao server-side (layout de cards, volume naturalmente baixo). Reavaliar se algum usuario ultrapassar 100 itens.
+- Pagina `/transacoes/importar` exibe titulo com Unicode escapado ("Transa\u00e7\u00f5es" em vez de "Transacoes"). Bug cosmético de baixa prioridade.
 
 ## Proxima Acao Sugerida
 Consultar backlog de melhorias (plano-melhorias-codex.md) e escolher proximo item a implementar do Horizonte Longo.
