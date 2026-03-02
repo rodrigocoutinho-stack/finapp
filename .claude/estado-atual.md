@@ -3,7 +3,7 @@
 Ultima atualizacao: 2026-03-02
 
 ## Status
-Build OK. Revisao de codigo completa — 11 problemas corrigidos. Teste E2E completo: 46/46 passos OK (22 basicos + 24 complementares cobrindo Dividas, Metas, Simuladores, Assistente IA, Historico, Importacao). Skill `/e2e-test` atualizado com cobertura total de todas as 12 funcionalidades do sistema (60 screenshots, 12 links de navegacao, 14 paginas de QA visual).
+Build OK. Sidebar refatorada: 12 itens reorganizados em 4 grupos colapsaveis (Movimentacoes, Planejamento, Analise, Ferramentas) + scroll corrigido. Dashboard e Configuracoes permanecem standalone. Revisao de codigo completa — 11 problemas corrigidos. Teste E2E completo: 46/46 passos OK.
 
 ## Hipoteses Abertas
 - Nenhuma
