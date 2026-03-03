@@ -1,570 +1,818 @@
 # FinApp
-
 ## Manual do Usuário
 
-**Versao:** 2.0
-**Data:** Fevereiro 2026
+**Versão:** 3.0
+**Data:** Março 2026
 
 ---
 
-Bem-vindo ao FinApp, a plataforma de gestao financeira pessoal que reune suas contas, transacoes, investimentos, projecoes e inteligencia artificial em um unico lugar. Com alertas inteligentes, indicadores financeiros e um assistente que entende seus dados reais, o FinApp vai alem do controle basico. Este manual vai guia-lo por todas as funcionalidades disponiveis.
+Bem-vindo ao FinApp, sua plataforma de gestão financeira pessoal. Aqui você encontra tudo o que precisa para controlar receitas, despesas, investimentos, metas e dívidas — com projeções automáticas, alertas inteligentes e um assistente com inteligência artificial que analisa seus dados reais.
+
+---
+
+## Sumário
+
+1. [Primeiros Passos](#1-primeiros-passos)
+2. [Navegação](#2-navegacao)
+3. [Dashboard](#3-dashboard)
+4. [Contas](#4-contas)
+5. [Transações](#5-transacoes)
+6. [Recorrentes](#6-recorrentes)
+7. [Metas Financeiras](#7-metas-financeiras)
+8. [Dívidas](#8-dividas)
+9. [Histórico de KPIs](#9-historico-de-kpis)
+10. [Fluxo](#10-fluxo)
+11. [Investimentos](#11-investimentos)
+12. [Assistente IA](#12-assistente-ia)
+13. [Simuladores](#13-simuladores)
+14. [Configurações](#14-configuracoes)
+15. [Fluxo de Configuração Inicial](#15-fluxo-de-configuracao-inicial)
+16. [Rotina Diária e Mensal](#16-rotina-diaria-e-mensal)
 
 ---
 
 ## 1 Primeiros Passos
 
-### 1.1 Criando sua conta
+### 1.1 Criar conta
 
-| Passo | Acao |
+| Passo | Ação |
 |:-----:|------|
 | 1 | Na tela de login, clique em **Criar conta**. |
-| 2 | Preencha **Nome completo**, **Email** e **Senha** (minimo 6 caracteres). |
-| 3 | Clique em **Criar conta**. |
-| 4 | Acesse seu email e clique no link de confirmacao. Verifique tambem a pasta de spam. |
-| 5 | Volte a tela de login e entre com suas credenciais. |
+| 2 | Preencha **Nome completo**, **Email** e **Senha**. |
+| 3 | A senha deve ter no mínimo 8 caracteres, 1 letra maiúscula e 1 número. |
+| 4 | Clique em **Criar conta**. |
+| 5 | Verifique seu email e clique no link de confirmação (confira também o spam). |
+| 6 | Volte à tela de login e entre com suas credenciais. |
 
-### 1.2 Login
+### 1.2 Login e logout
 
-| Passo | Acao |
-|:-----:|------|
-| 1 | Informe seu **Email** e **Senha**. |
-| 2 | Clique em **Entrar**. |
-| 3 | Voce sera direcionado ao Dashboard. |
-
-### 1.3 Logout
-
-Clique em **Sair** na parte inferior da barra lateral esquerda.
+- **Entrar:** informe email e senha e clique em **Entrar**.
+- **Sair:** clique em **Sair** na parte inferior da barra lateral.
+- **Auto-logout:** por segurança, após 30 minutos de inatividade um aviso é exibido e, se não houver resposta, a sessão é encerrada automaticamente.
 
 ---
 
-## 2 Navegacao
+## 2 Navegação
 
-A barra lateral esquerda (sidebar) e o ponto central de navegacao. Ela contem oito itens:
+A barra lateral esquerda é o ponto central de navegação. Os itens são organizados em grupos temáticos — clique no nome do grupo para expandir ou recolher as opções.
 
-| # | Menu | Descricao resumida |
-|:-:|------|-------------------|
-| 1 | **Dashboard** | Visao geral do mes — receitas, despesas, saldo, graficos |
-| 2 | **Contas** | Cadastro de contas bancarias, cartoes e carteiras |
-| 3 | **Transacoes** | Registro e consulta de movimentacoes financeiras |
-| 4 | **Recorrentes** | Transacoes planejadas que se repetem ou tem data futura |
-| 5 | **Fluxo** | Fluxo diario (dia a dia) e fluxo previsto (projecao mensal) |
-| 6 | **Investimentos** | Carteira de investimentos e quadro de evolucao |
-| 7 | **Assistente IA** | Chat inteligente que analisa seus dados financeiros reais |
-| 8 | **Configuracoes** | Dia de fechamento, meta de reserva, categorias e regras de importacao |
+### Grupos e páginas disponíveis
 
-**Comportamento da sidebar**
+| Grupo | Páginas |
+|-------|---------|
+| — | **Dashboard** (acesso direto, sempre visível) |
+| **Movimentações** | Contas · Transações · Recorrentes |
+| **Planejamento** | Metas · Dívidas · Investimentos |
+| **Análise** | Histórico · Fluxo |
+| **Ferramentas** | Assistente IA · Simuladores |
+| — | **Configurações** (sempre visível no rodapé) |
+
+### Comportamento da sidebar
 
 | Dispositivo | Comportamento |
 |-------------|---------------|
-| Desktop | Fixa a esquerda. Pode ser recolhida clicando na seta do topo — quando recolhida, exibe apenas icones. Passe o mouse sobre o icone para ver o nome. |
-| Celular | Abre como menu lateral ao tocar no icone de menu no topo. Fecha automaticamente ao navegar. |
+| **Desktop** | Fixada à esquerda. Pode ser recolhida com a seta no topo — quando recolhida, exibe apenas ícones. Passe o mouse para ver o nome. |
+| **Celular/Tablet** | Abre como menu lateral ao tocar no ícone de menu no topo da tela. Fecha automaticamente ao navegar. |
+
+> **Dica:** O grupo que contém a página atual abre automaticamente ao navegar.
 
 ---
 
 ## 3 Dashboard
 
-O Dashboard e a tela inicial. Ele apresenta um panorama completo das suas financas no mes selecionado.
+O Dashboard é a tela inicial e oferece uma visão completa das suas finanças no mês selecionado.
 
-### 3.1 Saudacao e atalhos rapidos
+### 3.1 Seletor de mês e atalhos
 
-No topo da pagina, uma saudacao personalizada exibe seu nome e a data atual (ex: *"Bom dia, Joao! Segunda, 14 de fevereiro"*).
+No topo da página, use as setas **‹** e **›** para navegar entre meses. Todos os dados refletem o período selecionado.
 
-Logo abaixo, dois botoes de atalho permitem criar transacoes sem sair do Dashboard:
+Dois botões de atalho permitem criar transações sem sair do Dashboard:
 
-| Botao | Funcao |
+| Botão | Função |
 |-------|--------|
-| **+ Receita** | Abre o formulario para registrar uma nova receita |
-| **+ Despesa** | Abre o formulario para registrar uma nova despesa |
+| **+ Receita** | Abre o formulário de nova receita |
+| **+ Despesa** | Abre o formulário de nova despesa |
 
-### 3.2 Seletor de mes
+### 3.2 Cards de resumo
 
-Use as setas **<** e **>** ao lado do nome do mes para navegar entre periodos. Todos os dados exibidos no Dashboard refletem o mes selecionado.
+| Card | O que mostra |
+|------|-------------|
+| **Receitas** | Soma de todas as receitas do mês |
+| **Despesas** | Soma de todas as despesas do mês |
+| **Saldo** | Diferença entre receitas e despesas |
 
-### 3.3 Cards de resumo
+### 3.3 Indicadores financeiros (KPIs)
 
-Tres cards destacados no topo mostram os totais do mes:
+Cinco mini-cards exibem indicadores-chave com código de cores:
 
-| Card | Cor | O que mostra |
-|------|-----|-------------|
-| **Receitas** | Verde | Soma de todas as receitas do mes |
-| **Despesas** | Vermelho | Soma de todas as despesas do mes |
-| **Saldo** | Azul (positivo) ou Vermelho (negativo) | Diferenca entre receitas e despesas |
+| KPI | O que mede | Verde | Amarelo | Vermelho |
+|-----|-----------|-------|---------|---------|
+| **Taxa de Poupança** | % da receita que foi poupada | > 20% | 10–20% | < 10% |
+| **Runway Financeiro** | Meses que o saldo atual sustenta o padrão de gastos | > 6 meses | 3–6 meses | < 3 meses |
+| **Reserva de Emergência** | Meses de despesas cobertos pela reserva, versus a meta configurada | Meta atingida | > 50% da meta | < 50% da meta |
+| **Desvio Orçamentário** | Desvio médio entre previsto e realizado por categoria | < 10% | 10–25% | > 25% |
+| **% Gasto Fixo** | % das receitas comprometido com despesas recorrentes | < 50% | 50–70% | > 70% |
 
-### 3.4 Indicadores financeiros (KPIs)
+### 3.4 Insights proativos
 
-Logo abaixo dos cards de resumo, cinco mini-cards exibem indicadores-chave das suas financas:
+O FinApp analisa seus dados e exibe automaticamente alertas e observações relevantes. Cada card tem borda colorida por prioridade (vermelho = urgente, amarelo = atenção, verde = positivo). Você pode dispensar um insight clicando no **X**.
 
-| KPI | O que mostra | Cores |
-|-----|-------------|-------|
-| **Taxa de Poupanca** | Percentual da receita que voce conseguiu poupar no mes | Verde (>20%), Amarelo (10-20%), Vermelho (<10%) |
-| **Runway Financeiro** | Quantos meses voce consegue manter o padrao de gastos com o saldo atual | Verde (>6), Amarelo (3-6), Vermelho (<3) |
-| **Reserva de Emergencia** | Quantos meses de despesas a sua reserva cobre, com barra de progresso em relacao a meta configurada | Verde (meta atingida), Amarelo (>50%), Vermelho (<50%) |
-| **Desvio Orcamentario** | Percentual medio de desvio entre o previsto e o realizado nas categorias | Verde (<10%), Amarelo (10-25%), Vermelho (>25%) |
-| **% Gasto Fixo** | Percentual das receitas comprometido com despesas recorrentes | Verde (<50%), Amarelo (50-70%), Vermelho (>70%) |
+**Exemplos:**
+- *"Alimentação ultrapassou o teto de R$ 800 este mês"*
+- *"Sua reserva cobre apenas 2 meses — a meta é 6"*
+- *"Você poupou 28% da receita este mês. Excelente!"*
 
-### 3.5 Insights proativos
+### 3.5 Widgets do Dashboard
 
-O FinApp analisa seus dados e exibe ate dois cards de insights priorizados no Dashboard. Cada insight tem borda colorida (vermelho para alertas, amarelo para atencao, verde para pontos positivos) e pode ser dispensado clicando no botao de fechar.
-
-Exemplos de insights:
-
-- "Suas despesas com Alimentacao ultrapassaram o teto de R$ 800 este mes"
-- "Sua reserva de emergencia cobre apenas 2 meses — a meta e 6 meses"
-- "Parabens! Voce poupou 25% da receita este mes"
-
-### 3.6 Widgets do Dashboard
-
-O conteudo principal esta organizado em duas colunas (no desktop):
-
-**Coluna esquerda (maior)**
+**Coluna principal (esquerda)**
 
 | Widget | O que mostra |
 |--------|-------------|
-| **Previsto vs Realizado** | Barra de progresso por categoria, comparando o valor previsto com o realizado. Categorias com teto de orcamento exibem um badge "Teto: R$ X". Badges de alerta: **Estourado** (vermelho, >= 100%) e **Atencao** (amarelo, >= 80%). Um resumo no topo indica quantas categorias estouraram e quantas estao em atencao. |
-| **Investimentos** | Saldo total da carteira, retorno nominal do ultimo mes (em R$ e %) e **retorno real** descontando a inflacao (IPCA 12 meses). Se nao houver investimentos, exibe orientacao para cadastro. |
-| **Recorrencias Sugeridas** | O sistema analisa suas transacoes dos ultimos 3 meses e detecta padroes repetitivos (mesma descricao, valores similares, em meses consecutivos). Exibe ate 3 sugestoes com botao **Criar** que redireciona para o cadastro de recorrentes com os dados pre-preenchidos. |
+| **Previsto vs Realizado** | Barra de progresso por categoria. Categorias com teto exibem "Teto: R$ X". Badge **Estourado** (vermelho) quando gasto ≥ 100% do previsto; badge **Atenção** (amarelo) quando ≥ 80%. |
+| **Metas** | Cards das metas financeiras cadastradas com progresso visual, valor atual vs meta e prazo. |
+| **Dívidas** | Resumo das dívidas ativas: total em aberto, parcela mensal e próximos vencimentos. |
+| **Investimentos** | Saldo total da carteira, retorno nominal do último mês e **retorno real** já descontando a inflação (IPCA 12 meses). |
+| **Recorrências Sugeridas** | O sistema detecta padrões repetitivos nas últimas transações e sugere criar recorrentes. Clique em **Criar** para pré-preencher o cadastro automaticamente. |
 
-**Coluna direita**
+**Coluna lateral (direita)**
 
 | Widget | O que mostra |
 |--------|-------------|
-| **Despesas por Categoria** | Grafico de barras horizontais com as maiores categorias de despesa do mes. Cada categoria exibe seu icone visual. |
-| **Ultimas Transacoes** | Lista das 5 transacoes mais recentes com descricao, data, categoria, conta e valor. Receitas em verde, despesas em vermelho. |
+| **Despesas por Categoria** | Gráfico de barras com as maiores categorias do mês. |
+| **Últimas Transações** | As 5 transações mais recentes com data, descrição, categoria, conta e valor. |
 
-### 3.7 Fechamento mensal
+### 3.6 Fechamento mensal
 
-No topo do Dashboard, o botao **Revisar mes** abre um modal com o fechamento do mes selecionado. O modal possui tres secoes:
+Clique em **Revisar mês** no topo do Dashboard para abrir o resumo do período. O modal exibe:
 
-| Secao | O que mostra |
-|-------|-------------|
-| **Resumo** | Total de receitas, despesas, saldo do mes e taxa de poupanca |
-| **Top 3 Desvios** | As tres categorias com maior diferenca entre previsto e realizado |
-| **Sugestoes** | Recomendacoes automaticas baseadas nos desvios identificados |
+| Seção | Conteúdo |
+|-------|----------|
+| **Resumo** | Receitas, despesas, saldo e taxa de poupança do mês |
+| **Top 3 Desvios** | As categorias com maior diferença entre previsto e realizado |
+| **Sugestões** | Recomendações automáticas baseadas nos desvios identificados |
 
-> **Dica:** Use o fechamento mensal como rotina ao final de cada mes para avaliar sua performance financeira e ajustar o planejamento.
+O fechamento é salvo automaticamente e alimenta a página de Histórico de KPIs.
+
+> **Dica:** Use o fechamento mensal como ritual de fim de mês — 10 minutos para revisar o que aconteceu e ajustar o planejamento do próximo mês.
 
 ---
 
 ## 4 Contas
 
-A pagina de Contas permite gerenciar as contas que representam de onde sai e para onde vai seu dinheiro.
+As contas representam onde seu dinheiro está: bancos, carteiras, cartões. Todas as transações precisam estar vinculadas a uma conta.
 
 ### 4.1 Tipos de conta
 
-| Tipo | Uso tipico | Exemplo |
-|------|-----------|---------|
-| **Banco** | Contas correntes ou poupanca | Nubank, Itau, Bradesco |
-| **Cartao** | Cartoes de credito | Visa, Mastercard |
-| **Carteira** | Dinheiro em especie | Carteira fisica |
+| Tipo | Exemplos |
+|------|---------|
+| **Banco** | Nubank, Itaú, Bradesco (conta corrente ou poupança) |
+| **Cartão** | Cartões de crédito |
+| **Carteira** | Dinheiro em espécie |
 
 ### 4.2 Criar uma conta
 
-| Passo | Acao |
+| Passo | Ação |
 |:-----:|------|
 | 1 | Clique em **Nova conta**. |
-| 2 | Preencha o **Nome da conta** e selecione o **Tipo**. |
-| 3 | Clique em **Criar conta**. |
+| 2 | Preencha o **Nome** e selecione o **Tipo**. |
+| 3 | Informe o **Saldo inicial** (o valor que você possui nessa conta hoje). |
+| 4 | Clique em **Criar conta**. |
 
-A conta e criada com saldo zero. O saldo e atualizado automaticamente conforme voce registra transacoes.
+> O saldo é atualizado automaticamente a cada transação registrada — não é necessário ajustar manualmente.
 
-### 4.3 Reserva de emergencia
+### 4.3 Reserva de emergência
 
-Ao criar ou editar uma conta, voce pode marcar a opcao **"Conta de reserva de emergencia"**. Contas marcadas exibem um badge verde "Reserva" na lista e seu saldo e usado no calculo do KPI de Reserva de Emergencia no Dashboard.
+Ao criar ou editar uma conta, marque **"Conta de reserva de emergência"** para indicar que esse dinheiro é destinado à reserva. O saldo dessa conta alimenta o KPI de Reserva de Emergência no Dashboard.
 
-> **Dica:** Marque como reserva apenas contas dedicadas a essa finalidade (ex: poupanca separada, CDB de liquidez diaria). Isso permite que o FinApp calcule corretamente quantos meses de despesas voce tem guardados.
+> **Dica:** Marque como reserva apenas contas realmente separadas para essa finalidade — por exemplo, uma poupança ou CDB com liquidez diária.
 
-### 4.4 Editar e excluir
+### 4.4 Reconciliação de saldo
 
-| Acao | Como fazer |
+Se o saldo exibido no FinApp divergir do saldo real no banco, use a **reconciliação**:
+
+| Passo | Ação |
+|:-----:|------|
+| 1 | Clique no ícone de **balança** ao lado da conta. |
+| 2 | O sistema calcula o saldo esperado com base no saldo inicial mais todas as transações. |
+| 3 | Se houver divergência, ajuste adicionando uma transação de correção. |
+
+### 4.5 Editar e excluir
+
+| Ação | Como fazer |
 |------|-----------|
-| Editar | Clique no icone de **lapis** na linha da conta. |
-| Excluir | Clique no icone de **lixeira**. Uma confirmacao sera solicitada. |
+| Editar | Clique no ícone de **lápis** na linha da conta. |
+| Excluir | Clique no ícone de **lixeira** (requer confirmação). |
 
-> **Atencao:** Contas que possuem transacoes vinculadas nao podem ser excluidas. Remova ou reclassifique as transacoes antes.
+> Contas com transações vinculadas não podem ser excluídas. Reclassifique as transações antes.
 
 ---
 
-## 5 Transacoes
+## 5 Transações
 
-A pagina de Transacoes e onde voce registra e consulta todas as movimentacoes financeiras — receitas e despesas.
+A página de Transações é onde você registra e consulta todas as movimentações — receitas e despesas.
 
-### 5.1 Criar uma transacao
+### 5.1 Criar uma transação
 
-| Passo | Acao |
+| Passo | Ação |
 |:-----:|------|
-| 1 | Clique em **Nova transacao**. |
-| 2 | Preencha o formulario (veja campos abaixo). |
-| 3 | Clique em **Criar transacao**. |
+| 1 | Clique em **Nova transação**. |
+| 2 | Preencha o formulário (campos abaixo). |
+| 3 | Clique em **Criar transação**. |
 
-**Campos do formulario:**
+**Campos:**
 
-| Campo | Descricao |
+| Campo | Descrição |
 |-------|-----------|
-| Tipo | Receita ou Despesa |
-| Valor (R$) | Valor da movimentacao |
-| Conta | Em qual conta ocorreu |
-| Categoria | Filtrada automaticamente pelo tipo escolhido |
-| Descricao | Texto livre — ex: "Supermercado", "Salario" |
-| Data | Dia em que a transacao ocorreu (padrao: hoje) |
+| **Tipo** | Receita ou Despesa |
+| **Valor (R$)** | Valor da movimentação |
+| **Conta** | Em qual conta ocorreu |
+| **Categoria** | Filtrada automaticamente pelo tipo |
+| **Descrição** | Texto livre — ex: "Supermercado", "Salário" |
+| **Data** | Data da transação (padrão: hoje) |
 
-O saldo da conta selecionada e atualizado automaticamente apos a criacao.
+### 5.2 Filtros e busca
 
-### 5.2 Filtro por mes
+Use as setas **‹** e **›** para navegar entre meses. Para localizar transações específicas, acesse os **Filtros Avançados**:
 
-Use as setas **<** e **>** para navegar entre os meses. A lista exibe apenas as transacoes do mes selecionado, ordenadas da mais recente para a mais antiga.
+| Filtro | Opções |
+|--------|--------|
+| **Tipo** | Receita / Despesa / Todos |
+| **Categoria** | Selecione uma ou mais |
+| **Conta** | Selecione uma ou mais |
+| **Busca por texto** | Busca na descrição |
 
-### 5.3 Editar e excluir
+Os filtros são aplicados diretamente na consulta — a lista atualiza instantaneamente.
 
-| Acao | Como fazer |
+### 5.3 Exportar para CSV
+
+Clique em **Exportar CSV** para baixar as transações do mês atual com os filtros aplicados. O arquivo é compatível com Excel (separador `;`, encoding UTF-8 com BOM para acentos corretos).
+
+### 5.4 Editar e excluir
+
+| Ação | Como fazer |
 |------|-----------|
-| Editar | Clique no icone de **lapis** na linha da transacao. |
-| Excluir | Clique no icone de **lixeira**. Uma confirmacao sera solicitada. |
+| Editar | Clique no ícone de **lápis** na linha da transação. |
+| Excluir | Clique no ícone de **lixeira** (requer confirmação). |
 
-### 5.4 Importar transacoes
+### 5.5 Importar transações
 
-O FinApp permite importar transacoes a partir de tres formatos de arquivo: **OFX/QFX** (extratos bancarios), **CSV** (planilhas) e **PDF** (faturas de cartao). Na pagina de Transacoes, clique em **Importar** para iniciar.
+Importe movimentações diretamente do extrato do banco — sem digitar manualmente. Clique em **Importar** na página de Transações.
 
 **Formatos aceitos:**
 
-| Formato | Uso tipico | Limite |
+| Formato | Uso típico | Limite |
 |---------|-----------|--------|
-| **.ofx / .qfx** | Extratos bancarios padrao | 5MB |
-| **.csv** | Planilhas exportadas do banco | 5MB |
-| **.pdf** | Faturas de cartao de credito | 10MB |
+| **.ofx / .qfx** | Extratos bancários padrão | 5 MB |
+| **.csv** | Planilhas exportadas do banco | 5 MB |
+| **.pdf** | Faturas de cartão de crédito | 10 MB |
 
-#### Fluxo OFX/QFX (3 etapas)
+#### Fluxo OFX/QFX
 
-| Etapa | Descricao |
-|:-----:|-----------|
-| 1 | **Upload** — Selecione a conta de destino e o arquivo OFX/QFX. |
-| 2 | **Revisao** — Confira as transacoes extraidas, ajuste categorias e revise duplicatas. |
-| 3 | **Resumo** — Veja o resultado da importacao. |
+| Etapa | Ação |
+|:-----:|------|
+| 1 | Selecione a **conta** e o arquivo OFX/QFX. Clique em **Carregar**. |
+| 2 | Revise as transações extraídas, ajuste categorias e confira duplicatas sinalizadas. |
+| 3 | Clique em **Importar** e veja o resumo final. |
 
-#### Fluxo CSV (4 etapas)
+#### Fluxo CSV
 
-| Etapa | Descricao |
-|:-----:|-----------|
-| 1 | **Upload** — Selecione a conta de destino e o arquivo CSV. |
-| 2 | **Mapeamento** — Indique qual coluna corresponde a data, valor e descricao. O sistema detecta automaticamente quando possivel. |
-| 3 | **Revisao** — Confira as transacoes, ajuste categorias e revise duplicatas. |
-| 4 | **Resumo** — Veja o resultado da importacao. |
+| Etapa | Ação |
+|:-----:|------|
+| 1 | Selecione a **conta** e o arquivo CSV. Clique em **Carregar**. |
+| 2 | Mapeie as colunas: qual é a **data**, qual é o **valor**, qual é a **descrição**. O sistema detecta automaticamente quando possível. |
+| 3 | Revise as transações, ajuste categorias e confira duplicatas. |
+| 4 | Clique em **Importar** e veja o resumo final. |
 
-> **Dica:** Arquivos CSV de bancos como Santander possuem linhas de metadados antes do cabecalho. O sistema detecta e ignora essas linhas automaticamente.
+#### Fluxo PDF
 
-#### Fluxo PDF (3 etapas)
+| Etapa | Ação |
+|:-----:|------|
+| 1 | Selecione a **conta** e o arquivo PDF da fatura. Clique em **Carregar**. |
+| 2 | A inteligência artificial (Gemini) extrai as transações automaticamente. Revise os dados e ajuste categorias. |
+| 3 | Clique em **Importar** e veja o resumo final. |
 
-| Etapa | Descricao |
-|:-----:|-----------|
-| 1 | **Upload** — Selecione a conta de destino e o arquivo PDF. |
-| 2 | **Revisao** — A inteligencia artificial (Gemini) extrai as transacoes do PDF automaticamente. Confira os dados, ajuste categorias e revise duplicatas. |
-| 3 | **Resumo** — Veja o resultado da importacao. |
+> **Atenção:** PDFs protegidos por senha não são suportados. Abra o arquivo, salve uma cópia sem senha e importe a cópia.
 
-> **Importante:** PDFs protegidos por senha nao sao suportados. Se seu banco exporta o PDF com senha (ex: CPF), abra o arquivo, salve uma copia sem senha e importe a copia.
+#### Categorização automática
 
-#### Etapa de Revisao (comum a todos os formatos)
+Se você tiver **Regras de Importação** configuradas (veja seção 14.3), as categorias são preenchidas automaticamente para transações que correspondam ao padrão. Elas aparecem com um badge **Auto** na tela de revisão.
 
-O sistema exibe todas as transacoes encontradas no arquivo. Para cada linha, voce pode atribuir ou alterar a categoria. Transacoes duplicadas (mesma conta, data e valor) sao sinalizadas automaticamente. Se voce tiver regras de categorizacao configuradas (em Configuracoes > Regras de Importacao), as categorias serao preenchidas automaticamente com um badge **Auto**. Revise os dados e clique em **Importar**.
+#### Resumo da importação
 
-#### Resumo final
-
-| Informacao | Significado |
+| Informação | Significado |
 |-----------|------------|
-| Importadas | Transacoes adicionadas com sucesso |
-| Ignoradas | Transacoes que voce optou por nao importar |
-| Duplicatas | Transacoes ja existentes que foram detectadas e ignoradas |
+| **Importadas** | Transações adicionadas com sucesso |
+| **Ignoradas** | Transações que você optou por não importar |
+| **Duplicatas** | Já existiam — foram ignoradas automaticamente |
 
 ---
 
-## 6 Transacoes Planejadas (Recorrentes)
+## 6 Recorrentes
 
-Transacoes planejadas representam movimentacoes que se repetem ou que estao programadas para o futuro. Elas alimentam automaticamente o **Fluxo Previsto** e o comparativo **Previsto vs Realizado** no Dashboard.
+Transações planejadas são movimentações que se repetem ou estão programadas para o futuro. Elas alimentam automaticamente o **Fluxo Previsto** e o comparativo **Previsto vs Realizado** no Dashboard.
 
-### 6.1 Tipos de frequencia
+### 6.1 Tipos de frequência
 
-| Frequencia | Quando usar | Exemplo |
+| Frequência | Quando usar | Exemplo |
 |-----------|-------------|---------|
-| **Recorrente (sem prazo)** | Repete todo mes indefinidamente | Aluguel, salario, plano de saude |
-| **Pontual (mes unico)** | Ocorre em um unico mes especifico | IPVA em janeiro, matricula escolar |
-| **Recorrente com periodo** | Repete mensalmente dentro de um intervalo definido | Parcelas de janeiro a junho |
+| **Recorrente (sem prazo)** | Repete todo mês indefinidamente | Aluguel, salário, plano de saúde |
+| **Pontual (mês único)** | Ocorre em um único mês | IPVA em janeiro, matrícula escolar |
+| **Recorrente com período** | Repete dentro de um intervalo | Parcelas de fevereiro a julho |
 
-### 6.2 Criar uma transacao planejada
+### 6.2 Criar uma transação planejada
 
-| Passo | Acao |
+| Passo | Ação |
 |:-----:|------|
-| 1 | Clique em **Nova transacao**. |
-| 2 | Preencha o formulario (veja campos abaixo). |
+| 1 | Clique em **Nova transação**. |
+| 2 | Preencha o formulário. |
 | 3 | Clique em **Criar**. |
 
-**Campos do formulario:**
+**Campos:**
 
-| Campo | Descricao |
+| Campo | Descrição |
 |-------|-----------|
-| Tipo | Receita ou Despesa |
-| Valor (R$) | Valor esperado da movimentacao |
-| Conta | Conta associada |
-| Categoria | Filtrada pelo tipo escolhido |
-| Descricao | Texto livre — ex: "Aluguel", "Salario", "Parcela TV" |
-| Frequencia | Recorrente (sem prazo), Pontual ou Recorrente com periodo |
-| Mes / Mes de inicio / Mes de termino | Campos condicionais, variam conforme a frequencia |
-| Dia do mes | Dia em que a transacao ocorre (1 a 31) |
-| Ativo | Se desmarcado, a transacao nao sera considerada nas projecoes |
+| **Tipo** | Receita ou Despesa |
+| **Valor (R$)** | Valor esperado |
+| **Conta** | Conta associada |
+| **Categoria** | Filtrada pelo tipo |
+| **Descrição** | Ex: "Aluguel", "Salário", "Parcela TV" |
+| **Frequência** | Recorrente, Pontual ou Com período |
+| **Mês / Início / Término** | Campos condicionais conforme a frequência |
+| **Dia do mês** | Dia em que ocorre (1–28) |
+| **Ativo** | Desmarcado = não entra nas projeções |
 
-### 6.3 Editar, desativar e excluir
+### 6.3 Gerenciar recorrentes
 
-| Acao | Como fazer |
+| Ação | Como fazer |
 |------|-----------|
-| Editar | Clique no icone de **lapis**. |
-| Desativar | Na edicao, desmarque o campo **Ativo**. A transacao permanece no historico, mas sai das projecoes. |
-| Excluir | Clique no icone de **lixeira** (com confirmacao). |
+| Editar | Clique no ícone de **lápis**. |
+| Desativar | Na edição, desmarque **Ativo** — a transação fica arquivada sem ser excluída. |
+| Excluir | Clique no ícone de **lixeira** (requer confirmação). |
+
+> **Dica:** Ao perceber que você tem uma despesa se repetindo há 3 meses no mesmo valor (ex: assinatura de streaming), o Dashboard vai sugerir transformá-la em recorrente automaticamente.
 
 ---
 
-## 7 Fluxo
+## 7 Metas Financeiras
 
-A pagina de Fluxo possui duas abas, acessiveis por um seletor no topo da pagina.
+A página de Metas permite definir objetivos financeiros com prazo e acompanhar o progresso ao longo do tempo.
 
-### 7.1 Fluxo Diario
+### 7.1 Para que serve
 
-Mostra o detalhamento **dia a dia** do mes selecionado. Cada linha representa uma movimentacao (real ou planejada).
+Use metas para objetivos como:
+- Juntar R$ 20.000 para uma viagem até dezembro
+- Formar uma reserva de emergência de R$ 30.000
+- Comprar um carro em 24 meses
+- Pagar a entrada de um apartamento
 
-| Coluna | O que mostra |
-|--------|-------------|
-| Dia | Data da movimentacao |
-| Descricao | Nome da transacao |
-| Categoria | Categoria com icone visual |
-| Valor | Valor da movimentacao (positivo ou negativo) |
-| Saldo Acumulado | Saldo progressivo — permite identificar em que dias o caixa fica apertado |
+### 7.2 Criar uma meta
 
-Use as setas **<** e **>** para navegar entre os meses.
+| Passo | Ação |
+|:-----:|------|
+| 1 | Clique em **Nova meta**. |
+| 2 | Preencha o formulário. |
+| 3 | Clique em **Criar meta**. |
 
-### 7.2 Fluxo Previsto
+**Campos:**
 
-Exibe uma **projecao de varios meses** — o mes atual mais tres meses futuros.
+| Campo | Descrição |
+|-------|-----------|
+| **Nome** | Ex: "Viagem Europa", "Carro novo" |
+| **Valor alvo (R$)** | Quanto você precisa juntar |
+| **Prazo** | Mês e ano da meta |
+| **Conta vinculada** | Opcional — se informada, o saldo atual da conta é usado como progresso real |
+| **Valor atual (R$)** | Se não houver conta vinculada, informe o valor já guardado |
+| **Cor** | Cor do card para identificação visual |
+| **Observações** | Notas livres |
 
-| Coluna | O que mostra |
-|--------|-------------|
-| Categoria | Nome da categoria |
-| Previsto | Valor esperado com base em recorrentes ou media historica |
-| Realizado | Transacoes efetivas ja registradas |
-| Diferenca | Desvio entre o previsto e o realizado |
+### 7.3 Acompanhar o progresso
 
-O saldo projetado e acumulado mes a mes, oferecendo uma visao de medio prazo.
+Cada meta exibe:
 
-> **Como funciona a projecao:** Categorias configuradas como "Recorrente" usam o valor fixo das transacoes planejadas. Categorias configuradas como "Historico" usam a media dos meses anteriores.
+| Informação | Descrição |
+|-----------|-----------|
+| **Barra de progresso** | Percentual atingido em relação ao valor alvo |
+| **Valor atual vs Alvo** | Ex: "R$ 8.400 / R$ 20.000" |
+| **Prazo** | Meses restantes e data prevista |
+| **Aporte mensal necessário** | Quanto poupar por mês para atingir a meta no prazo |
+
+O widget de Metas também aparece no Dashboard com uma visão rápida de todas as metas ativas.
+
+### 7.4 Editar e excluir
+
+| Ação | Como fazer |
+|------|-----------|
+| Editar | Clique no ícone de **lápis** no card da meta. |
+| Excluir | Clique no ícone de **lixeira** (requer confirmação). |
 
 ---
 
-## 8 Investimentos
+## 8 Dívidas
 
-A pagina de Investimentos possui duas abas: **Carteira** e **Evolucao**.
+A página de Dívidas permite registrar e acompanhar débitos — financiamentos, empréstimos, cartões parcelados — e simular cenários de quitação antecipada.
 
-### 8.1 Carteira
+### 8.1 Para que serve
 
-Exibe todos os investimentos cadastrados, agrupados por tipo de produto (CDB, Tesouro, Acoes, etc.). Cada card mostra o nome, tipo, indexador, saldo atual, conta associada, taxa e vencimento.
+Centralize suas dívidas para:
+- Visualizar o total em aberto e os juros acumulados
+- Acompanhar quantas parcelas faltam
+- Simular o impacto de pagar um valor extra por mês
+- Decidir qual dívida priorizar para quitar primeiro
+
+### 8.2 Criar uma dívida
+
+| Passo | Ação |
+|:-----:|------|
+| 1 | Clique em **Nova dívida**. |
+| 2 | Preencha o formulário. |
+| 3 | Clique em **Criar dívida**. |
+
+**Campos:**
+
+| Campo | Descrição |
+|-------|-----------|
+| **Nome** | Ex: "Financiamento carro", "Empréstimo pessoal" |
+| **Valor total (R$)** | Saldo devedor atual |
+| **Taxa de juros mensal (%)** | Taxa de juros mensal da dívida |
+| **Parcela mensal (R$)** | Valor da parcela que você paga todo mês |
+| **Parcelas restantes** | Número de parcelas que faltam |
+| **Data do próximo vencimento** | Próxima data de pagamento |
+| **Observações** | Notas livres |
+
+### 8.3 Simulador de quitação
+
+No card de cada dívida, clique em **Simulador** para calcular o impacto de pagamentos extras:
+
+| Informação exibida | O que significa |
+|-------------------|----------------|
+| **Tempo para quitar** | Meses até zerar a dívida no ritmo atual |
+| **Total pago em juros** | Quanto você pagará de juros no total |
+| **Com pagamento extra de R$ X/mês** | Quanto tempo e dinheiro você economiza pagando um valor adicional |
+
+> **Dica:** Use o simulador para descobrir se vale a pena direcionar parte do que sobra no mês para quitar uma dívida mais cedo.
+
+### 8.4 Editar e excluir
+
+| Ação | Como fazer |
+|------|-----------|
+| Editar | Clique no ícone de **lápis** no card da dívida. |
+| Excluir | Clique no ícone de **lixeira** (requer confirmação). |
+
+---
+
+## 9 Histórico de KPIs
+
+A página de Histórico exibe a **evolução mensal** dos seus principais indicadores financeiros ao longo do tempo, com base nos fechamentos mensais registrados.
+
+### 9.1 O que você encontra aqui
+
+| Seção | Conteúdo |
+|-------|----------|
+| **Gráfico Receitas vs Despesas vs Saldo** | Evolução mês a mês com barras e linha de saldo |
+| **Gráfico de Saúde Financeira** | Evolução da taxa de poupança ao longo dos meses |
+| **Tabela de dados** | Todos os meses com receitas, despesas, saldo, taxa de poupança e taxa de crescimento de receita |
+
+### 9.2 Como alimentar o Histórico
+
+O Histórico é preenchido automaticamente sempre que você usa o **Revisar mês** no Dashboard. Cada fechamento salva um snapshot dos KPIs daquele período.
+
+> **Dica:** Quanto mais meses você fechar, mais rico fica o histórico. Tente fechar o mês sempre nos primeiros dias do mês seguinte.
+
+---
+
+## 10 Fluxo
+
+A página de Fluxo possui duas abas: **Fluxo Diário** e **Fluxo Previsto**.
+
+### 10.1 Fluxo Diário
+
+Detalhamento **dia a dia** do mês selecionado — mostra cada movimentação real e planejada com o saldo acumulado ao longo do mês.
+
+| Coluna | O que mostra |
+|--------|-------------|
+| **Dia** | Data da movimentação |
+| **Descrição** | Nome da transação |
+| **Categoria** | Categoria com ícone |
+| **Valor** | Valor da movimentação |
+| **Saldo Acumulado** | Saldo progressivo — permite ver em que dias o caixa fica mais apertado |
+
+Use as setas **‹** e **›** para navegar entre meses.
+
+### 10.2 Fluxo Previsto
+
+Projeção de **vários meses** — o mês atual mais três meses futuros — comparando o valor previsto com o realizado por categoria.
+
+| Coluna | O que mostra |
+|--------|-------------|
+| **Categoria** | Nome da categoria |
+| **Previsto** | Valor esperado (baseado em recorrentes ou média histórica) |
+| **Realizado** | Transações efetivas já registradas |
+| **Diferença** | Desvio entre previsto e realizado |
+
+> **Como funciona a projeção:** categorias com tipo "Recorrente" usam o valor fixo das transações planejadas. Categorias com tipo "Histórico" usam a média dos meses anteriores. Você configura isso em Configurações > Categorias.
+
+---
+
+## 11 Investimentos
+
+A página de Investimentos possui duas abas: **Carteira** e **Evolução**.
+
+### 11.1 Carteira
+
+Lista todos os investimentos cadastrados, agrupados por tipo de produto.
 
 **Criar um investimento:**
 
-| Passo | Acao |
+| Passo | Ação |
 |:-----:|------|
 | 1 | Clique em **Novo investimento**. |
-| 2 | Preencha o formulario (veja campos abaixo). |
+| 2 | Preencha o formulário. |
 | 3 | Clique em **Criar investimento**. |
 
-> **Pre-requisito:** Voce precisa ter pelo menos uma conta cadastrada.
+**Campos:**
 
-**Campos do formulario:**
-
-| Campo | Descricao |
+| Campo | Descrição |
 |-------|-----------|
-| Nome | Nome descritivo — ex: "CDB Banco Inter 120% CDI" |
-| Conta / Corretora | Conta existente onde o investimento esta custodiado |
-| Produto | CDB, Tesouro, Acoes, Cripto, Fundo ou Outro |
-| Indexador | CDI, IPCA, Prefixado, entre outros |
-| Taxa contratada | Texto livre — ex: "120% CDI", "IPCA+6,5%" |
-| Vencimento | Data de vencimento (opcional) |
-| Observacoes | Notas adicionais (opcional) |
+| **Nome** | Ex: "CDB Banco Inter 120% CDI" |
+| **Conta / Corretora** | Conta onde o investimento está custodiado |
+| **Produto** | CDB, Tesouro, Ações, Cripto, Fundo ou Outro |
+| **Indexador** | CDI, IPCA, Prefixado, etc. |
+| **Taxa contratada** | Texto livre — ex: "120% CDI", "IPCA+6,5%" |
+| **Vencimento** | Data de vencimento (opcional) |
+| **Observações** | Notas adicionais (opcional) |
 
-### 8.2 Lancamentos
+### 11.2 Lançamentos
 
-Cada investimento possui seu proprio historico de lancamentos. Para acessa-lo, clique em **Lancamentos** no card do investimento.
+Cada investimento possui seu histórico de lançamentos. Clique em **Lançamentos** no card do investimento para acessar.
 
-**Tipos de lancamento:**
+**Tipos de lançamento:**
 
-| Tipo | Significado |
+| Tipo | Quando usar |
 |------|------------|
 | **Aporte** | Entrada de dinheiro no investimento |
-| **Resgate** | Retirada de dinheiro do investimento |
-| **Saldo** | Atualizacao de posicao (ex: extrato mensal) |
+| **Resgate** | Retirada de dinheiro |
+| **Saldo** | Atualização de posição (ex: extrato mensal do banco) |
 
-**Registrar um lancamento:**
+**Registrar um lançamento:**
 
-| Passo | Acao |
+| Passo | Ação |
 |:-----:|------|
-| 1 | No card do investimento, clique em **Lancamentos**. |
-| 2 | Clique em **Novo lancamento**. |
+| 1 | No card do investimento, clique em **Lançamentos**. |
+| 2 | Clique em **Novo lançamento**. |
 | 3 | Selecione o **Tipo**, informe a **Data** e o **Valor (R$)**. |
-| 4 | Confirme o lancamento. |
+| 4 | Confirme. |
 
-O saldo do investimento e calculado automaticamente a partir dos lancamentos registrados.
+O saldo do investimento é calculado automaticamente a partir dos lançamentos.
 
-### 8.3 Evolucao
+### 11.3 Evolução
 
-A aba Evolucao mostra um quadro com a **posicao mensal** de cada investimento ao longo do tempo, permitindo acompanhar o crescimento da carteira mes a mes.
+A aba Evolução exibe um quadro com a **posição mensal** de cada investimento ao longo do tempo, para acompanhar o crescimento da carteira mês a mês.
+
+### 11.4 Retorno real (IPCA)
+
+O widget de Investimentos no Dashboard exibe o **retorno real** do último mês: o retorno nominal descontado pela inflação (IPCA dos últimos 12 meses). Isso permite avaliar se seus investimentos estão, de fato, crescendo acima da inflação.
 
 ---
 
-## 9 Assistente IA
+## 12 Assistente IA
 
-O Assistente Financeiro e um chat com inteligencia artificial que analisa seus **dados financeiros reais** — contas, transacoes, recorrentes, investimentos e projecoes — para oferecer diagnosticos e orientacoes personalizadas.
+O Assistente Financeiro é um chat com inteligência artificial que analisa seus **dados financeiros reais** para oferecer diagnósticos e orientações personalizadas.
 
-### 9.1 Como usar
+### 12.1 Como usar
 
-| Passo | Acao |
+| Passo | Ação |
 |:-----:|------|
 | 1 | Acesse **Assistente IA** na sidebar. |
-| 2 | Na primeira visita, clique em uma das 4 perguntas sugeridas ou digite sua propria pergunta. |
-| 3 | Pressione **Enter** para enviar (ou clique no botao de envio). |
-| 4 | A resposta e exibida progressivamente enquanto e gerada. |
+| 2 | Na primeira visita, clique em uma das perguntas sugeridas ou digite sua própria. |
+| 3 | Pressione **Enter** para enviar (ou clique no botão de envio). |
+| 4 | A resposta é exibida progressivamente conforme é gerada. |
 
-| Atalho | Funcao |
+| Atalho | Função |
 |--------|--------|
 | **Enter** | Envia a mensagem |
 | **Shift + Enter** | Pula linha sem enviar |
 
 > **Limite:** 2.000 caracteres por mensagem.
 
-### 9.2 Contexto conversacional
+### 12.2 Contexto conversacional
 
-O assistente **mantem o contexto da conversa**. Cada nova pergunta considera as mensagens anteriores. Voce pode pedir um diagnostico e, na sequencia, perguntar *"como melhorar isso?"* sem precisar repetir o contexto.
+O assistente **mantém o contexto da conversa**. Você pode pedir um diagnóstico e, em seguida, perguntar *"como melhorar esse ponto?"* sem precisar repetir informações.
 
-### 9.3 Copiar respostas
+### 12.3 Copiar respostas
 
-Passe o mouse sobre qualquer resposta do assistente para revelar o **botao de copiar** no canto superior direito. Ao clicar, o texto e copiado e o icone muda para um check verde por 2 segundos, confirmando a copia.
+Passe o mouse sobre qualquer resposta para revelar o **botão de copiar** no canto superior direito. O ícone muda para um check verde por 2 segundos confirmando a cópia.
 
-### 9.4 Exemplos de perguntas
+### 12.4 Exemplos de perguntas úteis
 
-| Pergunta | Tipo de analise |
+| Pergunta | Tipo de análise |
 |----------|----------------|
-| "Como esta minha saude financeira?" | Diagnostico geral |
-| "Minhas despesas estao controladas?" | Analise de gastos |
-| "Minha carteira esta diversificada?" | Analise de investimentos |
-| "Tenho reserva de emergencia?" | Planejamento de reserva |
-| "Quais categorias estao acima do previsto?" | Orcamento |
-| "Como posso economizar mais?" | Recomendacoes |
+| "Como está minha saúde financeira?" | Diagnóstico geral |
+| "Minhas despesas estão controladas?" | Análise de gastos |
+| "Minha carteira de investimentos está diversificada?" | Análise de investimentos |
+| "Tenho reserva de emergência suficiente?" | Planejamento de reserva |
+| "Quais categorias estão acima do previsto?" | Revisão de orçamento |
+| "Como posso economizar mais este mês?" | Recomendações práticas |
+| "Vale a pena quitar minha dívida do cartão?" | Análise de dívidas |
+| "Estou no caminho certo para atingir minha meta de viagem?" | Análise de metas |
 
-> **Nota:** O assistente e baseado nos seus dados reais, mas nao substitui aconselhamento financeiro profissional.
+> **Nota:** O assistente se baseia nos seus dados reais, mas não substitui orientação de um profissional financeiro certificado.
 
 ---
 
-## 10 Configuracoes
+## 13 Simuladores
 
-A pagina de Configuracoes possui tres abas: **Geral**, **Categorias** e **Regras de Importacao**.
+A página de Simuladores oferece quatro calculadoras interativas para apoiar decisões financeiras. Todos os cálculos são feitos em tempo real — nenhum dado é salvo.
 
-### 10.1 Geral
+### 13.1 Juros Compostos
 
-A aba Geral contem duas configuracoes: **Dia de fechamento** e **Meta de reserva de emergencia**.
+Calcule o crescimento de um investimento ao longo do tempo.
+
+**Campos:**
+- Valor inicial (R$)
+- Aporte mensal (R$)
+- Taxa de juros ao mês (%)
+- Período (meses)
+
+**Resultado:** gráfico de evolução mês a mês + total acumulado e total de aportes vs rendimento.
+
+> **Exemplo de uso:** "Se eu investir R$ 500/mês durante 10 anos a 0,8% ao mês, quanto terei?"
+
+### 13.2 Inflação
+
+Simule o efeito da inflação no poder de compra ao longo do tempo.
+
+**Campos:**
+- Valor atual (R$)
+- Taxa de inflação anual (%)
+- Período (anos)
+
+**Resultado:** quanto esse valor representa no futuro em poder de compra real.
+
+> **Exemplo de uso:** "R$ 10.000 hoje valerão quanto daqui a 5 anos com inflação de 5% ao ano?"
+
+### 13.3 Custo de Oportunidade
+
+Compare duas alternativas de uso do dinheiro.
+
+**Campos:**
+- Valor disponível (R$)
+- Taxa de retorno da alternativa A (% ao mês)
+- Taxa de retorno da alternativa B (% ao mês)
+- Período (meses)
+
+**Resultado:** diferença de resultado entre as duas opções ao final do período.
+
+> **Exemplo de uso:** "Vale mais a pena pagar à vista com desconto ou parcelar e manter o dinheiro investido?"
+
+### 13.4 Independência Financeira (FIRE)
+
+Calcule quanto você precisa acumular para viver de renda — e quanto tempo levará para chegar lá.
+
+**Campos:**
+- Gastos mensais desejados na aposentadoria (R$)
+- Patrimônio atual (R$)
+- Aporte mensal (R$)
+- Taxa de retorno anual esperada (%)
+- Taxa de retirada segura (% ao ano, padrão: 4%)
+
+**Resultado:** três cenários (conservador, base e otimista) com o patrimônio alvo e o tempo estimado para atingi-lo.
+
+> **Exemplo de uso:** "Se quero viver com R$ 8.000/mês, quanto preciso ter investido e quando chegarei lá?"
+
+---
+
+## 14 Configurações
+
+A página de Configurações possui três abas: **Geral**, **Categorias** e **Regras de Importação**.
+
+### 14.1 Geral
 
 #### Dia de fechamento
 
-O dia de fechamento define quando comeca e termina seu "mes financeiro".
+Define quando começa e termina seu "mês financeiro". Útil para quem recebe salário em um dia diferente do dia 1.
 
-| Configuracao | Exemplo |
-|-------------|---------|
-| Dia 1 (padrao) | Fevereiro = 01/fev a 28/fev |
-| Dia 10 | Fevereiro = 10/fev a 09/mar |
-| Dia 25 | Fevereiro = 25/fev a 24/mar |
+| Configuração | Exemplo com dia 10 |
+|-------------|-------------------|
+| Mês de fevereiro | 10/fev → 09/mar |
 
-Essa configuracao e util para quem recebe salario em um dia diferente do dia 1. Ela afeta o Dashboard, o Fluxo e todas as projecoes.
+Essa configuração afeta o Dashboard, o Fluxo e todas as projeções.
 
-**Para alterar:**
+**Para alterar:** selecione o dia no dropdown (1 a 28) e clique em **Salvar**.
 
-| Passo | Acao |
-|:-----:|------|
-| 1 | Selecione o dia desejado no dropdown (1 a 28). |
-| 2 | Clique em **Salvar**. |
+#### Meta de reserva de emergência
 
-#### Meta de reserva de emergencia
+Define quantos meses de despesas você quer manter como reserva. Afeta o KPI de Reserva no Dashboard.
 
-Defina quantos meses de despesas voce deseja manter como reserva de emergencia. Essa meta e usada no calculo do KPI de Reserva no Dashboard e nos insights proativos.
+**Para alterar:** selecione a meta (3, 6, 9 ou 12 meses) e clique em **Salvar**.
 
-| Passo | Acao |
-|:-----:|------|
-| 1 | Selecione a meta desejada no dropdown: **3**, **6**, **9** ou **12 meses**. |
-| 2 | Clique em **Salvar**. |
+#### Tema visual
 
-O KPI de Reserva no Dashboard exibira uma barra de progresso mostrando o percentual atingido em relacao a meta configurada (ex: "4.2 / 6 meses (70%)").
+Selecione entre **Claro**, **Escuro** ou **Sistema** (acompanha automaticamente a preferência do seu dispositivo). A escolha é salva e persistida entre sessões.
 
-### 10.2 Categorias
+### 14.2 Categorias
 
-Gerencie as categorias usadas para classificar suas transacoes.
+Gerencie as categorias para classificar suas transações.
 
 **Criar uma categoria:**
 
-| Passo | Acao |
+| Passo | Ação |
 |:-----:|------|
 | 1 | Clique em **Nova categoria**. |
-| 2 | Preencha o formulario (veja campos abaixo). |
+| 2 | Preencha o formulário. |
 | 3 | Clique em **Criar categoria**. |
 
-**Campos do formulario:**
+**Campos:**
 
-| Campo | Descricao |
+| Campo | Descrição |
 |-------|-----------|
-| Nome | Nome da categoria — ex: "Alimentacao", "Salario", "Lazer" |
-| Tipo | Receita ou Despesa |
-| Tipo de projecao | **Historico** (media dos meses anteriores) ou **Recorrente** (valor fixo das transacoes planejadas) |
-| Teto mensal (R$) | Limite de gastos para categorias de despesa (opcional). Quando definido, o Dashboard usara esse valor como referencia no Previsto vs Realizado e emitira alertas quando o gasto se aproximar ou ultrapassar o teto. |
+| **Nome** | Ex: "Alimentação", "Salário", "Lazer" |
+| **Tipo** | Receita ou Despesa |
+| **Tipo de projeção** | **Histórico** (usa média dos meses anteriores) ou **Recorrente** (usa valor fixo das transações planejadas) |
+| **Teto mensal (R$)** | Limite de gastos mensal. Quando definido, ativa alertas no Dashboard quando o gasto se aproxima ou ultrapassa o valor. |
+| **Essencial** | Marque se é um gasto essencial (moradia, alimentação, saúde). Usado nos insights do assistente. |
 
-Cada categoria exibe automaticamente um icone visual baseado no nome (ex: alimentacao exibe um icone de comida, transporte exibe um carro).
+> Categorias com transações vinculadas não podem ser excluídas. Reclassifique as transações antes.
 
-> **Atencao:** Categorias com transacoes vinculadas nao podem ser excluidas. Reclassifique as transacoes antes de remover a categoria.
+### 14.3 Regras de Importação
 
-### 10.3 Regras de Importacao
-
-Regras de categorizacao automatica que sao aplicadas durante a importacao de extratos (OFX, CSV e PDF). Cada regra associa um **padrao de texto** a uma **categoria**.
+Regras de categorização automática aplicadas durante a importação de extratos (OFX, CSV, PDF). Cada regra associa um **padrão de texto** a uma **categoria**.
 
 **Criar uma regra:**
 
-| Passo | Acao |
+| Passo | Ação |
 |:-----:|------|
-| 1 | Na aba **Regras de Importacao**, preencha o padrao (ex: "SUPERMERCADO", "UBER", "PIX"). |
-| 2 | Selecione a categoria que sera atribuida automaticamente. |
+| 1 | Digite o padrão de texto — ex: "SUPERMERCADO", "UBER", "NETFLIX". |
+| 2 | Selecione a categoria que será atribuída automaticamente. |
 | 3 | Clique em **Adicionar**. |
 
-Quando uma transacao importada contem o padrao no campo de descricao, a categoria e atribuida automaticamente e sinalizada com um badge **Auto** na tela de revisao.
+**Como funciona:** ao importar um extrato, qualquer transação cuja descrição contenha o padrão recebe aquela categoria automaticamente, sinalizada com um badge **Auto** na tela de revisão.
+
+> **Dica:** Crie regras para os lançamentos mais frequentes do seu banco. Depois de configurar 10–15 regras, a importação mensal fica quase sem necessidade de ajuste manual.
 
 ---
 
-## 11 Guia de Configuracao Inicial
+## 15 Fluxo de Configuração Inicial
 
-Para aproveitar todos os recursos do FinApp, siga esta sequencia ao configurar a plataforma pela primeira vez:
+Ao usar o FinApp pela primeira vez, siga esta sequência para aproveitar todos os recursos desde o início:
 
-| Ordem | Acao | Por que |
-|:-----:|------|---------|
-| 1 | Cadastre suas **contas** | Sao a base para todas as movimentacoes |
-| 2 | Revise as **categorias** | As categorias padrao sao um bom comeco — ajuste conforme sua realidade |
-| 3 | Configure o **dia de fechamento** | Se seu ciclo financeiro nao comeca no dia 1, ajuste em Configuracoes |
-| 4 | Cadastre as **recorrentes** | Registre receitas fixas (salario) e despesas fixas (aluguel, planos). Isso alimenta as projecoes |
-| 5 | Registre suas **transacoes** | A cada gasto ou recebimento, registre. Use a importacao (OFX, CSV ou PDF) para agilizar |
-| 6 | Cadastre seus **investimentos** | Registre os investimentos e atualize os saldos mensalmente |
-
----
-
-## 12 Uso no Dia a Dia
-
-| Rotina | Frequencia sugerida | O que fazer |
-|--------|---------------------|-------------|
-| Consultar o Dashboard | Diariamente | Visao rapida de receitas, despesas e saldo do mes |
-| Registrar transacoes | A cada movimentacao | Manter os dados sempre atualizados |
-| Importar extrato | Semanalmente | Importar transacoes do banco (OFX, CSV ou PDF) sem digitacao manual |
-| Consultar o Fluxo Diario | Quando necessario | Ver o saldo projetado para dias especificos |
-| Consultar o Fluxo Previsto | Mensalmente | Planejar os proximos 3 meses |
-| Atualizar investimentos | Mensalmente | Registrar aportes, resgates ou atualizar saldo |
-| Revisar fechamento mensal | Mensalmente | Usar o botao "Revisar mes" no Dashboard para avaliar desvios e ajustar planejamento |
-| Verificar recorrencias sugeridas | Mensalmente | Conferir se o sistema detectou padroes que devem virar transacoes recorrentes |
-| Perguntar ao Assistente IA | Quando quiser | Obter diagnosticos e orientacoes personalizadas |
+| Ordem | Ação | Por que fazer isso primeiro |
+|:-----:|------|-----------------------------|
+| 1 | **Configurações > Geral** — Ajuste o dia de fechamento e a meta de reserva | Define o período que o sistema usará em todos os cálculos |
+| 2 | **Contas** — Cadastre suas contas com saldo inicial real | São a base de todas as movimentações |
+| 3 | **Configurações > Categorias** — Revise e ajuste as categorias padrão | As categorias padrão são um bom começo; adicione as que faltam e configure os tetos de orçamento |
+| 4 | **Recorrentes** — Cadastre receitas fixas (salário) e despesas fixas (aluguel, planos, financiamentos) | Alimenta as projeções do Fluxo Previsto e o comparativo Previsto vs Realizado |
+| 5 | **Configurações > Regras de Importação** — Crie as regras de categorização | Automatiza a categorização ao importar extratos |
+| 6 | **Transações > Importar** — Importe o extrato do mês atual | Preenche o histórico sem precisar digitar cada lançamento |
+| 7 | **Metas** — Cadastre seus objetivos financeiros | O sistema passa a monitorar e projetar o progresso |
+| 8 | **Dívidas** — Registre suas dívidas ativas | Consolida o passivo e habilita os simuladores de quitação |
+| 9 | **Investimentos** — Cadastre sua carteira | Ativa o cálculo de retorno real e o widget do Dashboard |
 
 ---
 
-**FinApp** — Gestao Financeira Pessoal
-*Versao 2.0 — Fevereiro 2026*
+## 16 Rotina Diária e Mensal
+
+### Rotina diária (5 minutos)
+
+| O que fazer | Onde |
+|-------------|------|
+| Registrar as transações do dia | Dashboard (atalho + Receita / + Despesa) ou página Transações |
+| Conferir o saldo do mês | Dashboard > Cards de resumo |
+| Verificar alertas de orçamento | Dashboard > Insights proativos |
+
+### Rotina semanal (10 minutos)
+
+| O que fazer | Onde |
+|-------------|------|
+| Importar o extrato bancário | Transações > Importar |
+| Verificar o Fluxo Diário | Fluxo > Fluxo Diário |
+
+### Rotina mensal (20–30 minutos)
+
+| O que fazer | Onde |
+|-------------|------|
+| Fechar o mês | Dashboard > **Revisar mês** |
+| Analisar os desvios por categoria | Dashboard > Previsto vs Realizado |
+| Verificar a evolução dos KPIs | Página Histórico |
+| Confirmar ou criar recorrências sugeridas | Dashboard > Widget Recorrências Sugeridas |
+| Atualizar saldos dos investimentos | Investimentos > Lançamentos |
+| Conferir o progresso das metas | Metas |
+| Usar o Assistente IA para diagnóstico mensal | Assistente IA > "Como foi meu mês financeiro?" |
+| Planejar os próximos 3 meses | Fluxo > Fluxo Previsto |
+
+---
+
+## Dicas rápidas
+
+| Situação | O que fazer |
+|----------|------------|
+| Saldo da conta divergiu do banco | Contas > ícone de balança > Reconciliação |
+| Não lembro em qual categoria classificar um gasto | Deixe em "Outros" e reclassifique depois pelo lápis na transação |
+| Quero testar "e se eu poupar mais?" | Simuladores > Juros Compostos |
+| Quero entender meu orçamento | Assistente IA: "Quais categorias estão acima do previsto?" |
+| A sidebar está muito cheia | Clique na seta no topo para recolher — ficam apenas ícones |
+| Prefiro interface escura | Configurações > Geral > Tema > Escuro |
+
+---
+
+**FinApp** — Gestão Financeira Pessoal
+*Versão 3.0 — Março 2026*
