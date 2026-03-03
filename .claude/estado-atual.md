@@ -3,7 +3,13 @@
 Ultima atualizacao: 2026-03-02
 
 ## Status
-Build OK. Sidebar refatorada: 12 itens reorganizados em 4 grupos colapsaveis (Movimentacoes, Planejamento, Analise, Ferramentas) + scroll corrigido. Dashboard e Configuracoes permanecem standalone. Revisao de codigo completa — 11 problemas corrigidos. Teste E2E completo: 46/46 passos OK.
+Build OK. Codigo estavel — sem debitos novos. Sessao atual focou em documentacao comercial e de usuario.
+
+Ultima sessao de codigo (2026-03-02): Sidebar refatorada com 4 grupos colapsaveis + scroll corrigido. Revisao de codigo: 11 problemas corrigidos. Teste E2E: 46/46 passos OK.
+
+Documentacao atualizada (2026-03-02):
+- Manual do Usuario v3.0: cobre todas as 12 funcionalidades, fluxo de configuracao inicial, rotina diaria/semanal/mensal, dicas rapidas. Fonte unica: `docs/manual-usuario.md` → gerado via `docs/gerar-manual.py`.
+- Pitch Deck v3.0: 14 slides com narrativa de venda (problema → barreiras → concorrentes → comparativo → solucao → modulos → IA → evidencias → CTA). Fonte: `docs/gerar-pitch.py`.
 
 ## Hipoteses Abertas
 - Nenhuma
