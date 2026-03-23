@@ -79,7 +79,7 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded, onPDFLoaded }: I
 
       onParsed(result, accountId);
     } catch {
-      setError("Erro ao ler o arquivo. Verifique se o formato \u00e9 v\u00e1lido.");
+      setError("Erro ao ler o arquivo. Verifique se o formato é válido.");
     } finally {
       setParsing(false);
     }

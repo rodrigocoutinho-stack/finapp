@@ -14,12 +14,12 @@ interface ImportCSVMappingProps {
 const DATE_PATTERNS = ["data", "date", "dt", "dia"];
 const AMOUNT_PATTERNS = ["valor", "amount", "value", "vlr", "quantia"];
 const DESC_PATTERNS = [
-  "descri\u00e7\u00e3o",
+  "descrição",
   "descricao",
   "description",
   "memo",
   "historico",
-  "hist\u00f3rico",
+  "histórico",
   "detalhe",
 ];
 const TYPE_PATTERNS = ["tipo", "type", "natureza", "d/c", "dc"];
@@ -112,7 +112,7 @@ export function ImportCSVMapping({
       <div className="max-w-3xl mx-auto">
         <div className="bg-card rounded-xl shadow-sm border border-border p-6">
           <p className="text-sm text-red-600 dark:text-red-400">
-            Nenhum cabe\u00e7alho encontrado no arquivo CSV.
+            Nenhum cabeçalho encontrado no arquivo CSV.
           </p>
           <Button variant="secondary" onClick={onBack} className="mt-4">
             Voltar
@@ -202,7 +202,7 @@ export function ImportCSVMapping({
             required
           />
           <MappingSelect
-            label="Coluna de descri\u00e7\u00e3o *"
+            label="Coluna de descrição *"
             value={descCol}
             onChange={setDescCol}
             options={columnOptions}
@@ -219,7 +219,7 @@ export function ImportCSVMapping({
 
         {!isValid && (
           <p className="text-sm text-amber-600">
-            Selecione as colunas obrigat\u00f3rias (data, valor e descri\u00e7\u00e3o) para continuar.
+            Selecione as colunas obrigatórias (data, valor e descrição) para continuar.
           </p>
         )}
 
@@ -277,7 +277,7 @@ function MappingSelect({
         onChange={(e) => onChange(parseInt(e.target.value, 10))}
       >
         <option value={-1}>
-          {optional ? "N\u00e3o mapear" : "Selecione..."}
+          {optional ? "Não mapear" : "Selecione..."}
         </option>
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>

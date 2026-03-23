@@ -155,12 +155,12 @@ export default function ImportarPage() {
     ? [
         { key: "upload", label: "Upload" },
         { key: "csv-mapping", label: "Mapeamento" },
-        { key: "review", label: "Revis\u00e3o" },
+        { key: "review", label: "Revisão" },
         { key: "summary", label: "Resumo" },
       ]
     : [
         { key: "upload", label: "Upload" },
-        { key: "review", label: "Revis\u00e3o" },
+        { key: "review", label: "Revisão" },
         { key: "summary", label: "Resumo" },
       ];
   const currentIndex = steps.findIndex((s) => s.key === step);
@@ -168,14 +168,14 @@ export default function ImportarPage() {
   return (
     <div>
       <PageHeader
-        title="Importar Transa\u00e7\u00f5es"
+        title="Importar Transações"
         description="Importe transações de extratos bancários (OFX/QFX), planilhas (CSV) ou faturas em PDF."
         action={
           <button
             onClick={() => router.push("/transacoes")}
             className="text-sm text-on-surface-muted hover:text-on-surface"
           >
-            Voltar para Transa\u00e7\u00f5es
+            Voltar para Transações
           </button>
         }
       />
