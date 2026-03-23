@@ -32,6 +32,7 @@ export function detectRecurrences(
   >();
 
   for (const t of transactions) {
+    if (t.type === "transferencia") continue; // transfers are not recurring income/expense
     const key = normalizeDescription(t.description);
     if (!groups.has(key)) {
       groups.set(key, { original: t.description, type: t.type, entries: [] });

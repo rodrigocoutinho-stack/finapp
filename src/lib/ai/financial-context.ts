@@ -60,8 +60,15 @@ export function buildFinancialContext(data: FinancialData): string {
       string,
       { type: string; total: number; count: number }
     >();
+    let transferCount = 0;
+    let transferTotal = 0;
     for (const t of data.recentTransactions) {
-      const cat = categoryMap.get(t.category_id);
+      if (t.type === "transferencia") {
+        transferCount++;
+        transferTotal += t.amount_cents;
+        continue;
+      }
+      const cat = t.category_id ? categoryMap.get(t.category_id) : null;
       const key = cat ? cat.name : "Sem categoria";
       const existing = grouped.get(key);
       if (existing) {
@@ -100,6 +107,9 @@ export function buildFinancialContext(data: FinancialData): string {
         .reduce((s, t) => s + t.amount_cents, 0);
       transSection += `\nDespesas (${formatCurrency(totalDesp)}):\n${despesas.join("\n")}`;
     }
+    if (transferCount > 0) {
+      transSection += `\nTransferências entre contas: ${formatCurrency(transferTotal)} (${transferCount}x) — não contabilizadas como receita/despesa`;
+    }
     sections.push(transSection);
   }
 
@@ -111,7 +121,10 @@ export function buildFinancialContext(data: FinancialData): string {
     }
 
     const recLines = data.recurringTransactions.map((r) => {
-      const cat = categoryMap.get(r.category_id);
+      if (r.type === "transferencia") {
+        return `- ${r.description} (Transferência, dia ${r.day_of_month}): ${formatCurrency(r.amount_cents)} [transferencia]`;
+      }
+      const cat = r.category_id ? categoryMap.get(r.category_id) : null;
       const catName = cat ? cat.name : "?";
       return `- ${r.description} (${catName}, dia ${r.day_of_month}): ${formatCurrency(r.amount_cents)} [${r.type}]`;
     });
@@ -122,10 +135,15 @@ export function buildFinancialContext(data: FinancialData): string {
     const totalRecDespesas = data.recurringTransactions
       .filter((r) => r.type === "despesa")
       .reduce((s, r) => s + r.amount_cents, 0);
+    const totalRecTransfers = data.recurringTransactions
+      .filter((r) => r.type === "transferencia")
+      .reduce((s, r) => s + r.amount_cents, 0);
 
-    sections.push(
-      `\n## RECORRENTES ATIVAS\n${recLines.join("\n")}\nTotal receitas recorrentes: ${formatCurrency(totalRecReceitas)}\nTotal despesas recorrentes: ${formatCurrency(totalRecDespesas)}`
-    );
+    let recSection = `\n## RECORRENTES ATIVAS\n${recLines.join("\n")}\nTotal receitas recorrentes: ${formatCurrency(totalRecReceitas)}\nTotal despesas recorrentes: ${formatCurrency(totalRecDespesas)}`;
+    if (totalRecTransfers > 0) {
+      recSection += `\nTotal transferências recorrentes: ${formatCurrency(totalRecTransfers)}`;
+    }
+    sections.push(recSection);
   }
 
   // --- PROJEÇÃO (forecast) ---

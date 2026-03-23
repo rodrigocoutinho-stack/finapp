@@ -14,6 +14,7 @@ import type { Account, Category, Transaction } from "@/types/database";
 interface TransactionWithRelations extends Transaction {
   accounts: { name: string } | null;
   categories: { name: string } | null;
+  destination_accounts: { name: string } | null;
 }
 
 interface TransactionListProps {
@@ -41,21 +42,41 @@ export function TransactionList({
     if (!deletingTransaction) return;
     setDeleteLoading(true);
 
-    // Revert balance atomically
-    const delta =
-      deletingTransaction.type === "receita"
-        ? -deletingTransaction.amount_cents
-        : deletingTransaction.amount_cents;
-    const { error: rpcError } = await supabase.rpc("adjust_account_balance", {
-      p_account_id: deletingTransaction.account_id,
-      p_delta: delta,
-    });
+    if (deletingTransaction.type === "transferencia") {
+      // Revert transfer: +amount on origin, -amount on destination
+      const [revertOrigin, revertDest] = await Promise.all([
+        supabase.rpc("adjust_account_balance", {
+          p_account_id: deletingTransaction.account_id,
+          p_delta: deletingTransaction.amount_cents,
+        }),
+        supabase.rpc("adjust_account_balance", {
+          p_account_id: deletingTransaction.destination_account_id!,
+          p_delta: -deletingTransaction.amount_cents,
+        }),
+      ]);
+      if (revertOrigin.error || revertDest.error) {
+        addToast("Erro ao ajustar saldo das contas.", "error");
+        setDeleteLoading(false);
+        setDeletingTransaction(null);
+        return;
+      }
+    } else {
+      // Revert balance atomically
+      const delta =
+        deletingTransaction.type === "receita"
+          ? -deletingTransaction.amount_cents
+          : deletingTransaction.amount_cents;
+      const { error: rpcError } = await supabase.rpc("adjust_account_balance", {
+        p_account_id: deletingTransaction.account_id,
+        p_delta: delta,
+      });
 
-    if (rpcError) {
-      addToast("Erro ao ajustar saldo da conta.", "error");
-      setDeleteLoading(false);
-      setDeletingTransaction(null);
-      return;
+      if (rpcError) {
+        addToast("Erro ao ajustar saldo da conta.", "error");
+        setDeleteLoading(false);
+        setDeletingTransaction(null);
+        return;
+      }
     }
 
     const { error: deleteError } = await supabase
@@ -65,14 +86,27 @@ export function TransactionList({
 
     if (deleteError) {
       // Revert: re-apply the balance that was just removed
-      const reverseDelta =
-        deletingTransaction.type === "receita"
-          ? deletingTransaction.amount_cents
-          : -deletingTransaction.amount_cents;
-      await supabase.rpc("adjust_account_balance", {
-        p_account_id: deletingTransaction.account_id,
-        p_delta: reverseDelta,
-      });
+      if (deletingTransaction.type === "transferencia") {
+        await Promise.all([
+          supabase.rpc("adjust_account_balance", {
+            p_account_id: deletingTransaction.account_id,
+            p_delta: -deletingTransaction.amount_cents,
+          }),
+          supabase.rpc("adjust_account_balance", {
+            p_account_id: deletingTransaction.destination_account_id!,
+            p_delta: deletingTransaction.amount_cents,
+          }),
+        ]);
+      } else {
+        const reverseDelta =
+          deletingTransaction.type === "receita"
+            ? deletingTransaction.amount_cents
+            : -deletingTransaction.amount_cents;
+        await supabase.rpc("adjust_account_balance", {
+          p_account_id: deletingTransaction.account_id,
+          p_delta: reverseDelta,
+        });
+      }
       addToast("Erro ao excluir transação.", "error");
       setDeleteLoading(false);
       setDeletingTransaction(null);
@@ -105,14 +139,20 @@ export function TransactionList({
       key: "category",
       header: "Categoria",
       render: (t: TransactionWithRelations) => (
-        <span className="text-on-surface-secondary">{t.categories?.name ?? "-"}</span>
+        <span className="text-on-surface-secondary">
+          {t.type === "transferencia" ? "Transferência" : (t.categories?.name ?? "-")}
+        </span>
       ),
     },
     {
       key: "account",
       header: "Conta",
       render: (t: TransactionWithRelations) => (
-        <span className="text-on-surface-secondary">{t.accounts?.name ?? "-"}</span>
+        <span className="text-on-surface-secondary">
+          {t.type === "transferencia"
+            ? `${t.accounts?.name ?? "-"} → ${t.destination_accounts?.name ?? "-"}`
+            : (t.accounts?.name ?? "-")}
+        </span>
       ),
     },
     {
@@ -123,10 +163,14 @@ export function TransactionList({
       render: (t: TransactionWithRelations) => (
         <span
           className={`font-medium ${
-            t.type === "receita" ? "text-emerald-600" : "text-rose-600"
+            t.type === "receita"
+              ? "text-emerald-600"
+              : t.type === "transferencia"
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-rose-600"
           }`}
         >
-          {t.type === "receita" ? "+" : "-"} {formatCurrency(t.amount_cents)}
+          {t.type === "receita" ? "+" : t.type === "transferencia" ? "" : "-"} {formatCurrency(t.amount_cents)}
         </span>
       ),
     },
@@ -187,8 +231,10 @@ export function TransactionList({
       >
         <p className="text-on-surface-secondary mb-6">
           Tem certeza que deseja excluir a transação{" "}
-          <strong>{deletingTransaction?.description}</strong>? O saldo da conta
-          será ajustado automaticamente.
+          <strong>{deletingTransaction?.description}</strong>?{" "}
+          {deletingTransaction?.type === "transferencia"
+            ? "Os saldos de ambas as contas serão ajustados automaticamente."
+            : "O saldo da conta será ajustado automaticamente."}
         </p>
         <div className="flex gap-3 justify-end">
           <Button variant="secondary" onClick={() => setDeletingTransaction(null)}>

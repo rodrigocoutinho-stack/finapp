@@ -27,14 +27,16 @@ interface TransactionWithRelations {
   id: string;
   user_id: string;
   account_id: string;
-  category_id: string;
-  type: "receita" | "despesa";
+  category_id: string | null;
+  destination_account_id: string | null;
+  type: "receita" | "despesa" | "transferencia";
   amount_cents: number;
   description: string;
   date: string;
   created_at: string;
   accounts: { name: string } | null;
   categories: { name: string } | null;
+  destination_accounts: { name: string } | null;
 }
 
 export default function TransacoesPage() {
@@ -60,7 +62,7 @@ function TransacoesContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [formDefaultType, setFormDefaultType] = useState<"receita" | "despesa" | undefined>();
+  const [formDefaultType, setFormDefaultType] = useState<"receita" | "despesa" | "transferencia" | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -85,11 +87,11 @@ function TransacoesContent() {
     });
   }, []);
 
-  // Auto-open form from query param (?novo=receita|despesa)
+  // Auto-open form from query param (?novo=receita|despesa|transferencia)
   const novoParam = searchParams.get("novo");
 
   useEffect(() => {
-    if ((novoParam === "receita" || novoParam === "despesa") && !loading) {
+    if ((novoParam === "receita" || novoParam === "despesa" || novoParam === "transferencia") && !loading) {
       setFormDefaultType(novoParam);
       setShowForm(true);
       router.replace("/transacoes", { scroll: false });
@@ -130,7 +132,7 @@ function TransacoesContent() {
     (start: string, end: string) => {
       let query = supabase
         .from("transactions")
-        .select("*, accounts(name), categories(name)", { count: "exact" })
+        .select("*, accounts:accounts!account_id(name), categories(name), destination_accounts:accounts!destination_account_id(name)", { count: "exact" })
         .gte("date", start)
         .lte("date", end)
         .order("date", { ascending: false });
@@ -141,7 +143,7 @@ function TransacoesContent() {
       if (filters.accountId) {
         query = query.eq("account_id", filters.accountId);
       }
-      if (filters.type === "receita" || filters.type === "despesa") {
+      if (filters.type === "receita" || filters.type === "despesa" || filters.type === "transferencia") {
         query = query.eq("type", filters.type);
       }
       if (filters.search) {
@@ -200,9 +202,14 @@ function TransacoesContent() {
       const columns: CsvColumn<TransactionWithRelations>[] = [
         { header: "Data", accessor: (r) => formatDate(r.date) },
         { header: "Descrição", accessor: (r) => r.description },
-        { header: "Tipo", accessor: (r) => r.type === "receita" ? "Receita" : "Despesa" },
+        {
+          header: "Tipo",
+          accessor: (r) =>
+            r.type === "receita" ? "Receita" : r.type === "transferencia" ? "Transferência" : "Despesa",
+        },
         { header: "Valor", accessor: (r) => (r.amount_cents / 100).toFixed(2).replace(".", ",") },
         { header: "Conta", accessor: (r) => r.accounts?.name ?? "" },
+        { header: "Conta Destino", accessor: (r) => r.destination_accounts?.name ?? "" },
         { header: "Categoria", accessor: (r) => r.categories?.name ?? "" },
       ];
 

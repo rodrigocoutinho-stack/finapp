@@ -14,8 +14,9 @@ import type { Account } from "@/types/database";
 
 interface TransactionSummary {
   account_id: string;
-  type: "receita" | "despesa";
+  type: "receita" | "despesa" | "transferencia";
   amount_cents: number;
+  destination_account_id?: string | null;
 }
 
 export default function ContasPage() {
@@ -37,7 +38,7 @@ export default function ContasPage() {
         .order("created_at", { ascending: true }),
       supabase
         .from("transactions")
-        .select("account_id, type, amount_cents")
+        .select("account_id, type, amount_cents, destination_account_id")
         .limit(10000),
     ]);
 

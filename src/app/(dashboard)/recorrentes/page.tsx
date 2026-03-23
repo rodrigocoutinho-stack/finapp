@@ -17,6 +17,7 @@ const PAGE_SIZE = 50;
 interface RecurringWithRelations extends RecurringTransaction {
   accounts: { name: string } | null;
   categories: { name: string } | null;
+  destination_accounts: { name: string } | null;
 }
 
 function RecorrentesContent() {
@@ -36,8 +37,8 @@ function RecorrentesContent() {
   const initialDescription = rawDesc ? rawDesc.slice(0, 200) : undefined;
 
   const rawTipo = searchParams.get("tipo");
-  const initialType: "receita" | "despesa" | undefined =
-    rawTipo === "receita" || rawTipo === "despesa" ? rawTipo : undefined;
+  const initialType: "receita" | "despesa" | "transferencia" | undefined =
+    rawTipo === "receita" || rawTipo === "despesa" || rawTipo === "transferencia" ? rawTipo : undefined;
 
   const rawValor = searchParams.get("valor");
   const parsedValor = rawValor ? parseInt(rawValor, 10) : NaN;
@@ -58,7 +59,7 @@ function RecorrentesContent() {
     const [recRes, accRes, catRes] = await Promise.all([
       supabase
         .from("recurring_transactions")
-        .select("*, accounts(name), categories(name)", { count: "exact" })
+        .select("*, accounts:accounts!account_id(name), categories(name), destination_accounts:accounts!destination_account_id(name)", { count: "exact" })
         .order("day_of_month")
         .range(from, to),
       supabase.from("accounts").select("*").order("name"),

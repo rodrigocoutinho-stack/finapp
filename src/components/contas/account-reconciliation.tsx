@@ -9,8 +9,9 @@ import type { Account } from "@/types/database";
 
 interface TransactionSummary {
   account_id: string;
-  type: "receita" | "despesa";
+  type: "receita" | "despesa" | "transferencia";
   amount_cents: number;
+  destination_account_id?: string | null;
 }
 
 interface AccountReconciliationProps {
@@ -39,11 +40,17 @@ export function AccountReconciliation({
       (t) => t.account_id === account.id
     );
     const txnSum = accountTxns.reduce(
-      (sum, t) =>
-        sum + (t.type === "receita" ? t.amount_cents : -t.amount_cents),
+      (sum, t) => {
+        if (t.type === "transferencia") return sum - t.amount_cents;
+        return sum + (t.type === "receita" ? t.amount_cents : -t.amount_cents);
+      },
       0
     );
-    const calculatedBalance = account.initial_balance_cents + txnSum;
+    // Add transfers where this account is the destination
+    const destSum = transactions
+      .filter((t) => t.type === "transferencia" && t.destination_account_id === account.id)
+      .reduce((sum, t) => sum + t.amount_cents, 0);
+    const calculatedBalance = account.initial_balance_cents + txnSum + destSum;
     const divergence = account.balance_cents - calculatedBalance;
 
     return { account, calculatedBalance, divergence };

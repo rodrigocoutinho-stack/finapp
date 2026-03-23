@@ -89,6 +89,7 @@ export function TransactionFilters({
         <option value="">Todos tipos</option>
         <option value="receita">Receita</option>
         <option value="despesa">Despesa</option>
+        <option value="transferencia">Transferência</option>
       </select>
 
       {hasActiveFilter && (

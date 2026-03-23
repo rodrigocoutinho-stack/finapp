@@ -112,8 +112,9 @@ export type Database = {
           id: string;
           user_id: string;
           account_id: string;
-          category_id: string;
-          type: "receita" | "despesa";
+          category_id: string | null;
+          destination_account_id: string | null;
+          type: "receita" | "despesa" | "transferencia";
           amount_cents: number;
           description: string;
           date: string;
@@ -123,8 +124,9 @@ export type Database = {
           id?: string;
           user_id: string;
           account_id: string;
-          category_id: string;
-          type: "receita" | "despesa";
+          category_id?: string | null;
+          destination_account_id?: string | null;
+          type: "receita" | "despesa" | "transferencia";
           amount_cents: number;
           description: string;
           date: string;
@@ -134,8 +136,9 @@ export type Database = {
           id?: string;
           user_id?: string;
           account_id?: string;
-          category_id?: string;
-          type?: "receita" | "despesa";
+          category_id?: string | null;
+          destination_account_id?: string | null;
+          type?: "receita" | "despesa" | "transferencia";
           amount_cents?: number;
           description?: string;
           date?: string;
@@ -163,6 +166,13 @@ export type Database = {
             referencedRelation: "categories";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "transactions_destination_account_id_fkey";
+            columns: ["destination_account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
         ];
       };
       recurring_transactions: {
@@ -170,8 +180,9 @@ export type Database = {
           id: string;
           user_id: string;
           account_id: string;
-          category_id: string;
-          type: "receita" | "despesa";
+          category_id: string | null;
+          destination_account_id: string | null;
+          type: "receita" | "despesa" | "transferencia";
           amount_cents: number;
           description: string;
           day_of_month: number;
@@ -184,8 +195,9 @@ export type Database = {
           id?: string;
           user_id: string;
           account_id: string;
-          category_id: string;
-          type: "receita" | "despesa";
+          category_id?: string | null;
+          destination_account_id?: string | null;
+          type: "receita" | "despesa" | "transferencia";
           amount_cents: number;
           description: string;
           day_of_month: number;
@@ -198,8 +210,9 @@ export type Database = {
           id?: string;
           user_id?: string;
           account_id?: string;
-          category_id?: string;
-          type?: "receita" | "despesa";
+          category_id?: string | null;
+          destination_account_id?: string | null;
+          type?: "receita" | "despesa" | "transferencia";
           amount_cents?: number;
           description?: string;
           day_of_month?: number;
@@ -228,6 +241,13 @@ export type Database = {
             columns: ["category_id"];
             isOneToOne: false;
             referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recurring_transactions_destination_account_id_fkey";
+            columns: ["destination_account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
             referencedColumns: ["id"];
           },
         ];

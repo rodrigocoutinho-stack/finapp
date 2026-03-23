@@ -89,12 +89,14 @@ export async function calculateForecast(
           .from("recurring_transactions")
           .select("*, categories(name)")
           .eq("is_active", true)
+          .neq("type", "transferencia")
           .limit(1000),
         getHistoricalTransactions(supabase, closingDay),
         includeCurrentMonth
           ? supabase
               .from("transactions")
               .select("category_id, type, amount_cents, date")
+              .neq("type", "transferencia")
               .gte("date", currentRange.start)
               .lte("date", todayStr)
               .limit(5000)
@@ -354,6 +356,7 @@ async function getHistoricalTransactions(
   const { data } = await supabase
     .from("transactions")
     .select("category_id, type, amount_cents, date")
+    .neq("type", "transferencia")
     .gte("date", startRange.start)
     .lte("date", endRange.end);
 

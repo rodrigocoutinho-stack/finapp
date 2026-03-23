@@ -12,7 +12,10 @@ import type { Account, Category, RecurringTransaction } from "@/types/database";
 const transactionTypeOptions = [
   { value: "despesa", label: "Despesa" },
   { value: "receita", label: "Receita" },
+  { value: "transferencia", label: "Transferência" },
 ];
+
+type TransactionType = "receita" | "despesa" | "transferencia";
 
 const scheduleTypeOptions = [
   { value: "recurring", label: "Recorrente (sem prazo)" },
@@ -35,7 +38,7 @@ interface RecurringFormProps {
   onCancel: () => void;
   initialDescription?: string;
   initialAmountCents?: number;
-  initialType?: "receita" | "despesa";
+  initialType?: TransactionType;
   initialDay?: number;
 }
 
@@ -51,7 +54,7 @@ export function RecurringForm({
   initialDay,
 }: RecurringFormProps) {
   const supabase = createClient();
-  const [type, setType] = useState<"receita" | "despesa">(
+  const [type, setType] = useState<TransactionType>(
     recurring?.type ?? initialType ?? "despesa"
   );
   const [amount, setAmount] = useState(
@@ -62,6 +65,9 @@ export function RecurringForm({
         : ""
   );
   const [accountId, setAccountId] = useState(recurring?.account_id ?? "");
+  const [destinationAccountId, setDestinationAccountId] = useState(
+    recurring?.destination_account_id ?? ""
+  );
   const [categoryId, setCategoryId] = useState(recurring?.category_id ?? "");
   const [description, setDescription] = useState(recurring?.description ?? initialDescription ?? "");
   const [dayOfMonth, setDayOfMonth] = useState(
@@ -77,12 +83,20 @@ export function RecurringForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
 
+  const isTransfer = type === "transferencia";
   const filteredCategories = categories.filter((c) => c.type === type);
 
   const accountOptions = accounts.map((a) => ({
     value: a.id,
     label: `${a.name} (${formatCurrency(a.balance_cents)})`,
   }));
+
+  const destinationAccountOptions = accounts
+    .filter((a) => a.id !== accountId)
+    .map((a) => ({
+      value: a.id,
+      label: `${a.name} (${formatCurrency(a.balance_cents)})`,
+    }));
 
   const categoryOptions = filteredCategories.map((c) => ({
     value: c.id,
@@ -129,8 +143,17 @@ export function RecurringForm({
       newErrors.account = "Selecione uma conta.";
     }
 
-    if (!categoryId) {
-      newErrors.category = "Selecione uma categoria.";
+    if (isTransfer) {
+      if (!destinationAccountId) {
+        newErrors.destinationAccount = "Selecione a conta de destino.";
+      }
+      if (destinationAccountId && destinationAccountId === accountId) {
+        newErrors.destinationAccount = "A conta de destino deve ser diferente da conta de origem.";
+      }
+    } else {
+      if (!categoryId) {
+        newErrors.category = "Selecione uma categoria.";
+      }
     }
 
     const day = parseInt(dayOfMonth, 10);
@@ -176,7 +199,8 @@ export function RecurringForm({
           type,
           amount_cents: amountCents,
           account_id: accountId,
-          category_id: categoryId,
+          category_id: isTransfer ? null : categoryId,
+          destination_account_id: isTransfer ? destinationAccountId : null,
           description,
           day_of_month: day,
           is_active: isActive,
@@ -195,7 +219,8 @@ export function RecurringForm({
         type,
         amount_cents: amountCents,
         account_id: accountId,
-        category_id: categoryId,
+        category_id: isTransfer ? null : categoryId,
+        destination_account_id: isTransfer ? destinationAccountId : null,
         description,
         day_of_month: day,
         is_active: isActive,
@@ -225,8 +250,14 @@ export function RecurringForm({
         label="Tipo"
         value={type}
         onChange={(e) => {
-          setType(e.target.value as "receita" | "despesa");
-          setCategoryId("");
+          const newType = e.target.value as TransactionType;
+          setType(newType);
+          if (newType === "transferencia") {
+            setCategoryId("");
+          } else {
+            setCategoryId("");
+            setDestinationAccountId("");
+          }
         }}
         options={transactionTypeOptions}
         required
@@ -244,32 +275,51 @@ export function RecurringForm({
 
       <Select
         id="account"
-        label="Conta"
+        label={isTransfer ? "Conta de origem" : "Conta"}
         value={accountId}
-        onChange={(e) => { setAccountId(e.target.value); clearFieldError("account"); }}
+        onChange={(e) => {
+          setAccountId(e.target.value);
+          clearFieldError("account");
+          if (e.target.value === destinationAccountId) {
+            setDestinationAccountId("");
+          }
+        }}
         options={accountOptions}
         placeholder="Selecione a conta"
         error={errors.account}
         required
       />
 
-      <Select
-        id="category"
-        label="Categoria"
-        value={categoryId}
-        onChange={(e) => { setCategoryId(e.target.value); clearFieldError("category"); }}
-        options={categoryOptions}
-        placeholder="Selecione a categoria"
-        error={errors.category}
-        required
-      />
+      {isTransfer ? (
+        <Select
+          id="destinationAccount"
+          label="Conta de destino"
+          value={destinationAccountId}
+          onChange={(e) => { setDestinationAccountId(e.target.value); clearFieldError("destinationAccount"); }}
+          options={destinationAccountOptions}
+          placeholder="Selecione a conta de destino"
+          error={errors.destinationAccount}
+          required
+        />
+      ) : (
+        <Select
+          id="category"
+          label="Categoria"
+          value={categoryId}
+          onChange={(e) => { setCategoryId(e.target.value); clearFieldError("category"); }}
+          options={categoryOptions}
+          placeholder="Selecione a categoria"
+          error={errors.category}
+          required
+        />
+      )}
 
       <Input
         id="description"
         label="Descrição"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="Ex: Salário, Aluguel, Viagem"
+        placeholder={isTransfer ? "Ex: Pagamento fatura cartão" : "Ex: Salário, Aluguel, Viagem"}
         maxLength={500}
         required
       />

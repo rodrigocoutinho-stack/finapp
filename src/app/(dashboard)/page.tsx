@@ -13,15 +13,32 @@ const CategoryChart = dynamic(
   { ssr: false, loading: () => <div className="h-48 animate-pulse bg-tab-bg rounded-lg" /> }
 );
 import { MonthPicker } from "@/components/dashboard/month-picker";
-import { InvestmentSummary } from "@/components/dashboard/investment-summary";
 import { BudgetComparison } from "@/components/dashboard/budget-comparison";
 import { GreetingHeader } from "@/components/layout/greeting-header";
 import { Modal } from "@/components/ui/modal";
-import { MonthlyClosing } from "@/components/dashboard/monthly-closing";
-import { RecurrenceSuggestions } from "@/components/dashboard/recurrence-suggestions";
-import { GoalsSummary } from "@/components/dashboard/goals-summary";
-import { DebtSummary } from "@/components/dashboard/debt-summary";
 import { detectRecurrences, type RecurrenceSuggestion } from "@/lib/recurrence-detection";
+
+// Lazy-load components below the fold
+const InvestmentSummary = dynamic(
+  () => import("@/components/dashboard/investment-summary").then((mod) => mod.InvestmentSummary),
+  { ssr: false, loading: () => <div className="h-32 animate-pulse bg-tab-bg rounded-xl" /> }
+);
+const MonthlyClosing = dynamic(
+  () => import("@/components/dashboard/monthly-closing").then((mod) => mod.MonthlyClosing),
+  { ssr: false }
+);
+const RecurrenceSuggestions = dynamic(
+  () => import("@/components/dashboard/recurrence-suggestions").then((mod) => mod.RecurrenceSuggestions),
+  { ssr: false, loading: () => <div className="h-24 animate-pulse bg-tab-bg rounded-xl" /> }
+);
+const GoalsSummary = dynamic(
+  () => import("@/components/dashboard/goals-summary").then((mod) => mod.GoalsSummary),
+  { ssr: false, loading: () => <div className="h-24 animate-pulse bg-tab-bg rounded-xl" /> }
+);
+const DebtSummary = dynamic(
+  () => import("@/components/dashboard/debt-summary").then((mod) => mod.DebtSummary),
+  { ssr: false, loading: () => <div className="h-24 animate-pulse bg-tab-bg rounded-xl" /> }
+);
 
 import { CardsSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
@@ -35,12 +52,14 @@ import type { Account, Debt, Goal, InvestmentEntry, Transaction, RecurringTransa
 
 interface TransactionRow {
   id: string;
-  type: "receita" | "despesa";
+  type: "receita" | "despesa" | "transferencia";
   amount_cents: number;
   description: string;
   date: string;
   categories: { name: string } | null;
   accounts: { name: string } | null;
+  destination_account_id: string | null;
+  destination_accounts: { name: string } | null;
 }
 
 interface InvestmentData {
@@ -150,10 +169,14 @@ export default function DashboardPage() {
     const annualEndRange = getMonthRange(annualEndYear, annualEndMonth, closingDay);
 
     try {
-    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes, allTxnSummaryRes, debtsRes, closingRes, prevClosingRes, past3mRes, existingRecRes, pastReceitasRes, annualRes] = await Promise.all([
+    // Reconciliation: use 6-month window instead of all-time .limit(10000)
+    const reconDate = new Date(curYear, curMonth - 6, 1);
+    const reconStart = `${reconDate.getFullYear()}-${String(reconDate.getMonth() + 1).padStart(2, "0")}-01`;
+
+    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes, reconTxnRes, debtsRes, closingRes, prevClosingRes, past3mFullRes, existingRecRes, annualRes] = await Promise.all([
       supabase
         .from("transactions")
-        .select("id, type, amount_cents, description, date, categories(name), accounts(name)")
+        .select("id, type, amount_cents, description, date, destination_account_id, categories(name), accounts:accounts!account_id(name), destination_accounts:accounts!destination_account_id(name)")
         .gte("date", start)
         .lte("date", end)
         .order("date", { ascending: false })
@@ -188,10 +211,12 @@ export default function DashboardPage() {
         .select("id")
         .eq("type", "despesa")
         .eq("is_essential", true),
+      // Reconciliation: 6-month window instead of unlimited (was .limit(10000))
       supabase
         .from("transactions")
-        .select("account_id, type, amount_cents")
-        .limit(10000),
+        .select("account_id, type, amount_cents, destination_account_id")
+        .gte("date", reconStart)
+        .limit(5000),
       supabase
         .from("debts")
         .select("*")
@@ -208,7 +233,7 @@ export default function DashboardPage() {
         .select("*")
         .eq("month", prevMonthStr)
         .maybeSingle(),
-      // Conditional queries (recurrence, savings rates, annual provisions)
+      // Combined query: recurrence detection + savings rates (was 2 separate queries)
       isCurrentMonthSelected
         ? supabase
             .from("transactions")
@@ -223,14 +248,6 @@ export default function DashboardPage() {
             .select("*")
             .eq("is_active", true)
             .limit(1000)
-        : Promise.resolve({ data: null }),
-      isCurrentMonthSelected
-        ? supabase
-            .from("transactions")
-            .select("type, amount_cents, date")
-            .gte("date", globalStart)
-            .lte("date", globalEnd)
-            .limit(5000)
         : Promise.resolve({ data: null }),
       isCurrentMonthSelected
         ? supabase
@@ -290,13 +307,20 @@ export default function DashboardPage() {
     // Debts
     setDashDebts((debtsRes.data as Debt[] | null) ?? []);
 
-    // Reconciliation divergence check
-    const allTxnSummary = (allTxnSummaryRes.data ?? []) as { account_id: string; type: string; amount_cents: number }[];
+    // Reconciliation divergence check (6-month window — approximate, not exact)
+    const reconTxns = (reconTxnRes.data ?? []) as { account_id: string; type: string; amount_cents: number; destination_account_id?: string | null }[];
     const hasDivergence = accountsData.some((account) => {
-      const txnSum = allTxnSummary
+      const txnSum = reconTxns
         .filter((t) => t.account_id === account.id)
-        .reduce((sum, t) => sum + (t.type === "receita" ? t.amount_cents : -t.amount_cents), 0);
-      const calculated = account.initial_balance_cents + txnSum;
+        .reduce((sum, t) => {
+          if (t.type === "transferencia") return sum - t.amount_cents;
+          return sum + (t.type === "receita" ? t.amount_cents : -t.amount_cents);
+        }, 0);
+      // Add transfers where this account is the destination
+      const destSum = reconTxns
+        .filter((t) => t.type === "transferencia" && t.destination_account_id === account.id)
+        .reduce((sum, t) => sum + t.amount_cents, 0);
+      const calculated = account.initial_balance_cents + txnSum + destSum;
       return account.balance_cents !== calculated;
     });
     setHasDivergentAccounts(hasDivergence);
@@ -307,15 +331,14 @@ export default function DashboardPage() {
 
     // Recurrence detection + savings rates + annual provisions
     if (isCurrentMonthSelected) {
-      const past3mTransactions = (past3mRes.data as Transaction[] | null) ?? [];
+      const past3mTransactions = (past3mFullRes.data as Transaction[] | null) ?? [];
       const existingRecs = (existingRecRes.data as RecurringTransaction[] | null) ?? [];
       setRecurrenceSuggestions(detectRecurrences(past3mTransactions, existingRecs));
 
-      // Calculate savings rates per past month
-      const pastTxns = (pastReceitasRes.data ?? []) as { type: string; amount_cents: number; date: string }[];
+      // Calculate savings rates per past month (reuse past3mFullRes data)
       const rates: number[] = [];
       for (const range of pastMonthsRanges) {
-        const monthTxns = pastTxns.filter((t) => t.date >= range.start && t.date <= range.end);
+        const monthTxns = past3mTransactions.filter((t) => t.date >= range.start && t.date <= range.end);
         const rec = monthTxns.filter((t) => t.type === "receita").reduce((s, t) => s + t.amount_cents, 0);
         const desp = monthTxns.filter((t) => t.type === "despesa").reduce((s, t) => s + t.amount_cents, 0);
         if (rec > 0) {
@@ -540,6 +563,15 @@ export default function DashboardPage() {
             </svg>
             Despesa
           </Link>
+          <Link
+            href="/transacoes?novo=transferencia"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+            </svg>
+            Transferência
+          </Link>
         </div>
       </div>
 
@@ -662,16 +694,21 @@ export default function DashboardPage() {
                             </p>
                             <p className="text-xs text-on-surface-muted">
                               {formatDate(t.date)} &middot;{" "}
-                              {t.categories?.name ?? "-"} &middot;{" "}
-                              {t.accounts?.name ?? "-"}
+                              {t.type === "transferencia"
+                                ? `${t.accounts?.name ?? "-"} → ${t.destination_accounts?.name ?? "-"}`
+                                : `${t.categories?.name ?? "-"} · ${t.accounts?.name ?? "-"}`}
                             </p>
                           </div>
                           <span
                             className={`text-sm font-semibold tabular-nums ${
-                              t.type === "receita" ? "text-emerald-600" : "text-rose-600"
+                              t.type === "receita"
+                                ? "text-emerald-600"
+                                : t.type === "transferencia"
+                                  ? "text-blue-600 dark:text-blue-400"
+                                  : "text-rose-600"
                             }`}
                           >
-                            {t.type === "receita" ? "+" : "-"}{" "}
+                            {t.type === "receita" ? "+" : t.type === "transferencia" ? "" : "-"}{" "}
                             {formatCurrency(t.amount_cents)}
                           </span>
                         </div>

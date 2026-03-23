@@ -12,13 +12,16 @@ import type { Account, Category, Transaction } from "@/types/database";
 const transactionTypeOptions = [
   { value: "despesa", label: "Despesa" },
   { value: "receita", label: "Receita" },
+  { value: "transferencia", label: "Transferência" },
 ];
+
+type TransactionType = "receita" | "despesa" | "transferencia";
 
 interface TransactionFormProps {
   transaction?: Transaction;
   accounts: Account[];
   categories: Category[];
-  defaultType?: "receita" | "despesa";
+  defaultType?: TransactionType;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -32,13 +35,16 @@ export function TransactionForm({
   onCancel,
 }: TransactionFormProps) {
   const supabase = createClient();
-  const [type, setType] = useState<"receita" | "despesa">(
+  const [type, setType] = useState<TransactionType>(
     transaction?.type ?? defaultType ?? "despesa"
   );
   const [amount, setAmount] = useState(
     transaction ? (transaction.amount_cents / 100).toFixed(2).replace(".", ",") : ""
   );
   const [accountId, setAccountId] = useState(transaction?.account_id ?? "");
+  const [destinationAccountId, setDestinationAccountId] = useState(
+    transaction?.destination_account_id ?? ""
+  );
   const [categoryId, setCategoryId] = useState(transaction?.category_id ?? "");
   const [description, setDescription] = useState(transaction?.description ?? "");
   const [date, setDate] = useState(
@@ -48,12 +54,20 @@ export function TransactionForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
 
+  const isTransfer = type === "transferencia";
   const filteredCategories = categories.filter((c) => c.type === type);
 
   const accountOptions = accounts.map((a) => ({
     value: a.id,
     label: `${a.name} (${formatCurrency(a.balance_cents)})`,
   }));
+
+  const destinationAccountOptions = accounts
+    .filter((a) => a.id !== accountId)
+    .map((a) => ({
+      value: a.id,
+      label: `${a.name} (${formatCurrency(a.balance_cents)})`,
+    }));
 
   const categoryOptions = filteredCategories.map((c) => ({
     value: c.id,
@@ -91,8 +105,17 @@ export function TransactionForm({
       newErrors.account = "Selecione uma conta.";
     }
 
-    if (!categoryId) {
-      newErrors.category = "Selecione uma categoria.";
+    if (isTransfer) {
+      if (!destinationAccountId) {
+        newErrors.destinationAccount = "Selecione a conta de destino.";
+      }
+      if (destinationAccountId && destinationAccountId === accountId) {
+        newErrors.destinationAccount = "A conta de destino deve ser diferente da conta de origem.";
+      }
+    } else {
+      if (!categoryId) {
+        newErrors.category = "Selecione uma categoria.";
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -113,20 +136,39 @@ export function TransactionForm({
     }
 
     if (transaction) {
-      // Revert the old transaction's effect on account balance atomically
-      const oldDelta =
-        transaction.type === "receita"
-          ? -transaction.amount_cents
-          : transaction.amount_cents;
-      const { error: revertError } = await supabase.rpc("adjust_account_balance", {
-        p_account_id: transaction.account_id,
-        p_delta: oldDelta,
-      });
-
-      if (revertError) {
-        setServerError("Erro ao ajustar saldo da conta.");
-        setLoading(false);
-        return;
+      // === EDIT ===
+      // Revert the old transaction's effect on account balance
+      if (transaction.type === "transferencia") {
+        // Revert transfer: +amount on old origin, -amount on old destination
+        const [revertOrigin, revertDest] = await Promise.all([
+          supabase.rpc("adjust_account_balance", {
+            p_account_id: transaction.account_id,
+            p_delta: transaction.amount_cents,
+          }),
+          supabase.rpc("adjust_account_balance", {
+            p_account_id: transaction.destination_account_id!,
+            p_delta: -transaction.amount_cents,
+          }),
+        ]);
+        if (revertOrigin.error || revertDest.error) {
+          setServerError("Erro ao reverter saldo das contas.");
+          setLoading(false);
+          return;
+        }
+      } else {
+        const oldDelta =
+          transaction.type === "receita"
+            ? -transaction.amount_cents
+            : transaction.amount_cents;
+        const { error: revertError } = await supabase.rpc("adjust_account_balance", {
+          p_account_id: transaction.account_id,
+          p_delta: oldDelta,
+        });
+        if (revertError) {
+          setServerError("Erro ao ajustar saldo da conta.");
+          setLoading(false);
+          return;
+        }
       }
 
       // Update transaction
@@ -136,7 +178,8 @@ export function TransactionForm({
           type,
           amount_cents: amountCents,
           account_id: accountId,
-          category_id: categoryId,
+          category_id: isTransfer ? null : categoryId,
+          destination_account_id: isTransfer ? destinationAccountId : null,
           description,
           date,
         })
@@ -148,27 +191,45 @@ export function TransactionForm({
         return;
       }
 
-      // Apply the new transaction's effect on account balance atomically
-      const newDelta = type === "receita" ? amountCents : -amountCents;
-      const { error: applyError } = await supabase.rpc("adjust_account_balance", {
-        p_account_id: accountId,
-        p_delta: newDelta,
-      });
-
-      if (applyError) {
-        setServerError("Transação atualizada, mas houve erro ao ajustar o saldo.");
-        setLoading(false);
-        return;
+      // Apply the new transaction's effect on account balance
+      if (isTransfer) {
+        const [applyOrigin, applyDest] = await Promise.all([
+          supabase.rpc("adjust_account_balance", {
+            p_account_id: accountId,
+            p_delta: -amountCents,
+          }),
+          supabase.rpc("adjust_account_balance", {
+            p_account_id: destinationAccountId,
+            p_delta: amountCents,
+          }),
+        ]);
+        if (applyOrigin.error || applyDest.error) {
+          setServerError("Transação atualizada, mas houve erro ao ajustar os saldos.");
+          setLoading(false);
+          return;
+        }
+      } else {
+        const newDelta = type === "receita" ? amountCents : -amountCents;
+        const { error: applyError } = await supabase.rpc("adjust_account_balance", {
+          p_account_id: accountId,
+          p_delta: newDelta,
+        });
+        if (applyError) {
+          setServerError("Transação atualizada, mas houve erro ao ajustar o saldo.");
+          setLoading(false);
+          return;
+        }
       }
       logAudit(supabase, "transaction.update", "transaction", transaction.id, { type, amount_cents: amountCents, description });
     } else {
-      // Create transaction
+      // === CREATE ===
       const { error } = await supabase.from("transactions").insert({
         user_id: user.id,
         type,
         amount_cents: amountCents,
         account_id: accountId,
-        category_id: categoryId,
+        category_id: isTransfer ? null : categoryId,
+        destination_account_id: isTransfer ? destinationAccountId : null,
         description,
         date,
       });
@@ -179,17 +240,34 @@ export function TransactionForm({
         return;
       }
 
-      // Update account balance atomically
-      const delta = type === "receita" ? amountCents : -amountCents;
-      const { error: balanceError } = await supabase.rpc("adjust_account_balance", {
-        p_account_id: accountId,
-        p_delta: delta,
-      });
-
-      if (balanceError) {
-        setServerError("Transação criada, mas houve erro ao ajustar o saldo.");
-        setLoading(false);
-        return;
+      // Update account balance(s)
+      if (isTransfer) {
+        const [originRes, destRes] = await Promise.all([
+          supabase.rpc("adjust_account_balance", {
+            p_account_id: accountId,
+            p_delta: -amountCents,
+          }),
+          supabase.rpc("adjust_account_balance", {
+            p_account_id: destinationAccountId,
+            p_delta: amountCents,
+          }),
+        ]);
+        if (originRes.error || destRes.error) {
+          setServerError("Transação criada, mas houve erro ao ajustar os saldos.");
+          setLoading(false);
+          return;
+        }
+      } else {
+        const delta = type === "receita" ? amountCents : -amountCents;
+        const { error: balanceError } = await supabase.rpc("adjust_account_balance", {
+          p_account_id: accountId,
+          p_delta: delta,
+        });
+        if (balanceError) {
+          setServerError("Transação criada, mas houve erro ao ajustar o saldo.");
+          setLoading(false);
+          return;
+        }
       }
       logAudit(supabase, "transaction.create", "transaction", null, { type, amount_cents: amountCents, description });
     }
@@ -210,8 +288,14 @@ export function TransactionForm({
         label="Tipo"
         value={type}
         onChange={(e) => {
-          setType(e.target.value as "receita" | "despesa");
-          setCategoryId("");
+          const newType = e.target.value as TransactionType;
+          setType(newType);
+          if (newType === "transferencia") {
+            setCategoryId("");
+          } else {
+            setCategoryId("");
+            setDestinationAccountId("");
+          }
         }}
         options={transactionTypeOptions}
         required
@@ -229,32 +313,52 @@ export function TransactionForm({
 
       <Select
         id="account"
-        label="Conta"
+        label={isTransfer ? "Conta de origem" : "Conta"}
         value={accountId}
-        onChange={(e) => { setAccountId(e.target.value); clearFieldError("account"); }}
+        onChange={(e) => {
+          setAccountId(e.target.value);
+          clearFieldError("account");
+          // Reset destination if it became same as origin
+          if (e.target.value === destinationAccountId) {
+            setDestinationAccountId("");
+          }
+        }}
         options={accountOptions}
         placeholder="Selecione a conta"
         error={errors.account}
         required
       />
 
-      <Select
-        id="category"
-        label="Categoria"
-        value={categoryId}
-        onChange={(e) => { setCategoryId(e.target.value); clearFieldError("category"); }}
-        options={categoryOptions}
-        placeholder="Selecione a categoria"
-        error={errors.category}
-        required
-      />
+      {isTransfer ? (
+        <Select
+          id="destinationAccount"
+          label="Conta de destino"
+          value={destinationAccountId}
+          onChange={(e) => { setDestinationAccountId(e.target.value); clearFieldError("destinationAccount"); }}
+          options={destinationAccountOptions}
+          placeholder="Selecione a conta de destino"
+          error={errors.destinationAccount}
+          required
+        />
+      ) : (
+        <Select
+          id="category"
+          label="Categoria"
+          value={categoryId}
+          onChange={(e) => { setCategoryId(e.target.value); clearFieldError("category"); }}
+          options={categoryOptions}
+          placeholder="Selecione a categoria"
+          error={errors.category}
+          required
+        />
+      )}
 
       <Input
         id="description"
         label="Descrição"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="Ex: Supermercado"
+        placeholder={isTransfer ? "Ex: Pagamento fatura cartão" : "Ex: Supermercado"}
         maxLength={500}
         required
       />

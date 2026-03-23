@@ -14,6 +14,7 @@ import type { Account, Category, RecurringTransaction } from "@/types/database";
 interface RecurringWithRelations extends RecurringTransaction {
   accounts: { name: string } | null;
   categories: { name: string } | null;
+  destination_accounts: { name: string } | null;
 }
 
 interface RecurringListProps {
@@ -102,14 +103,20 @@ export function RecurringList({
       key: "category",
       header: "Categoria",
       render: (r: RecurringWithRelations) => (
-        <span className="text-on-surface-secondary">{r.categories?.name ?? "-"}</span>
+        <span className="text-on-surface-secondary">
+          {r.type === "transferencia" ? "Transferência" : (r.categories?.name ?? "-")}
+        </span>
       ),
     },
     {
       key: "account",
       header: "Conta",
       render: (r: RecurringWithRelations) => (
-        <span className="text-on-surface-secondary">{r.accounts?.name ?? "-"}</span>
+        <span className="text-on-surface-secondary">
+          {r.type === "transferencia"
+            ? `${r.accounts?.name ?? "-"} → ${r.destination_accounts?.name ?? "-"}`
+            : (r.accounts?.name ?? "-")}
+        </span>
       ),
     },
     {
@@ -141,8 +148,14 @@ export function RecurringList({
       headerClassName: "text-right",
       className: "text-right font-medium",
       render: (r: RecurringWithRelations) => (
-        <span className={r.type === "receita" ? "text-emerald-600" : "text-rose-600"}>
-          {r.type === "receita" ? "+" : "-"} {formatCurrency(r.amount_cents)}
+        <span className={
+          r.type === "receita"
+            ? "text-emerald-600"
+            : r.type === "transferencia"
+              ? "text-blue-600 dark:text-blue-400"
+              : "text-rose-600"
+        }>
+          {r.type === "receita" ? "+" : r.type === "transferencia" ? "" : "-"} {formatCurrency(r.amount_cents)}
         </span>
       ),
     },

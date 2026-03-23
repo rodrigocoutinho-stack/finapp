@@ -67,6 +67,7 @@ export async function calculateDailyFlow(
         supabase
           .from("transactions")
           .select("category_id, type, amount_cents, date")
+          .neq("type", "transferencia")
           .gte("date", firstDay)
           .lte("date", lastDay)
           .limit(5000),
@@ -74,6 +75,7 @@ export async function calculateDailyFlow(
           .from("recurring_transactions")
           .select("*")
           .eq("is_active", true)
+          .neq("type", "transferencia")
           .limit(1000),
         supabase.from("categories").select("id, name, type"),
       ]);
@@ -174,6 +176,7 @@ export async function calculateDailyFlow(
   // Group real transactions by date (YYYY-MM-DD) and category
   const realByDateCategory = new Map<string, Map<string, number>>();
   for (const t of transactions) {
+    if (!t.category_id) continue; // skip transfers (already filtered, safety net)
     const dateKey = t.date;
     let catMap = realByDateCategory.get(dateKey);
     if (!catMap) {
@@ -191,6 +194,7 @@ export async function calculateDailyFlow(
   // Group recurring by their actual date in this competency
   const plannedByDateCategory = new Map<string, Map<string, number>>();
   for (const r of activeRecurrings) {
+    if (!r.category_id) continue; // skip transfers (already filtered, safety net)
     const rDate = getRecurringDateInCompetency(r.day_of_month, year, month, closingDay);
     if (!rDate) continue;
     let catMap = plannedByDateCategory.get(rDate);
