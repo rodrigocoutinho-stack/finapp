@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { PDFDocument } from "pdf-lib";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit, PDF_IMPORT_LIMIT } from "@/lib/rate-limit";
 import type { ParsedTransaction } from "@/lib/ofx-parser";
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_PASSWORD_LENGTH = 50;
 
-const EXTRACTION_PROMPT = `Você é um extrator de dados de faturas e extratos bancários brasileiros.
-
-Analise o PDF e extraia TODAS as transações individuais.
-
-Retorne APENAS um JSON array válido (sem markdown, sem blocos de código), no formato:
+const EXTRACTION_FORMAT_AND_RULES = `Retorne APENAS um JSON array válido (sem markdown, sem blocos de código), no formato:
 [
   {
     "date": "YYYY-MM-DD",
@@ -28,6 +26,21 @@ Regras:
 - Se uma transação é parcelada (ex: "PARCELA 3/12"), inclua na descrição
 - Ignore linhas de total, subtotal, saldo anterior, limite disponível
 - Se não conseguir extrair transações, retorne []`;
+
+const EXTRACTION_PROMPT = `Você é um extrator de dados de faturas e extratos bancários brasileiros.
+
+Analise o PDF e extraia TODAS as transações individuais.
+
+${EXTRACTION_FORMAT_AND_RULES}`;
+
+const TEXT_EXTRACTION_PROMPT = `Você é um extrator de dados de faturas e extratos bancários brasileiros.
+
+O texto abaixo foi extraído de um PDF de fatura/extrato bancário. Analise e extraia TODAS as transações individuais.
+
+${EXTRACTION_FORMAT_AND_RULES}
+
+Texto extraído do PDF:
+`;
 
 interface GeminiTransaction {
   date: unknown;
@@ -134,6 +147,41 @@ function isOriginAllowed(request: NextRequest): boolean {
   return allowed.some((url) => referer.startsWith(url!));
 }
 
+/**
+ * Extract text from a password-protected PDF using pdfjs-dist.
+ * Returns the concatenated text of all pages or null if extraction fails.
+ */
+async function extractTextWithPassword(
+  pdfBytes: ArrayBuffer,
+  password: string
+): Promise<string | null> {
+  // Dynamic import to avoid loading pdfjs-dist when not needed
+  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
+
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(pdfBytes),
+    password,
+    useSystemFonts: true,
+  });
+
+  const doc = await loadingTask.promise;
+  const pageTexts: string[] = [];
+
+  for (let i = 1; i <= doc.numPages; i++) {
+    const page = await doc.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .filter((item) => "str" in item && typeof (item as Record<string, unknown>).str === "string")
+      .map((item) => (item as Record<string, unknown>).str as string)
+      .join(" ");
+    pageTexts.push(pageText);
+  }
+
+  doc.destroy();
+  const fullText = pageTexts.join("\n\n");
+  return fullText.trim().length > 0 ? fullText : null;
+}
+
 export async function POST(request: NextRequest) {
   if (!isOriginAllowed(request)) {
     return NextResponse.json({ error: "Origem não permitida." }, { status: 403 });
@@ -180,6 +228,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Read and validate password (optional, max 50 chars)
+  const rawPassword = formData.get("password");
+  const pdfPassword =
+    typeof rawPassword === "string" && rawPassword.length > 0
+      ? rawPassword.slice(0, MAX_PASSWORD_LENGTH)
+      : undefined;
+
   // Authenticate BEFORE reading file into memory
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -201,7 +256,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Convert file to base64 AFTER auth check (prevents unauthenticated resource consumption)
+  // Convert file to bytes AFTER auth check (prevents unauthenticated resource consumption)
   const arrayBuffer = await pdfFile.arrayBuffer();
 
   // Validate PDF magic bytes (%PDF-)
@@ -214,7 +269,93 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const pdfBase64 = Buffer.from(arrayBuffer).toString("base64");
+  // ── Path A: Password provided → decrypt with pdfjs-dist, send text to Gemini ──
+  if (pdfPassword) {
+    let extractedText: string | null;
+    try {
+      extractedText = await extractTextWithPassword(arrayBuffer, pdfPassword);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("Incorrect Password") || msg.includes("password")) {
+        return NextResponse.json(
+          { error: "Senha incorreta. Verifique e tente novamente." },
+          { status: 400 }
+        );
+      }
+      return NextResponse.json(
+        { error: "Erro ao abrir o PDF com a senha informada. Verifique se o arquivo é válido." },
+        { status: 400 }
+      );
+    }
+
+    if (!extractedText) {
+      return NextResponse.json({
+        success: false,
+        transactions: [],
+        errors: ["O PDF foi aberto com a senha, mas não contém texto extraível."],
+      });
+    }
+
+    try {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+      const result = await model.generateContent(
+        {
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: TEXT_EXTRACTION_PROMPT + extractedText }],
+            },
+          ],
+        },
+        { timeout: 60000 }
+      );
+
+      const responseText = result.response.text();
+
+      if (!responseText || responseText.trim().length === 0) {
+        return NextResponse.json({
+          success: false,
+          transactions: [],
+          errors: ["A IA não retornou dados a partir do texto extraído."],
+        });
+      }
+
+      const { transactions, errors } = parseGeminiResponse(responseText);
+
+      return NextResponse.json({
+        success: transactions.length > 0,
+        transactions,
+        errors,
+      });
+    } catch (err) {
+      console.error("PDF text import error:", err);
+      return NextResponse.json(
+        { error: "Erro ao processar o texto extraído do PDF. Tente novamente." },
+        { status: 500 }
+      );
+    }
+  }
+
+  // ── Path B: No password → pdf-lib ignoreEncryption + send PDF bytes to Gemini ──
+
+  // Try to remove owner-password encryption transparently
+  let finalPdfBytes: ArrayBuffer | Uint8Array = arrayBuffer;
+
+  try {
+    const doc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+    if (doc.isEncrypted) {
+      finalPdfBytes = await doc.save();
+    }
+  } catch {
+    // If pdf-lib can't handle it, send original bytes to Gemini
+    finalPdfBytes = arrayBuffer;
+  }
+
+  const pdfBase64 = Buffer.from(
+    finalPdfBytes instanceof Uint8Array ? finalPdfBytes : new Uint8Array(finalPdfBytes)
+  ).toString("base64");
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -272,7 +413,7 @@ export async function POST(request: NextRequest) {
         {
           error:
             "Não foi possível ler o PDF. Ele pode estar protegido por senha. " +
-            "Abra o arquivo, salve uma cópia sem senha e tente novamente.",
+            "Tente novamente informando a senha do documento.",
         },
         { status: 400 }
       );

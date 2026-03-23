@@ -93,13 +93,13 @@ export default function ImportarPage() {
     setStep("review");
   }
 
-  async function handlePDFLoaded(file: File, accountId: string) {
+  async function handlePDFLoaded(file: File, accountId: string, password?: string) {
     setSelectedAccountId(accountId);
     setPdfProcessing(true);
     setParseWarnings([]);
 
     try {
-      const result = await parsePDFImport(file);
+      const result = await parsePDFImport(file, password);
 
       if (!result.success) {
         setParseWarnings(result.errors);

@@ -1,8 +1,11 @@
 import type { OFXParseResult } from "@/lib/ofx-parser";
 
-export async function parsePDFImport(file: File): Promise<OFXParseResult> {
+export async function parsePDFImport(file: File, password?: string): Promise<OFXParseResult> {
   const formData = new FormData();
   formData.append("pdf", file);
+  if (password) {
+    formData.append("password", password);
+  }
 
   const res = await fetch("/api/import/pdf", {
     method: "POST",
