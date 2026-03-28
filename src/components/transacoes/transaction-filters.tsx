@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { groupAccountsByGroup } from "@/lib/utils";
 import type { Account, Category } from "@/types/database";
 
 export interface TransactionFiltersState {
@@ -74,11 +75,21 @@ export function TransactionFilters({
         className="rounded-lg border border-input-border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-on-surface"
       >
         <option value="">Todas contas</option>
-        {accounts.map((a) => (
-          <option key={a.id} value={a.id}>
-            {a.name}
-          </option>
-        ))}
+        {(() => {
+          const grouped = groupAccountsByGroup(accounts);
+          if (grouped.length <= 1) {
+            return accounts.map((a) => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ));
+          }
+          return grouped.map(([group, accts]) => (
+            <optgroup key={group} label={group}>
+              {accts.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </optgroup>
+          ));
+        })()}
       </select>
 
       <select

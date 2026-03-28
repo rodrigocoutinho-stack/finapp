@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Select } from "@/components/ui/select";
 import { parseOFX, type OFXParseResult } from "@/lib/ofx-parser";
+import { buildGroupedAccountOptions } from "@/lib/utils";
 import type { Account } from "@/types/database";
 
 interface ImportUploadProps {
@@ -20,10 +21,8 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded, onPDFLoaded }: I
   const [pdfPassword, setPdfPassword] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const accountOptions = accounts.map((a) => ({
-    value: a.id,
-    label: `${a.name} (${a.type})`,
-  }));
+  const importLabelFn = (a: Account) => `${a.name} (${a.type})`;
+  const { options: accountOptions, groupedOptions: accountGrouped } = buildGroupedAccountOptions(accounts, importLabelFn);
 
   function resetFile() {
     setPdfFile(null);
@@ -116,7 +115,8 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded, onPDFLoaded }: I
         <Select
           label="Conta de destino"
           id="import-account"
-          options={accountOptions}
+          options={accountGrouped ? undefined : accountOptions}
+          groupedOptions={accountGrouped}
           value={accountId}
           onChange={(e) => setAccountId(e.target.value)}
           placeholder="Selecione uma conta..."

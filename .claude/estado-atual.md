@@ -1,23 +1,20 @@
 # Estado Atual — FinApp
 
-Ultima atualizacao: 2026-03-22
+Ultima atualizacao: 2026-03-28
 
 ## Status
-Build OK. Codigo estavel. Feature "Transferencia entre contas" implementada com sucesso.
+Build OK. Codigo estavel. Features "Agrupamento de Contas" e "Relatorio Consolidado por Grupo" implementadas.
 
 Alteracoes da sessao:
-- Migration 019: tipo `transferencia` em transactions e recurring_transactions, campo `destination_account_id`, category_id nullable, constraints de consistencia
-- Types database.ts atualizados (Transaction e RecurringTransaction com novos campos/tipos)
-- TransactionForm: tipo transferencia com conta destino, sem categoria, ajuste de saldo em 2 contas
-- TransactionList: cor azul para transferencias, coluna "Origem → Destino"
-- TransactionFilters: opcao transferencia adicionada
-- Transacoes page: query com hint `accounts!account_id` + `accounts!destination_account_id`, CSV com coluna Conta Destino
-- RecurringForm/RecurringList: mesma logica de transferencia
-- Dashboard: botao rapido "Transferencia", transacoes recentes com cor azul, reconciliacao corrigida para transferencias
-- Contas/Reconciliacao: tratamento de transferencias (debito na origem, credito no destino)
-- Forecast/DailyFlow: filtro `.neq("type", "transferencia")` para nao inflar receita/despesa
-- RecurrenceDetection: skip de transferencias
-- Financial context IA: menciona transferencias no contexto
+- Migration 020: campo `account_group` (TEXT nullable) na tabela accounts + indice
+- Helper `groupAccountsByGroup()` e `buildGroupedAccountOptions()` em utils.ts
+- AccountForm: campo "Grupo (opcional)" com autocomplete via `<datalist>`
+- AccountList: renderizacao agrupada com secoes, subtotais e botao "Relatorio" por grupo
+- Select UI: suporte a `groupedOptions` com `<optgroup>` (backward-compatible)
+- 5 formularios atualizados com optgroup em dropdowns de conta
+- TransactionFilters: dropdown de conta com optgroup
+- Modal UI: prop `size` ("md" | "lg" | "xl" | "2xl" | "4xl") + scroll em conteudo longo
+- GroupReportModal: relatorio consolidado por grupo com 3 cards resumo + BarChart (Recharts) + DataTable (ultimos 6 meses)
 
 ## Hipoteses Abertas
 - Nenhuma
@@ -33,9 +30,8 @@ Alteracoes da sessao:
 - 2 tabelas (ForecastTable, DailyFlowTable) usam HTML manual em vez do DataTable reutilizavel (colunas dinamicas/sticky incompativeis sem expandir API).
 - Exportacao CSV limitada a 1000 rows por query Supabase. Suficiente para v1, mas usuarios com muitas transacoes podem precisar de paginacao na exportacao.
 - Paginas de Metas e Dividas mantem `.limit(100)` sem paginacao server-side (layout de cards, volume naturalmente baixo). Reavaliar se algum usuario ultrapassar 100 itens.
-- Pagina `/transacoes/importar` exibe titulo com Unicode escapado ("Transa\u00e7\u00f5es" em vez de "Transacoes"). Bug cosmético de baixa prioridade.
 - 30 auth users de load test permanecem no Supabase (loadtest-*@finapp-loadtest.com). Dados foram limpos, mas auth users exigem service_role key para exclusao.
-- Migration 019 precisa ser aplicada no Supabase (nao foi executada automaticamente — requer `supabase db push` ou execucao manual no SQL Editor).
+- PDFs com user-password: pdfjs-dist extrai texto (perde layout visual), Gemini recebe texto puro. Qualidade pode ser inferior a PDFs sem senha onde Gemini recebe bytes PDF nativos. Aceitavel — alternativa seria nao suportar.
 
 ## Proxima Acao Sugerida
-Aplicar migration 019 no Supabase (produção) via SQL Editor ou `supabase db push`, e testar criacao/edicao/exclusao de transferencias no ambiente de producao.
+Testar o relatorio consolidado com dados reais: criar contas PJ e PF, adicionar transacoes de receita e despesa na PJ, verificar que o modal mostra cards + grafico + tabela corretamente.

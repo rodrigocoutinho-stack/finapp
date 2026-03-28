@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -47,6 +47,11 @@ export default function ContasPage() {
     setLoading(false);
   }, []);
 
+  const existingGroups = useMemo(
+    () => [...new Set(accounts.map((a) => a.account_group).filter(Boolean))] as string[],
+    [accounts]
+  );
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -72,7 +77,7 @@ export default function ContasPage() {
       {loading ? (
         <TableSkeleton rows={4} cols={3} />
       ) : (
-        <AccountList accounts={accounts} onRefresh={fetchData} />
+        <AccountList accounts={accounts} existingGroups={existingGroups} onRefresh={fetchData} />
       )}
 
       <Modal
@@ -81,6 +86,7 @@ export default function ContasPage() {
         title="Nova conta"
       >
         <AccountForm
+          existingGroups={existingGroups}
           onSuccess={() => {
             setShowForm(false);
             fetchData();

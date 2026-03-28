@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { toCents, formatCurrency } from "@/lib/utils";
+import { toCents, formatCurrency, buildGroupedAccountOptions } from "@/lib/utils";
 import { GOAL_ICONS, GOAL_COLORS, HORIZON_LABELS } from "@/lib/goal-utils";
 import { logAudit } from "@/lib/audit-log";
 import type { Goal, Account } from "@/types/database";
@@ -49,13 +49,15 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
 
+  const accountLabelFn = (a: Account) => `${a.name} (${formatCurrency(a.balance_cents)})`;
+  const { options: baseAccountOpts, groupedOptions: accountGrouped } = buildGroupedAccountOptions(accounts, accountLabelFn);
   const accountOptions = [
     { value: "", label: "Sem conta vinculada (manual)" },
-    ...accounts.map((a) => ({
-      value: a.id,
-      label: `${a.name} (${formatCurrency(a.balance_cents)})`,
-    })),
+    ...baseAccountOpts,
   ];
+  const goalGroupedOptions = accountGrouped
+    ? [{ group: "—", options: [{ value: "", label: "Sem conta vinculada (manual)" }] }, ...accountGrouped]
+    : undefined;
 
   const showManualAmount = !accountId;
 
@@ -224,7 +226,8 @@ export function GoalForm({ goal, accounts, onSuccess, onCancel }: GoalFormProps)
         label="Conta vinculada"
         value={accountId}
         onChange={(e) => setAccountId(e.target.value)}
-        options={accountOptions}
+        options={goalGroupedOptions ? undefined : accountOptions}
+        groupedOptions={goalGroupedOptions}
       />
 
       {showManualAmount && (

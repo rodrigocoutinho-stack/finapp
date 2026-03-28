@@ -34,6 +34,7 @@ export type Database = {
           balance_cents: number;
           initial_balance_cents: number;
           is_emergency_reserve: boolean;
+          account_group: string | null;
           created_at: string;
         };
         Insert: {
@@ -44,6 +45,7 @@ export type Database = {
           balance_cents?: number;
           initial_balance_cents?: number;
           is_emergency_reserve?: boolean;
+          account_group?: string | null;
           created_at?: string;
         };
         Update: {
@@ -54,6 +56,7 @@ export type Database = {
           balance_cents?: number;
           initial_balance_cents?: number;
           is_emergency_reserve?: boolean;
+          account_group?: string | null;
           created_at?: string;
         };
         Relationships: [

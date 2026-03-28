@@ -1,11 +1,22 @@
 import { SelectHTMLAttributes } from "react";
 
+interface OptionItem {
+  value: string;
+  label: string;
+}
+
+interface OptionGroup {
+  group: string;
+  options: OptionItem[];
+}
+
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
   helpText?: string;
   optional?: boolean;
-  options: { value: string; label: string }[];
+  options?: OptionItem[];
+  groupedOptions?: OptionGroup[];
   placeholder?: string;
 }
 
@@ -16,6 +27,7 @@ export function Select({
   optional,
   id,
   options,
+  groupedOptions,
   placeholder,
   className = "",
   required,
@@ -45,11 +57,21 @@ export function Select({
             {placeholder}
           </option>
         )}
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
+        {groupedOptions
+          ? groupedOptions.map((g) => (
+              <optgroup key={g.group} label={g.group}>
+                {g.options.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))
+          : options?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
       </select>
       {helpText && !error && (
         <p className="mt-1 text-xs text-on-surface-muted">{helpText}</p>

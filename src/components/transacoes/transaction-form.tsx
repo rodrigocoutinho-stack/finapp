@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { toCents, formatCurrency } from "@/lib/utils";
+import { toCents, formatCurrency, buildGroupedAccountOptions } from "@/lib/utils";
 import { logAudit } from "@/lib/audit-log";
 import type { Account, Category, Transaction } from "@/types/database";
 
@@ -57,17 +57,13 @@ export function TransactionForm({
   const isTransfer = type === "transferencia";
   const filteredCategories = categories.filter((c) => c.type === type);
 
-  const accountOptions = accounts.map((a) => ({
-    value: a.id,
-    label: `${a.name} (${formatCurrency(a.balance_cents)})`,
-  }));
+  const accountLabelFn = (a: Account) => `${a.name} (${formatCurrency(a.balance_cents)})`;
+  const { groupedOptions: accountGrouped } = buildGroupedAccountOptions(accounts, accountLabelFn);
+  const accountOptions = accounts.map((a) => ({ value: a.id, label: accountLabelFn(a) }));
 
-  const destinationAccountOptions = accounts
-    .filter((a) => a.id !== accountId)
-    .map((a) => ({
-      value: a.id,
-      label: `${a.name} (${formatCurrency(a.balance_cents)})`,
-    }));
+  const destAccounts = accounts.filter((a) => a.id !== accountId);
+  const { groupedOptions: destGrouped } = buildGroupedAccountOptions(destAccounts, accountLabelFn);
+  const destinationAccountOptions = destAccounts.map((a) => ({ value: a.id, label: accountLabelFn(a) }));
 
   const categoryOptions = filteredCategories.map((c) => ({
     value: c.id,
@@ -323,7 +319,8 @@ export function TransactionForm({
             setDestinationAccountId("");
           }
         }}
-        options={accountOptions}
+        options={accountGrouped ? undefined : accountOptions}
+        groupedOptions={accountGrouped}
         placeholder="Selecione a conta"
         error={errors.account}
         required
@@ -335,7 +332,8 @@ export function TransactionForm({
           label="Conta de destino"
           value={destinationAccountId}
           onChange={(e) => { setDestinationAccountId(e.target.value); clearFieldError("destinationAccount"); }}
-          options={destinationAccountOptions}
+          options={destGrouped ? undefined : destinationAccountOptions}
+          groupedOptions={destGrouped}
           placeholder="Selecione a conta de destino"
           error={errors.destinationAccount}
           required

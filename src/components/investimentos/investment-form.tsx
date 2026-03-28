@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { productOptions, indexerOptions } from "@/lib/investment-utils";
+import { buildGroupedAccountOptions } from "@/lib/utils";
 import type { Investment, Account } from "@/types/database";
 
 interface InvestmentFormProps {
@@ -33,7 +34,7 @@ export function InvestmentForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState("");
 
-  const accountOptions = accounts.map((a) => ({ value: a.id, label: a.name }));
+  const { options: accountOptions, groupedOptions: accountGrouped } = buildGroupedAccountOptions(accounts);
 
   function clearFieldError(field: string) {
     setErrors((prev) => {
@@ -127,7 +128,8 @@ export function InvestmentForm({
         label="Conta / Corretora"
         value={accountId}
         onChange={(e) => { setAccountId(e.target.value); clearFieldError("account"); }}
-        options={accountOptions}
+        options={accountGrouped ? undefined : accountOptions}
+        groupedOptions={accountGrouped}
         error={errors.account}
         required
       />

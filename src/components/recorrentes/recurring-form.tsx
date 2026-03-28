@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toCents, formatCurrency } from "@/lib/utils";
+import { toCents, formatCurrency, buildGroupedAccountOptions } from "@/lib/utils";
 import type { Account, Category, RecurringTransaction } from "@/types/database";
 
 const transactionTypeOptions = [
@@ -86,17 +86,13 @@ export function RecurringForm({
   const isTransfer = type === "transferencia";
   const filteredCategories = categories.filter((c) => c.type === type);
 
-  const accountOptions = accounts.map((a) => ({
-    value: a.id,
-    label: `${a.name} (${formatCurrency(a.balance_cents)})`,
-  }));
+  const accountLabelFn = (a: Account) => `${a.name} (${formatCurrency(a.balance_cents)})`;
+  const { groupedOptions: accountGrouped } = buildGroupedAccountOptions(accounts, accountLabelFn);
+  const accountOptions = accounts.map((a) => ({ value: a.id, label: accountLabelFn(a) }));
 
-  const destinationAccountOptions = accounts
-    .filter((a) => a.id !== accountId)
-    .map((a) => ({
-      value: a.id,
-      label: `${a.name} (${formatCurrency(a.balance_cents)})`,
-    }));
+  const destAccounts = accounts.filter((a) => a.id !== accountId);
+  const { groupedOptions: destGrouped } = buildGroupedAccountOptions(destAccounts, accountLabelFn);
+  const destinationAccountOptions = destAccounts.map((a) => ({ value: a.id, label: accountLabelFn(a) }));
 
   const categoryOptions = filteredCategories.map((c) => ({
     value: c.id,
@@ -284,7 +280,8 @@ export function RecurringForm({
             setDestinationAccountId("");
           }
         }}
-        options={accountOptions}
+        options={accountGrouped ? undefined : accountOptions}
+        groupedOptions={accountGrouped}
         placeholder="Selecione a conta"
         error={errors.account}
         required
@@ -296,7 +293,8 @@ export function RecurringForm({
           label="Conta de destino"
           value={destinationAccountId}
           onChange={(e) => { setDestinationAccountId(e.target.value); clearFieldError("destinationAccount"); }}
-          options={destinationAccountOptions}
+          options={destGrouped ? undefined : destinationAccountOptions}
+          groupedOptions={destGrouped}
           placeholder="Selecione a conta de destino"
           error={errors.destinationAccount}
           required
