@@ -1,24 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useInvestmentData } from "@/hooks/use-investment-data";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
 import { FinancialKPIs } from "@/components/dashboard/financial-kpis";
 import { FinancialInsights } from "@/components/dashboard/financial-insights";
-import dynamic from "next/dynamic";
+import { MonthPicker } from "@/components/dashboard/month-picker";
+import { BudgetComparison } from "@/components/dashboard/budget-comparison";
+import { RecentTransactions } from "@/components/dashboard/recent-transactions";
+import { SectionErrorBoundary } from "@/components/dashboard/section-error-boundary";
+import { Modal } from "@/components/ui/modal";
+import { CardsSkeleton, TableSkeleton } from "@/components/ui/skeleton";
+import { usePreferences } from "@/contexts/preferences-context";
+import { useToast } from "@/contexts/toast-context";
 
+// Lazy-load heavy / below-the-fold components
 const CategoryChart = dynamic(
   () => import("@/components/dashboard/category-chart").then((mod) => mod.CategoryChart),
   { ssr: false, loading: () => <div className="h-48 animate-pulse bg-tab-bg rounded-lg" /> }
 );
-import { MonthPicker } from "@/components/dashboard/month-picker";
-import { BudgetComparison } from "@/components/dashboard/budget-comparison";
-import { GreetingHeader } from "@/components/layout/greeting-header";
-import { Modal } from "@/components/ui/modal";
-import { detectRecurrences, type RecurrenceSuggestion } from "@/lib/recurrence-detection";
-
-// Lazy-load components below the fold
 const InvestmentSummary = dynamic(
   () => import("@/components/dashboard/investment-summary").then((mod) => mod.InvestmentSummary),
   { ssr: false, loading: () => <div className="h-32 animate-pulse bg-tab-bg rounded-xl" /> }
@@ -40,710 +43,209 @@ const DebtSummary = dynamic(
   { ssr: false, loading: () => <div className="h-24 animate-pulse bg-tab-bg rounded-xl" /> }
 );
 
-import { CardsSkeleton, TableSkeleton } from "@/components/ui/skeleton";
-import { getMonthRange, formatCurrency, formatDate } from "@/lib/utils";
-import { calculateForecast, type MonthForecast } from "@/lib/forecast";
-import { getMonthEndBalance } from "@/lib/investment-utils";
-import { getCurrentCompetencyMonth } from "@/lib/closing-day";
-import { getIPCA12Months } from "@/lib/inflation";
-import { usePreferences } from "@/contexts/preferences-context";
-import { useToast } from "@/contexts/toast-context";
-import type { Account, Debt, Goal, InvestmentEntry, Transaction, RecurringTransaction, MonthlyClosingRow } from "@/types/database";
-
-interface TransactionRow {
-  id: string;
-  type: "receita" | "despesa" | "transferencia";
-  amount_cents: number;
-  description: string;
-  date: string;
-  categories: { name: string } | null;
-  accounts: { name: string } | null;
-  destination_account_id: string | null;
-  destination_accounts: { name: string } | null;
-}
-
-interface InvestmentData {
-  totalBalance: number;
-  lastReturn: number;
-  lastReturnPercent: number;
-  hasData: boolean;
-}
-
 export default function DashboardPage() {
-  const supabase = createClient();
-  const { closingDay, reserveTargetMonths, loading: prefsLoading } = usePreferences();
+  const [showClosing, setShowClosing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const data = useDashboardData();
+  const { investmentData, ipca12m } = useInvestmentData();
+  const { fullName } = usePreferences();
   const { addToast } = useToast();
 
-  const { year: initYear, month: initMonth } = getCurrentCompetencyMonth(closingDay);
-  const [year, setYear] = useState(initYear);
-  const [month, setMonth] = useState(initMonth);
-
-  const prevMonth = useCallback(() => {
-    setMonth((prev) => {
-      if (prev === 0) { setYear((y) => y - 1); return 11; }
-      return prev - 1;
-    });
-  }, []);
-  const nextMonth = useCallback(() => {
-    setMonth((prev) => {
-      if (prev === 11) { setYear((y) => y + 1); return 0; }
-      return prev + 1;
-    });
-  }, []);
-  const [transactions, setTransactions] = useState<TransactionRow[]>([]);
-  const [currentMonthForecast, setCurrentMonthForecast] = useState<MonthForecast | null>(null);
-  const [investmentData, setInvestmentData] = useState<InvestmentData>({
-    totalBalance: 0,
-    lastReturn: 0,
-    lastReturnPercent: 0,
-    hasData: false,
-  });
-  const [loading, setLoading] = useState(true);
-  const [showClosing, setShowClosing] = useState(false);
-
-  // New state for KPIs/Insights
-  const [totalAccountBalance, setTotalAccountBalance] = useState(0);
-  const [reserveBalance, setReserveBalance] = useState(0);
-  const [hasReserveAccount, setHasReserveAccount] = useState(false);
-  const [avgMonthlyExpense, setAvgMonthlyExpense] = useState(0);
-  const [ipca12m, setIpca12m] = useState<number | null>(null);
-  const [totalRecurringDespesas, setTotalRecurringDespesas] = useState(0);
-  const [avgEssentialExpense, setAvgEssentialExpense] = useState(0);
-  const [hasEssentialCategories, setHasEssentialCategories] = useState(false);
-  const [pastSavingsRates, setPastSavingsRates] = useState<number[]>([]);
-  const [annualProvisions, setAnnualProvisions] = useState<{ description: string; amountCents: number }[]>([]);
-  const [recurrenceSuggestions, setRecurrenceSuggestions] = useState<RecurrenceSuggestion[]>([]);
-  const [dashGoals, setDashGoals] = useState<Goal[]>([]);
-  const [dashAccounts, setDashAccounts] = useState<Account[]>([]);
-  const [dashDebts, setDashDebts] = useState<Debt[]>([]);
-  const [hasDivergentAccounts, setHasDivergentAccounts] = useState(false);
-  const [existingClosing, setExistingClosing] = useState<MonthlyClosingRow | null>(null);
-  const [previousClosing, setPreviousClosing] = useState<MonthlyClosingRow | null>(null);
-
-  // Sync initial year/month when closingDay loads
-  useEffect(() => {
-    if (!prefsLoading) {
-      const { year: y, month: m } = getCurrentCompetencyMonth(closingDay);
-      setYear(y);
-      setMonth(m);
-    }
-  }, [closingDay, prefsLoading]);
-
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    const { start, end } = getMonthRange(year, month, closingDay);
-    const { year: curYear, month: curMonth } = getCurrentCompetencyMonth(closingDay);
-    const isCurrentMonthSelected = year === curYear && month === curMonth;
-
-    // Calculate past 3 months for avgMonthlyExpense
-    const pastMonthsRanges: { start: string; end: string }[] = [];
-    for (let i = 1; i <= 3; i++) {
-      let pastYear = curYear;
-      let pastMonth = curMonth - i;
-      while (pastMonth < 0) {
-        pastMonth += 12;
-        pastYear--;
-      }
-      pastMonthsRanges.push(getMonthRange(pastYear, pastMonth, closingDay));
-    }
-
-    const globalStart = pastMonthsRanges[pastMonthsRanges.length - 1]?.start ?? start;
-    const globalEnd = pastMonthsRanges[0]?.end ?? end;
-
-    // Month string for closing (YYYY-MM)
-    const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
-    // Previous month string
-    const prevMonthDate = new Date(year, month - 1, 1);
-    const prevMonthStr = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, "0")}`;
-
-    // Calculate date range for ~12 months ago (for provision detection) — needed for Promise.all
-    let annualYear = curYear - 1;
-    const annualMonth = curMonth;
-    let annualStartMonth = annualMonth - 1;
-    if (annualStartMonth < 0) { annualStartMonth += 12; annualYear--; }
-    const annualStartRange = getMonthRange(annualYear, annualStartMonth, closingDay);
-    let annualEndYear = curYear - 1;
-    let annualEndMonth = curMonth + 1;
-    if (annualEndMonth > 11) { annualEndMonth -= 12; annualEndYear++; }
-    const annualEndRange = getMonthRange(annualEndYear, annualEndMonth, closingDay);
-
+  const handleExportPdf = useCallback(async () => {
+    setExporting(true);
     try {
-    // Reconciliation: use 6-month window instead of all-time .limit(10000)
-    const reconDate = new Date(curYear, curMonth - 6, 1);
-    const reconStart = `${reconDate.getFullYear()}-${String(reconDate.getMonth() + 1).padStart(2, "0")}-01`;
-
-    const [transactionsRes, forecastResult, accountsRes, pastExpensesRes, recurringDespesasRes, goalsRes, essentialCatsRes, reconTxnRes, debtsRes, closingRes, prevClosingRes, past3mFullRes, existingRecRes, annualRes] = await Promise.all([
-      supabase
-        .from("transactions")
-        .select("id, type, amount_cents, description, date, destination_account_id, categories(name), accounts:accounts!account_id(name), destination_accounts:accounts!destination_account_id(name)")
-        .gte("date", start)
-        .lte("date", end)
-        .order("date", { ascending: false })
-        .limit(2000),
-      isCurrentMonthSelected
-        ? calculateForecast(supabase, 0, true, closingDay)
-        : Promise.resolve(null),
-      supabase
-        .from("accounts")
-        .select("*"),
-      supabase
-        .from("transactions")
-        .select("type, amount_cents, category_id")
-        .eq("type", "despesa")
-        .gte("date", globalStart)
-        .lte("date", globalEnd)
-        .limit(5000),
-      supabase
-        .from("recurring_transactions")
-        .select("type, amount_cents")
-        .eq("is_active", true)
-        .eq("type", "despesa")
-        .limit(1000),
-      supabase
-        .from("goals")
-        .select("*")
-        .eq("is_active", true)
-        .order("priority")
-        .limit(10),
-      supabase
-        .from("categories")
-        .select("id")
-        .eq("type", "despesa")
-        .eq("is_essential", true),
-      // Reconciliation: 6-month window instead of unlimited (was .limit(10000))
-      supabase
-        .from("transactions")
-        .select("account_id, type, amount_cents, destination_account_id")
-        .gte("date", reconStart)
-        .limit(5000),
-      supabase
-        .from("debts")
-        .select("*")
-        .eq("is_active", true)
-        .order("remaining_amount_cents", { ascending: false })
-        .limit(20),
-      supabase
-        .from("monthly_closings")
-        .select("*")
-        .eq("month", monthStr)
-        .maybeSingle(),
-      supabase
-        .from("monthly_closings")
-        .select("*")
-        .eq("month", prevMonthStr)
-        .maybeSingle(),
-      // Combined query: recurrence detection + savings rates (was 2 separate queries)
-      isCurrentMonthSelected
-        ? supabase
-            .from("transactions")
-            .select("id, user_id, account_id, category_id, type, amount_cents, description, date, created_at")
-            .gte("date", globalStart)
-            .lte("date", end)
-            .limit(5000)
-        : Promise.resolve({ data: null }),
-      isCurrentMonthSelected
-        ? supabase
-            .from("recurring_transactions")
-            .select("*")
-            .eq("is_active", true)
-            .limit(1000)
-        : Promise.resolve({ data: null }),
-      isCurrentMonthSelected
-        ? supabase
-            .from("transactions")
-            .select("type, amount_cents, description")
-            .eq("type", "despesa")
-            .gte("date", annualStartRange.start)
-            .lte("date", annualEndRange.end)
-            .gte("amount_cents", 50000)
-            .limit(500)
-        : Promise.resolve({ data: null }),
-    ]);
-
-    setTransactions((transactionsRes.data as TransactionRow[]) ?? []);
-    setCurrentMonthForecast(
-      forecastResult?.months.find((m) => m.isCurrentMonth) ?? null
-    );
-
-    // Accounts data
-    const accountsData = (accountsRes.data as Account[] | null) ?? [];
-    setDashAccounts(accountsData);
-    const totalBal = accountsData.reduce((sum, a) => sum + a.balance_cents, 0);
-    const reserveAccounts = accountsData.filter((a) => a.is_emergency_reserve);
-    const resBal = reserveAccounts.reduce((sum, a) => sum + a.balance_cents, 0);
-
-    setTotalAccountBalance(totalBal);
-    setReserveBalance(resBal);
-    setHasReserveAccount(reserveAccounts.length > 0);
-
-    // Average monthly expense (last 3 months)
-    const pastExpenses = (pastExpensesRes.data ?? []) as { type: string; amount_cents: number; category_id: string }[];
-    const totalPastExpenses = pastExpenses.reduce((sum, t) => sum + t.amount_cents, 0);
-    const monthCount = pastMonthsRanges.length;
-    setAvgMonthlyExpense(monthCount > 0 ? Math.round(totalPastExpenses / monthCount) : 0);
-
-    // Essential expense average (for more precise reserve/runway)
-    const essentialCatIds = new Set(
-      ((essentialCatsRes.data ?? []) as { id: string }[]).map((c) => c.id)
-    );
-    setHasEssentialCategories(essentialCatIds.size > 0);
-    if (essentialCatIds.size > 0) {
-      const essentialTotal = pastExpenses
-        .filter((t) => essentialCatIds.has(t.category_id))
-        .reduce((sum, t) => sum + t.amount_cents, 0);
-      setAvgEssentialExpense(monthCount > 0 ? Math.round(essentialTotal / monthCount) : 0);
-    } else {
-      setAvgEssentialExpense(0);
-    }
-
-    // Total recurring despesas (active)
-    const recurringDespesas = (recurringDespesasRes.data ?? []) as { type: string; amount_cents: number }[];
-    setTotalRecurringDespesas(recurringDespesas.reduce((sum, r) => sum + r.amount_cents, 0));
-
-    // Goals
-    setDashGoals((goalsRes.data as Goal[] | null) ?? []);
-
-    // Debts
-    setDashDebts((debtsRes.data as Debt[] | null) ?? []);
-
-    // Reconciliation divergence check (6-month window — approximate, not exact)
-    const reconTxns = (reconTxnRes.data ?? []) as { account_id: string; type: string; amount_cents: number; destination_account_id?: string | null }[];
-    const hasDivergence = accountsData.some((account) => {
-      const txnSum = reconTxns
-        .filter((t) => t.account_id === account.id)
-        .reduce((sum, t) => {
-          if (t.type === "transferencia") return sum - t.amount_cents;
-          return sum + (t.type === "receita" ? t.amount_cents : -t.amount_cents);
-        }, 0);
-      // Add transfers where this account is the destination
-      const destSum = reconTxns
-        .filter((t) => t.type === "transferencia" && t.destination_account_id === account.id)
-        .reduce((sum, t) => sum + t.amount_cents, 0);
-      const calculated = account.initial_balance_cents + txnSum + destSum;
-      return account.balance_cents !== calculated;
-    });
-    setHasDivergentAccounts(hasDivergence);
-
-    // Monthly closings
-    setExistingClosing((closingRes.data as MonthlyClosingRow | null) ?? null);
-    setPreviousClosing((prevClosingRes.data as MonthlyClosingRow | null) ?? null);
-
-    // Recurrence detection + savings rates + annual provisions
-    if (isCurrentMonthSelected) {
-      const past3mTransactions = (past3mFullRes.data as Transaction[] | null) ?? [];
-      const existingRecs = (existingRecRes.data as RecurringTransaction[] | null) ?? [];
-      setRecurrenceSuggestions(detectRecurrences(past3mTransactions, existingRecs));
-
-      // Calculate savings rates per past month (reuse past3mFullRes data)
-      const rates: number[] = [];
-      for (const range of pastMonthsRanges) {
-        const monthTxns = past3mTransactions.filter((t) => t.date >= range.start && t.date <= range.end);
-        const rec = monthTxns.filter((t) => t.type === "receita").reduce((s, t) => s + t.amount_cents, 0);
-        const desp = monthTxns.filter((t) => t.type === "despesa").reduce((s, t) => s + t.amount_cents, 0);
-        if (rec > 0) {
-          rates.push(((rec - desp) / rec) * 100);
-        }
-      }
-      setPastSavingsRates(rates);
-
-      // Find large expenses from ~12 months ago that match current month descriptions
-      const annualTxns = (annualRes.data ?? []) as { type: string; amount_cents: number; description: string }[];
-      const currentDescriptions = new Set(
-        transactions
-          .filter((t) => t.type === "despesa" && t.amount_cents >= 50000)
-          .map((t) => t.description.toLowerCase().trim())
-      );
-      // Annual expenses: large expenses from ~12 months ago NOT matching current month (not yet paid)
-      const existingRecDescriptions = new Set(
-        existingRecs.map((r) => r.description.toLowerCase().trim())
-      );
-      const provisions = annualTxns
-        .filter((t) => {
-          const desc = t.description.toLowerCase().trim();
-          return !currentDescriptions.has(desc) && !existingRecDescriptions.has(desc);
-        })
-        .reduce((acc, t) => {
-          const desc = t.description.trim();
-          const existing = acc.find((a) => a.description.toLowerCase() === desc.toLowerCase());
-          if (existing) {
-            existing.amountCents = Math.max(existing.amountCents, t.amount_cents);
-          } else {
-            acc.push({ description: desc, amountCents: t.amount_cents });
-          }
-          return acc;
-        }, [] as { description: string; amountCents: number }[])
-        .sort((a, b) => b.amountCents - a.amountCents)
-        .slice(0, 3);
-      setAnnualProvisions(provisions);
-    } else {
-      setRecurrenceSuggestions([]);
-      setPastSavingsRates([]);
-      setAnnualProvisions([]);
-    }
-
-    } catch (err) {
-      console.error("Erro ao carregar dashboard:", err);
-      addToast("Erro ao carregar dados do dashboard.", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [year, month, closingDay]);
-
-  // Fetch investment data once (does not depend on month)
-  useEffect(() => {
-    async function fetchInvestments() {
-      try {
-        const [investmentsRes, entriesRes, ipca] = await Promise.all([
-          supabase
-            .from("investments")
-            .select("id, product, indexer")
-            .eq("is_active", true),
-          supabase
-            .from("investment_entries")
-            .select("investment_id, type, amount_cents, date")
-            .limit(5000),
-          getIPCA12Months(),
-        ]);
-
-        const investments = (investmentsRes.data ?? []) as { id: string; product: string; indexer: string }[];
-        const entries = (entriesRes.data ?? []) as InvestmentEntry[];
-        setIpca12m(ipca);
-
-        if (investments.length === 0) {
-          setInvestmentData({
-            totalBalance: 0,
-            lastReturn: 0,
-            lastReturnPercent: 0,
-            hasData: false,
-          });
-          return;
-        }
-
-        const today = new Date();
-
-        // Current month and previous month for comparison
-        const currentYM = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-        const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        const prevYM = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
-
-        let totalBalance = 0;
-        let totalPrevMonth = 0;
-
-        for (const inv of investments) {
-          const invEntries = entries.filter((e) => e.investment_id === inv.id);
-          totalBalance += getMonthEndBalance(invEntries, currentYM);
-          totalPrevMonth += getMonthEndBalance(invEntries, prevYM);
-        }
-
-        const lastReturn = totalBalance - totalPrevMonth;
-        const lastReturnPercent =
-          totalPrevMonth > 0
-            ? ((totalBalance / totalPrevMonth) - 1) * 100
-            : 0;
-
-        setInvestmentData({
-          totalBalance,
-          lastReturn,
-          lastReturnPercent,
-          hasData: true,
-        });
-      } catch (err) {
-        console.error("Erro ao carregar investimentos:", err);
-      }
-    }
-
-    fetchInvestments();
-  }, []);
-
-  useEffect(() => {
-    if (!prefsLoading) {
-      fetchData();
-    }
-  }, [fetchData, prefsLoading]);
-
-
-  const totalReceitas = useMemo(
-    () => transactions.filter((t) => t.type === "receita").reduce((sum, t) => sum + t.amount_cents, 0),
-    [transactions]
-  );
-
-  const totalDespesas = useMemo(
-    () => transactions.filter((t) => t.type === "despesa").reduce((sum, t) => sum + t.amount_cents, 0),
-    [transactions]
-  );
-
-  const chartData = useMemo(() => {
-    const map = new Map<string, number>();
-    transactions
-      .filter((t) => t.type === "despesa")
-      .forEach((t) => {
-        const catName = t.categories?.name ?? "Sem categoria";
-        map.set(catName, (map.get(catName) ?? 0) + t.amount_cents);
+      const { generateMonthlyReport } = await import("@/lib/pdf-report");
+      const totalDespesas = data.totalDespesas;
+      generateMonthlyReport({
+        year: data.year,
+        month: data.month,
+        closingDay: data.closingDay,
+        totalReceitas: data.totalReceitas,
+        totalDespesas,
+        transactions: data.transactions.map((t) => ({
+          date: t.date,
+          description: t.description,
+          category: t.categories?.name ?? "Sem categoria",
+          account: t.accounts?.name ?? "-",
+          type: t.type,
+          amount_cents: t.amount_cents,
+        })),
+        categoryBreakdown: data.chartData.map((c) => ({
+          name: c.name,
+          amount_cents: c.amount,
+          percent: totalDespesas > 0 ? (c.amount / totalDespesas) * 100 : 0,
+        })),
+        kpis: {
+          savingsRate: data.savingsRate,
+          runway: data.runway,
+          reserveMonths: data.reserveMonths,
+          budgetDeviation: data.budgetDeviation,
+          fixedExpensePct: data.fixedExpensePct,
+        },
+        userName: fullName || undefined,
       });
-    return Array.from(map.entries())
-      .map(([name, amount]) => ({ name, amount }))
-      .sort((a, b) => b.amount - a.amount);
-  }, [transactions]);
-
-  const recentTransactions = useMemo(() => transactions.slice(0, 5), [transactions]);
-
-  // KPIs calculated values
-  const savingsRate = useMemo(
-    () => totalReceitas > 0 ? ((totalReceitas - totalDespesas) / totalReceitas) * 100 : null,
-    [totalReceitas, totalDespesas]
-  );
-
-  const expenseBaseForKpis = useMemo(
-    () => hasEssentialCategories && avgEssentialExpense > 0 ? avgEssentialExpense : avgMonthlyExpense,
-    [hasEssentialCategories, avgEssentialExpense, avgMonthlyExpense]
-  );
-
-  const runway = useMemo(
-    () => expenseBaseForKpis > 0 ? totalAccountBalance / expenseBaseForKpis : null,
-    [expenseBaseForKpis, totalAccountBalance]
-  );
-
-  const reserveMonths = useMemo(
-    () => hasReserveAccount && expenseBaseForKpis > 0 ? reserveBalance / expenseBaseForKpis : null,
-    [hasReserveAccount, expenseBaseForKpis, reserveBalance]
-  );
-
-  const forecastDespesas = useMemo(
-    () => currentMonthForecast?.forecastToDateDespesas ?? 0,
-    [currentMonthForecast]
-  );
-
-  const budgetDeviation = useMemo(
-    () => forecastDespesas > 0 ? ((totalDespesas - forecastDespesas) / forecastDespesas) * 100 : null,
-    [totalDespesas, forecastDespesas]
-  );
-
-  const fixedExpensePct = useMemo(
-    () => totalDespesas > 0 ? (totalRecurringDespesas / totalDespesas) * 100 : null,
-    [totalRecurringDespesas, totalDespesas]
-  );
-
-  const closingMonthStr = useMemo(
-    () => `${year}-${String(month + 1).padStart(2, "0")}`,
-    [year, month]
-  );
+      addToast("Relatório PDF gerado com sucesso.", "success");
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+      addToast("Erro ao gerar relatório PDF.", "error");
+    } finally {
+      setExporting(false);
+    }
+  }, [data, fullName, addToast]);
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <GreetingHeader />
-        <div className="flex gap-2">
-          {currentMonthForecast && (
-            <button
-              onClick={() => setShowClosing(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-tab-bg text-on-surface-secondary hover:bg-skeleton transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
-              </svg>
-              Revisar mês
-            </button>
-          )}
-          <Link
-            href="/transacoes?novo=receita"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Receita
-          </Link>
-          <Link
-            href="/transacoes?novo=despesa"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 hover:bg-rose-100 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-            </svg>
-            Despesa
-          </Link>
-          <Link
-            href="/transacoes?novo=transferencia"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-            </svg>
-            Transferência
-          </Link>
-        </div>
-      </div>
+      <DashboardHeader
+        showClosingButton={!!data.currentMonthForecast}
+        onOpenClosing={() => setShowClosing(true)}
+        onExportPdf={data.loading ? undefined : handleExportPdf}
+        exporting={exporting}
+      />
 
       <div className="mb-6">
-        <MonthPicker year={year} month={month} onPrev={prevMonth} onNext={nextMonth} closingDay={closingDay} />
+        <MonthPicker
+          year={data.year}
+          month={data.month}
+          onPrev={data.prevMonth}
+          onNext={data.nextMonth}
+          closingDay={data.closingDay}
+        />
       </div>
 
-      {loading || prefsLoading ? (
+      {data.loading || data.prefsLoading ? (
         <div className="space-y-10">
           <CardsSkeleton />
           <TableSkeleton rows={6} cols={5} />
         </div>
       ) : (
         <>
-          <SummaryCards totalReceitas={totalReceitas} totalDespesas={totalDespesas} />
+          <SummaryCards totalReceitas={data.totalReceitas} totalDespesas={data.totalDespesas} />
 
-          {/* KPIs */}
-          <div className="mt-4">
-            <FinancialKPIs
-              totalReceitas={totalReceitas}
-              totalDespesas={totalDespesas}
-              totalBalance={totalAccountBalance}
-              avgMonthlyExpense={avgMonthlyExpense}
-              avgEssentialExpense={avgEssentialExpense}
-              hasEssentialCategories={hasEssentialCategories}
-              reserveBalance={reserveBalance}
-              hasReserveAccount={hasReserveAccount}
-              reserveTargetMonths={reserveTargetMonths}
-              forecastDespesas={forecastDespesas}
-              totalRecurringDespesas={totalRecurringDespesas}
-            />
-          </div>
-
-          {/* Insights */}
-          <div className="mt-4">
-            <FinancialInsights
-              totalReceitas={totalReceitas}
-              totalDespesas={totalDespesas}
-              savingsRate={savingsRate}
-              runway={runway}
-              reserveMonths={reserveMonths}
-              forecast={currentMonthForecast}
-              hasInvestments={investmentData.hasData}
-              reserveTargetMonths={reserveTargetMonths}
-              goals={dashGoals}
-              accounts={dashAccounts}
-              pastSavingsRates={pastSavingsRates}
-              annualProvisions={annualProvisions}
-              hasDivergentAccounts={hasDivergentAccounts}
-              debts={dashDebts}
-            />
-          </div>
-
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Left column — wider */}
-            <div className="lg:col-span-3 flex flex-col gap-6">
-              {currentMonthForecast && (
-                <div className="bg-card rounded-xl border border-border p-6 shadow-sm flex-1">
-                  <h2 className="text-lg font-semibold text-on-surface-heading mb-4">
-                    Previsto vs Realizado
-                  </h2>
-                  <BudgetComparison month={currentMonthForecast} closingDay={closingDay} />
-                </div>
-              )}
-
-              <InvestmentSummary
-                totalBalance={investmentData.totalBalance}
-                lastReturn={investmentData.lastReturn}
-                lastReturnPercent={investmentData.lastReturnPercent}
-                hasData={investmentData.hasData}
-                ipca12m={ipca12m}
+          <SectionErrorBoundary sectionName="KPIs">
+            <div className="mt-4">
+              <FinancialKPIs
+                totalReceitas={data.totalReceitas}
+                totalDespesas={data.totalDespesas}
+                totalBalance={data.totalAccountBalance}
+                avgMonthlyExpense={data.avgMonthlyExpense}
+                avgEssentialExpense={data.avgEssentialExpense}
+                hasEssentialCategories={data.hasEssentialCategories}
+                reserveBalance={data.reserveBalance}
+                hasReserveAccount={data.hasReserveAccount}
+                reserveTargetMonths={data.reserveTargetMonths}
+                forecastDespesas={data.forecastDespesas}
+                totalRecurringDespesas={data.totalRecurringDespesas}
               />
+            </div>
+          </SectionErrorBoundary>
 
-              {recurrenceSuggestions.length > 0 && (
-                <RecurrenceSuggestions suggestions={recurrenceSuggestions} />
+          <SectionErrorBoundary sectionName="Insights">
+            <div className="mt-4">
+              <FinancialInsights
+                totalReceitas={data.totalReceitas}
+                totalDespesas={data.totalDespesas}
+                savingsRate={data.savingsRate}
+                runway={data.runway}
+                reserveMonths={data.reserveMonths}
+                forecast={data.currentMonthForecast}
+                hasInvestments={investmentData.hasData}
+                reserveTargetMonths={data.reserveTargetMonths}
+                goals={data.dashGoals}
+                accounts={data.dashAccounts}
+                pastSavingsRates={data.pastSavingsRates}
+                annualProvisions={data.annualProvisions}
+                hasDivergentAccounts={data.hasDivergentAccounts}
+                debts={data.dashDebts}
+              />
+            </div>
+          </SectionErrorBoundary>
+
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
+            {/* Left column */}
+            <div className="md:col-span-2 lg:col-span-3 flex flex-col gap-4 sm:gap-6">
+              {data.currentMonthForecast && (
+                <SectionErrorBoundary sectionName="Previsto vs Realizado">
+                  <div className="bg-card rounded-xl border border-border p-6 shadow-sm flex-1">
+                    <h2 className="text-lg font-semibold text-on-surface-heading mb-4">
+                      Previsto vs Realizado
+                    </h2>
+                    <BudgetComparison month={data.currentMonthForecast} closingDay={data.closingDay} />
+                  </div>
+                </SectionErrorBoundary>
               )}
 
-              {dashGoals.length > 0 && (
-                <GoalsSummary goals={dashGoals} accounts={dashAccounts} />
+              <SectionErrorBoundary sectionName="Investimentos">
+                <InvestmentSummary
+                  totalBalance={investmentData.totalBalance}
+                  lastReturn={investmentData.lastReturn}
+                  lastReturnPercent={investmentData.lastReturnPercent}
+                  hasData={investmentData.hasData}
+                  ipca12m={ipca12m}
+                />
+              </SectionErrorBoundary>
+
+              {data.recurrenceSuggestions.length > 0 && (
+                <SectionErrorBoundary sectionName="Recorrências sugeridas">
+                  <RecurrenceSuggestions suggestions={data.recurrenceSuggestions} />
+                </SectionErrorBoundary>
               )}
 
-              {dashDebts.length > 0 && (
-                <DebtSummary debts={dashDebts} />
+              {data.dashGoals.length > 0 && (
+                <SectionErrorBoundary sectionName="Metas">
+                  <GoalsSummary goals={data.dashGoals} accounts={data.dashAccounts} />
+                </SectionErrorBoundary>
+              )}
+
+              {data.dashDebts.length > 0 && (
+                <SectionErrorBoundary sectionName="Dívidas">
+                  <DebtSummary debts={data.dashDebts} />
+                </SectionErrorBoundary>
               )}
             </div>
 
-            {/* Right column — single card */}
-            <div className="lg:col-span-2 flex">
+            {/* Right column */}
+            <div className="md:col-span-1 lg:col-span-2 flex">
               <div className="bg-card rounded-xl border border-border shadow-sm flex-1 flex flex-col">
-                {/* Despesas por Categoria */}
-                <div className="p-6">
-                  <h2 className="text-lg font-semibold text-on-surface-heading mb-4">
-                    Despesas por Categoria
-                  </h2>
-                  <CategoryChart data={chartData} />
-                </div>
+                <SectionErrorBoundary sectionName="Despesas por categoria">
+                  <div className="p-6">
+                    <h2 className="text-lg font-semibold text-on-surface-heading mb-4">
+                      Despesas por Categoria
+                    </h2>
+                    <CategoryChart data={data.chartData} />
+                  </div>
+                </SectionErrorBoundary>
 
-                {/* Divider */}
                 <div className="border-t border-border" />
 
-                {/* Últimas Transações */}
-                <div className="p-6 flex-1">
-                  <h2 className="text-lg font-semibold text-on-surface-heading mb-4">
-                    Últimas Transações
-                  </h2>
-                  {recentTransactions.length === 0 ? (
-                    <p className="text-on-surface-muted text-sm">
-                      Nenhuma transação neste mês.
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {recentTransactions.map((t) => (
-                        <div
-                          key={t.id}
-                          className="flex items-center justify-between py-2 border-b border-border-light last:border-0"
-                        >
-                          <div>
-                            <p className="text-sm font-medium text-on-surface">
-                              {t.description}
-                            </p>
-                            <p className="text-xs text-on-surface-muted">
-                              {formatDate(t.date)} &middot;{" "}
-                              {t.type === "transferencia"
-                                ? `${t.accounts?.name ?? "-"} → ${t.destination_accounts?.name ?? "-"}`
-                                : `${t.categories?.name ?? "-"} · ${t.accounts?.name ?? "-"}`}
-                            </p>
-                          </div>
-                          <span
-                            className={`text-sm font-semibold tabular-nums ${
-                              t.type === "receita"
-                                ? "text-emerald-600"
-                                : t.type === "transferencia"
-                                  ? "text-blue-600 dark:text-blue-400"
-                                  : "text-rose-600"
-                            }`}
-                          >
-                            {t.type === "receita" ? "+" : t.type === "transferencia" ? "" : "-"}{" "}
-                            {formatCurrency(t.amount_cents)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <RecentTransactions transactions={data.recentTransactions} />
               </div>
             </div>
           </div>
         </>
       )}
 
-      {currentMonthForecast && (
+      {data.currentMonthForecast && (
         <Modal
           open={showClosing}
           onClose={() => setShowClosing(false)}
           title="Fechamento do Mês"
         >
           <MonthlyClosing
-            forecast={currentMonthForecast}
-            totalReceitas={totalReceitas}
-            totalDespesas={totalDespesas}
-            savingsRate={savingsRate}
-            month={closingMonthStr}
-            runwayMonths={runway}
-            reserveMonths={reserveMonths}
-            budgetDeviation={budgetDeviation}
-            fixedExpensePct={fixedExpensePct}
-            totalBalance={totalAccountBalance}
-            existingClosing={existingClosing}
-            previousClosing={previousClosing}
+            forecast={data.currentMonthForecast}
+            totalReceitas={data.totalReceitas}
+            totalDespesas={data.totalDespesas}
+            savingsRate={data.savingsRate}
+            month={data.closingMonthStr}
+            runwayMonths={data.runway}
+            reserveMonths={data.reserveMonths}
+            budgetDeviation={data.budgetDeviation}
+            fixedExpensePct={data.fixedExpensePct}
+            totalBalance={data.totalAccountBalance}
+            existingClosing={data.existingClosing}
+            previousClosing={data.previousClosing}
             onSaved={() => {
               setShowClosing(false);
-              fetchData();
+              data.fetchData();
             }}
           />
         </Modal>

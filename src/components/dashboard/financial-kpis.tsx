@@ -69,7 +69,7 @@ export function FinancialKPIs({
       : null;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
       {/* Taxa de Poupança */}
       <KPICard
         label="Taxa de Poupança"
@@ -261,7 +261,7 @@ function KPICard({
         <div className={`p-2 rounded-lg ${styles.icon}`}>{icon}</div>
         <div className="min-w-0">
           <p className="text-xs font-medium text-on-surface-muted">{label}</p>
-          <p className={`text-lg font-bold ${styles.value}`}>{value}</p>
+          <p className={`text-base sm:text-lg font-bold ${styles.value}`}>{value}</p>
           <div className="text-xs text-on-surface-muted truncate">{sublabel}</div>
         </div>
       </div>

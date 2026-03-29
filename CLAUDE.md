@@ -7,6 +7,8 @@ FinApp - Gestão Financeira Pessoal
 
 ## DECISÕES CONSOLIDADAS — Ver .claude/decisoes-consolidadas.md
 
+## RELATÓRIO DE CARGA — Ver .claude/relatorio-carga.md
+
 ## Contexto do Projeto
 
 ### Stack
@@ -15,19 +17,21 @@ FinApp - Gestão Financeira Pessoal
 - Supabase (Auth + PostgreSQL + RLS)
 - Recharts (gráficos)
 - Google Generative AI (`@google/generative-ai`) — Gemini 2.5 Flash
+- pdf-lib (owner-password removal) + pdfjs-dist (user-password decryption)
 
 ### Infraestrutura
-- **Supabase:** Projeto `knwbotsyztakseriiwtv`, Migrations 001-018
+- **Supabase:** Projeto `knwbotsyztakseriiwtv`, Migrations 001-020
 - **Vercel:** `finapp-kohl.vercel.app` (deploy automático via GitHub)
 - **GitHub:** `https://github.com/rodrigocoutinho-stack/finapp.git`
 
 ### Funcionalidades Implementadas
 - Autenticação (login, registro, logout, auto-logout por inatividade 30 min)
-- CRUD Contas (banco, cartão, carteira, reserva de emergência, saldo inicial, reconciliação)
+- CRUD Contas (banco, cartão, carteira, reserva de emergência, saldo inicial, reconciliação, agrupamento por grupo PJ/PF/etc)
 - CRUD Categorias (receita/despesa, teto de orçamento, flag essencial — dentro de Configurações)
-- CRUD Transações (filtro mensal + filtros avançados por categoria/conta/tipo/busca, paginação server-side, exportação CSV, atualização automática de saldo via RPC atômico)
+- CRUD Transações (receita/despesa/transferência, filtro mensal + filtros avançados por categoria/conta/tipo/busca, paginação server-side, exportação CSV, atualização automática de saldo via RPC atômico)
+- Transferências entre contas (tipo dedicado, ajuste de saldo em origem e destino, ignorado em KPIs/forecast/fluxo)
 - Transações Planejadas (recorrentes, pontuais, com período, detecção automática de padrões)
-- Importação OFX/CSV/PDF (mapeamento CSV, extração PDF via IA Gemini, auto-categorização por regras)
+- Importação OFX/CSV/PDF (mapeamento CSV, extração PDF via IA Gemini, suporte a PDFs com senha via pdfjs-dist, auto-categorização por regras)
 - Investimentos (CRUD + lançamentos + quadro de evolução + retorno real IPCA)
 - Metas Financeiras (CRUD + progresso + vínculo a conta + cards visuais + widget dashboard + insights)
 - Gestão de Dívidas (CRUD + simulador pagamento extra + widget dashboard + insights juros/renda)
@@ -41,6 +45,7 @@ FinApp - Gestão Financeira Pessoal
 - Security Hardening (HTTP headers, RPC hardening, RLS strengthening, error sanitization, MIME validation, auth guard)
 - Configurações (abas Geral + Categorias + Regras de Importação, closing day 1-28, meta reserva de emergência, tema claro/escuro/sistema)
 - Dark Mode (CSS variables semânticas, tokens Tailwind v4 via @theme, next-themes com localStorage, hook useChartColors para gráficos)
+- Relatório Consolidado por Grupo (modal com cards Bruto/Impostos/Líquido + BarChart Recharts + DataTable, últimos 6 meses, acessível via botão "Relatório" por grupo na página Contas)
 
 ## Estrutura do Projeto
 
@@ -75,7 +80,7 @@ src/
 │   ├── dividas/                  # DebtForm, DebtList, DebtSimulator
 │   ├── historico/                 # KpiHistory
 │   ├── simuladores/              # CompoundInterestSimulator, InflationSimulator, OpportunityCostSimulator
-│   ├── contas/                   # AccountForm, AccountList, AccountReconciliation
+│   ├── contas/                   # AccountForm, AccountList, AccountReconciliation, GroupReportModal
 │   ├── categorias/               # CategoryForm, CategoryList, CategoryRules
 │   ├── assistente/               # ChatMessage, ChatInput
 │   ├── transacoes/               # TransactionForm, TransactionList, TransactionFilters, Import*
@@ -117,10 +122,10 @@ src/
 | Tabela | Descrição |
 |--------|-----------|
 | `profiles` | Perfis de usuário (extends auth.users), inclui `closing_day`, `reserve_target_months` |
-| `accounts` | Contas (banco, cartão, carteira), `is_emergency_reserve`, `initial_balance_cents` |
+| `accounts` | Contas (banco, cartão, carteira), `is_emergency_reserve`, `initial_balance_cents`, `account_group` (nullable) |
 | `categories` | Categorias com `projection_type`, `budget_cents`, `is_essential` |
-| `transactions` | Transações (receita/despesa) |
-| `recurring_transactions` | Transações planejadas (recorrentes, pontuais, com período) |
+| `transactions` | Transações (receita/despesa/transferência), `destination_account_id` para transferências |
+| `recurring_transactions` | Transações planejadas (recorrentes, pontuais, com período), suporta transferências |
 | `investments` | Investimentos (CDB, Tesouro, Ações, etc.) |
 | `investment_entries` | Lançamentos de investimentos (aportes, resgates, saldos) |
 | `category_rules` | Regras de categorização automática (pattern → category) |
@@ -129,7 +134,7 @@ src/
 | `audit_logs` | Trilha de auditoria imutável (ação, entidade, detalhes JSONB) |
 | `monthly_closings` | Fechamento mensal persistente com snapshot de KPIs |
 
-### Migrations (001-018)
+### Migrations (001-019)
 1. `001_initial_schema.sql` — Estrutura base (profiles, accounts, categories, transactions)
 2. `002_seed_categories.sql` — Categorias padrão
 3. `003_add_projection_type.sql` — Campo projection_type em categories
@@ -148,6 +153,8 @@ src/
 16. `016_debts.sql` — Tabela debts com RLS, índice, constraints
 17. `017_audit_logs.sql` — Tabela audit_logs (INSERT + SELECT imutável)
 18. `018_monthly_closings.sql` — Tabela monthly_closings (fechamento mensal + KPIs snapshot)
+19. `019_transfers.sql` — Tipo transferência + destination_account_id + category_id nullable + constraints
+20. `020_account_groups.sql` — Campo account_group (TEXT nullable) em accounts + índice
 
 ## Navegação (Sidebar)
 

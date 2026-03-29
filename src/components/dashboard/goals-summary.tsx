@@ -35,8 +35,8 @@ export function GoalsSummary({ goals, accounts }: GoalsSummaryProps) {
   if (topGoals.length === 0) return null;
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-card rounded-xl border border-border p-4 sm:p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
           <svg
             className="w-5 h-5 text-emerald-600"
@@ -61,7 +61,7 @@ export function GoalsSummary({ goals, accounts }: GoalsSummaryProps) {
         </Link>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         {topGoals.map((goal) => {
           const colorKey = goal.color in GOAL_COLORS ? goal.color : "emerald";
           const colorStyles = GOAL_COLORS[colorKey];

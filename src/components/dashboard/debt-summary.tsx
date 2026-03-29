@@ -43,8 +43,8 @@ export function DebtSummary({ debts }: DebtSummaryProps) {
     .slice(0, 3);
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-card rounded-xl border border-border p-4 sm:p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
         <div className="flex items-center gap-2">
           <svg
             className="w-5 h-5 text-rose-500"
@@ -70,22 +70,22 @@ export function DebtSummary({ debts }: DebtSummaryProps) {
       </div>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-surface-alt rounded-lg px-3 py-2 text-center">
-          <p className="text-xs text-on-surface-muted">Total devedor</p>
-          <p className="text-sm font-semibold text-on-surface-heading">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
+        <div className="bg-surface-alt rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 text-center">
+          <p className="text-[10px] sm:text-xs text-on-surface-muted">Total devedor</p>
+          <p className="text-xs sm:text-sm font-semibold text-on-surface-heading">
             {formatCurrency(totalRemaining)}
           </p>
         </div>
-        <div className="bg-surface-alt rounded-lg px-3 py-2 text-center">
-          <p className="text-xs text-on-surface-muted">Parcelas/mês</p>
-          <p className="text-sm font-semibold text-on-surface-heading">
+        <div className="bg-surface-alt rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 text-center">
+          <p className="text-[10px] sm:text-xs text-on-surface-muted">Parcelas/mês</p>
+          <p className="text-xs sm:text-sm font-semibold text-on-surface-heading">
             {formatCurrency(totalMonthlyPayment)}
           </p>
         </div>
-        <div className="bg-surface-alt rounded-lg px-3 py-2 text-center">
-          <p className="text-xs text-on-surface-muted">Ativas</p>
-          <p className="text-sm font-semibold text-on-surface-heading">
+        <div className="bg-surface-alt rounded-lg px-2 py-1.5 sm:px-3 sm:py-2 text-center">
+          <p className="text-[10px] sm:text-xs text-on-surface-muted">Ativas</p>
+          <p className="text-xs sm:text-sm font-semibold text-on-surface-heading">
             {activeDebts.length}
           </p>
         </div>

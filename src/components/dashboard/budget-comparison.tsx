@@ -88,19 +88,20 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
         </div>
       )}
 
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto -mx-2 sm:mx-0">
+      <table className="w-full text-xs sm:text-sm">
         <thead>
           <tr className="border-b border-border">
-            <th className="text-left py-2 pr-4 font-medium text-on-surface-secondary min-w-[160px]">
+            <th className="text-left py-2 pr-3 sm:pr-4 font-medium text-on-surface-secondary min-w-[120px] sm:min-w-[160px]">
               Categoria
             </th>
-            <th className="text-right py-2 px-3 font-medium text-on-surface-secondary min-w-[100px]">
+            <th className="text-right py-2 px-2 sm:px-3 font-medium text-on-surface-secondary min-w-[80px] sm:min-w-[100px]">
               Previsto
             </th>
-            <th className="text-right py-2 px-3 font-medium text-on-surface-secondary min-w-[100px]">
+            <th className="text-right py-2 px-2 sm:px-3 font-medium text-on-surface-secondary min-w-[80px] sm:min-w-[100px]">
               Realizado
             </th>
-            <th className="text-right py-2 px-3 font-medium text-on-surface-secondary min-w-[110px]">
+            <th className="text-right py-2 px-2 sm:px-3 font-medium text-on-surface-secondary min-w-[80px] sm:min-w-[110px]">
               Diferença
             </th>
           </tr>
@@ -212,6 +213,7 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

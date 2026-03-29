@@ -46,9 +46,9 @@ export function CategoryChart({ data }: CategoryChartProps) {
   const total = data.reduce((sum, d) => sum + d.amount, 0);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-6">
+    <div className="flex flex-col items-center gap-4 sm:gap-6 sm:flex-row">
       {/* Donut chart */}
-      <div className="relative w-[200px] h-[200px] shrink-0">
+      <div className="relative w-[160px] h-[160px] sm:w-[200px] sm:h-[200px] shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -57,8 +57,8 @@ export function CategoryChart({ data }: CategoryChartProps) {
               nameKey="name"
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={90}
+              innerRadius="35%"
+              outerRadius="48%"
               paddingAngle={2}
               strokeWidth={0}
             >

@@ -14,7 +14,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           collapsed ? "lg:pl-[68px]" : "lg:pl-60"
         }`}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-10">
           {children}
         </div>
       </main>

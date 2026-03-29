@@ -11,7 +11,7 @@ export function SummaryCards({ totalReceitas, totalDespesas }: SummaryCardsProps
   const saldo = totalReceitas - totalDespesas;
 
   return (
-    <div className="grid gap-5 sm:grid-cols-3">
+    <div className="grid gap-3 sm:gap-5 sm:grid-cols-3">
       {/* Receitas */}
       <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
         <div className="flex items-center gap-4">
