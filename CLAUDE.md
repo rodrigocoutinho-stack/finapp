@@ -27,7 +27,7 @@ FinApp - Gestão Financeira Pessoal
 ### Funcionalidades Implementadas
 - Autenticação (login, registro, logout, auto-logout por inatividade 30 min)
 - CRUD Contas (banco, cartão, carteira, reserva de emergência, saldo inicial, reconciliação, agrupamento por grupo PJ/PF/etc)
-- CRUD Categorias (receita/despesa, teto de orçamento, flag essencial — dentro de Configurações)
+- CRUD Categorias (receita/despesa, teto de orçamento, flag essencial, agrupamento por category_group — dentro de Configurações, 27 categorias padrão para novos usuários)
 - CRUD Transações (receita/despesa/transferência, filtro mensal + filtros avançados por categoria/conta/tipo/busca, paginação server-side, exportação CSV, atualização automática de saldo via RPC atômico)
 - Transferências entre contas (tipo dedicado, ajuste de saldo em origem e destino, ignorado em KPIs/forecast/fluxo)
 - Transações Planejadas (recorrentes, pontuais, com período, detecção automática de padrões)
@@ -155,6 +155,8 @@ src/
 18. `018_monthly_closings.sql` — Tabela monthly_closings (fechamento mensal + KPIs snapshot)
 19. `019_transfers.sql` — Tipo transferência + destination_account_id + category_id nullable + constraints
 20. `020_account_groups.sql` — Campo account_group (TEXT nullable) em accounts + índice
+21. `021_category_groups.sql` — Campo category_group (TEXT nullable) em categories + índice
+22. `022_seed_categories_v2.sql` — Atualiza trigger seed_default_categories com 27 categorias em 8 grupos
 
 ## Navegação (Sidebar)
 
