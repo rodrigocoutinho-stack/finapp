@@ -21,14 +21,16 @@ const projectionTypeOptions = [
 
 interface CategoryFormProps {
   category?: Category;
+  existingGroups?: string[];
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProps) {
+export function CategoryForm({ category, existingGroups = [], onSuccess, onCancel }: CategoryFormProps) {
   const supabase = createClient();
   const [name, setName] = useState(category?.name ?? "");
   const [type, setType] = useState(category?.type ?? "despesa");
+  const [categoryGroup, setCategoryGroup] = useState(category?.category_group ?? "");
   const [projectionType, setProjectionType] = useState<"recurring" | "historical">(
     category?.projection_type ?? "historical"
   );
@@ -85,7 +87,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
     if (category) {
       const { error } = await supabase
         .from("categories")
-        .update({ name, type, projection_type: projectionType, budget_cents: budgetCents, is_essential: type === "despesa" ? isEssential : false })
+        .update({ name, type, projection_type: projectionType, budget_cents: budgetCents, is_essential: type === "despesa" ? isEssential : false, category_group: categoryGroup.trim() || null })
         .eq("id", category.id);
 
       if (error) {
@@ -96,7 +98,7 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
     } else {
       const { error } = await supabase
         .from("categories")
-        .insert({ user_id: user.id, name, type, projection_type: projectionType, budget_cents: budgetCents, is_essential: type === "despesa" ? isEssential : false });
+        .insert({ user_id: user.id, name, type, projection_type: projectionType, budget_cents: budgetCents, is_essential: type === "despesa" ? isEssential : false, category_group: categoryGroup.trim() || null });
 
       if (error) {
         setServerError("Erro ao criar categoria.");
@@ -125,6 +127,28 @@ export function CategoryForm({ category, onSuccess, onCancel }: CategoryFormProp
         maxLength={100}
         required
       />
+
+      <div>
+        <label htmlFor="categoryGroup" className="block text-sm font-medium text-on-surface-secondary mb-1">
+          Grupo <span className="text-on-surface-muted font-normal">(opcional)</span>
+        </label>
+        <input
+          id="categoryGroup"
+          list="category-group-suggestions"
+          value={categoryGroup}
+          onChange={(e) => setCategoryGroup(e.target.value)}
+          placeholder="Ex: Despesas Essenciais Fixas, Receitas PF"
+          maxLength={50}
+          className="w-full rounded-lg border border-input-border bg-card px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-muted focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+        />
+        {existingGroups.length > 0 && (
+          <datalist id="category-group-suggestions">
+            {existingGroups.map((g) => (
+              <option key={g} value={g} />
+            ))}
+          </datalist>
+        )}
+      </div>
 
       <Select
         id="type"

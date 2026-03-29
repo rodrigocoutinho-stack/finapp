@@ -17,6 +17,7 @@ export interface ReportCategoryBreakdown {
   name: string;
   amount_cents: number;
   percent: number;
+  categoryGroup?: string | null;
 }
 
 export interface ReportKPIs {

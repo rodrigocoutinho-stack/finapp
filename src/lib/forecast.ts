@@ -13,6 +13,7 @@ import { isRecurringActiveInMonth } from "@/lib/utils";
 export interface CategoryForecast {
   categoryId: string;
   categoryName: string;
+  categoryGroup: string | null;
   type: "receita" | "despesa";
   projectedAmount: number;
   forecastAmount: number;
@@ -253,6 +254,7 @@ export async function calculateForecast(
         byCategory.push({
           categoryId: category.id,
           categoryName: category.name,
+          categoryGroup: category.category_group ?? null,
           type: category.type,
           projectedAmount: monthlyAmount,
           forecastAmount: forecastFull,

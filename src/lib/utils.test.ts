@@ -9,8 +9,10 @@ import {
   formatMonthLabel,
   groupAccountsByGroup,
   buildGroupedAccountOptions,
+  groupCategoriesByGroup,
+  buildGroupedCategoryOptions,
 } from "./utils";
-import type { Account } from "@/types/database";
+import type { Account, Category } from "@/types/database";
 
 // ── formatCurrency ──────────────────────────────────────────────
 
@@ -243,5 +245,87 @@ describe("buildGroupedAccountOptions", () => {
     const accounts = [makeAccount({ id: "1", name: "Nubank", type: "banco" })];
     const result = buildGroupedAccountOptions(accounts, (a) => `${a.name} (${a.type})`);
     expect(result.options[0].label).toBe("Nubank (banco)");
+  });
+});
+
+// ── groupCategoriesByGroup ──────────────────────────────────────
+
+function makeCategory(overrides: Partial<Category> = {}): Category {
+  return {
+    id: "c1",
+    user_id: "u1",
+    name: "Alimentação",
+    type: "despesa",
+    projection_type: "historical",
+    budget_cents: null,
+    is_essential: false,
+    category_group: null,
+    created_at: "2026-01-01",
+    ...overrides,
+  };
+}
+
+describe("groupCategoriesByGroup", () => {
+  it("returns empty array for empty input", () => {
+    expect(groupCategoriesByGroup([])).toEqual([]);
+  });
+
+  it("groups all null categories under 'Geral'", () => {
+    const cats = [makeCategory({ id: "1" }), makeCategory({ id: "2" })];
+    const result = groupCategoriesByGroup(cats);
+    expect(result).toHaveLength(1);
+    expect(result[0][0]).toBe("Geral");
+    expect(result[0][1]).toHaveLength(2);
+  });
+
+  it("sorts alphabetically with 'Geral' last", () => {
+    const cats = [
+      makeCategory({ id: "1", category_group: "Variáveis Essenciais" }),
+      makeCategory({ id: "2", category_group: null }),
+      makeCategory({ id: "3", category_group: "Despesas Essenciais Fixas" }),
+    ];
+    const result = groupCategoriesByGroup(cats);
+    expect(result.map(([g]) => g)).toEqual(["Despesas Essenciais Fixas", "Variáveis Essenciais", "Geral"]);
+  });
+
+  it("groups categories correctly", () => {
+    const cats = [
+      makeCategory({ id: "1", name: "Moradia", category_group: "Essenciais" }),
+      makeCategory({ id: "2", name: "Educação", category_group: "Essenciais" }),
+      makeCategory({ id: "3", name: "Lazer", category_group: "Discricionárias" }),
+    ];
+    const result = groupCategoriesByGroup(cats);
+    expect(result).toHaveLength(2);
+    expect(result[0][0]).toBe("Discricionárias");
+    expect(result[0][1]).toHaveLength(1);
+    expect(result[1][0]).toBe("Essenciais");
+    expect(result[1][1]).toHaveLength(2);
+  });
+});
+
+// ── buildGroupedCategoryOptions ──────────────────────────────────
+
+describe("buildGroupedCategoryOptions", () => {
+  it("returns only options when single group", () => {
+    const cats = [makeCategory({ id: "1", name: "Alimentação" })];
+    const result = buildGroupedCategoryOptions(cats);
+    expect(result.options).toHaveLength(1);
+    expect(result.groupedOptions).toBeUndefined();
+  });
+
+  it("returns groupedOptions when 2+ groups", () => {
+    const cats = [
+      makeCategory({ id: "1", name: "Moradia", category_group: "Essenciais" }),
+      makeCategory({ id: "2", name: "Lazer", category_group: "Discricionárias" }),
+    ];
+    const result = buildGroupedCategoryOptions(cats);
+    expect(result.groupedOptions).toBeDefined();
+    expect(result.groupedOptions).toHaveLength(2);
+  });
+
+  it("accepts custom labelFn", () => {
+    const cats = [makeCategory({ id: "1", name: "Moradia", type: "despesa" })];
+    const result = buildGroupedCategoryOptions(cats, (c) => `${c.name} (${c.type})`);
+    expect(result.options[0].label).toBe("Moradia (despesa)");
   });
 });

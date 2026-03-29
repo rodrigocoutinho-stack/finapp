@@ -16,7 +16,7 @@ export interface TransactionRow {
   amount_cents: number;
   description: string;
   date: string;
-  categories: { name: string } | null;
+  categories: { name: string; category_group: string | null } | null;
   accounts: { name: string } | null;
   destination_account_id: string | null;
   destination_accounts: { name: string } | null;
@@ -123,7 +123,7 @@ export function useDashboardData() {
       ] = await Promise.all([
         supabase
           .from("transactions")
-          .select("id, type, amount_cents, description, date, destination_account_id, categories(name), accounts:accounts!account_id(name), destination_accounts:accounts!destination_account_id(name)")
+          .select("id, type, amount_cents, description, date, destination_account_id, categories(name, category_group), accounts:accounts!account_id(name), destination_accounts:accounts!destination_account_id(name)")
           .gte("date", start)
           .lte("date", end)
           .order("date", { ascending: false })
@@ -340,15 +340,21 @@ export function useDashboardData() {
   );
 
   const chartData = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map<string, { amount: number; categoryGroup: string | null }>();
     transactions
       .filter((t) => t.type === "despesa")
       .forEach((t) => {
         const catName = t.categories?.name ?? "Sem categoria";
-        map.set(catName, (map.get(catName) ?? 0) + t.amount_cents);
+        const catGroup = t.categories?.category_group ?? null;
+        const existing = map.get(catName);
+        if (existing) {
+          existing.amount += t.amount_cents;
+        } else {
+          map.set(catName, { amount: t.amount_cents, categoryGroup: catGroup });
+        }
       });
     return Array.from(map.entries())
-      .map(([name, amount]) => ({ name, amount }))
+      .map(([name, { amount, categoryGroup }]) => ({ name, amount, categoryGroup }))
       .sort((a, b) => b.amount - a.amount);
   }, [transactions]);
 

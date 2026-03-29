@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toCents, formatCurrency, buildGroupedAccountOptions } from "@/lib/utils";
+import { toCents, formatCurrency, buildGroupedAccountOptions, buildGroupedCategoryOptions } from "@/lib/utils";
 import type { Account, Category, RecurringTransaction } from "@/types/database";
 
 const transactionTypeOptions = [
@@ -94,10 +94,7 @@ export function RecurringForm({
   const { groupedOptions: destGrouped } = buildGroupedAccountOptions(destAccounts, accountLabelFn);
   const destinationAccountOptions = destAccounts.map((a) => ({ value: a.id, label: accountLabelFn(a) }));
 
-  const categoryOptions = filteredCategories.map((c) => ({
-    value: c.id,
-    label: c.name,
-  }));
+  const { options: categoryOptions, groupedOptions: categoryGrouped } = buildGroupedCategoryOptions(filteredCategories);
 
   function resolveMonthFields(): {
     start_month: string | null;
@@ -306,6 +303,7 @@ export function RecurringForm({
           value={categoryId}
           onChange={(e) => { setCategoryId(e.target.value); clearFieldError("category"); }}
           options={categoryOptions}
+          groupedOptions={categoryGrouped}
           placeholder="Selecione a categoria"
           error={errors.category}
           required

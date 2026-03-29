@@ -1,5 +1,5 @@
 import { getCompetencyRange } from "@/lib/closing-day";
-import type { Account } from "@/types/database";
+import type { Account, Category } from "@/types/database";
 
 /**
  * Agrupa contas por account_group. Contas sem grupo ficam em "Geral".
@@ -38,6 +38,46 @@ export function buildGroupedAccountOptions(
     groupedOptions: grouped.map(([group, accts]) => ({
       group,
       options: accts.map((a) => ({ value: a.id, label: labelFn(a) })),
+    })),
+  };
+}
+
+/**
+ * Agrupa categorias por category_group. Categorias sem grupo ficam em "Geral".
+ * Retorna grupos nomeados em ordem alfabética, com "Geral" por último.
+ */
+export function groupCategoriesByGroup(categories: Category[]): [string, Category[]][] {
+  const groups = new Map<string, Category[]>();
+  for (const cat of categories) {
+    const key = cat.category_group ?? "Geral";
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(cat);
+  }
+  return [...groups.entries()].sort((a, b) => {
+    if (a[0] === "Geral") return 1;
+    if (b[0] === "Geral") return -1;
+    return a[0].localeCompare(b[0]);
+  });
+}
+
+/**
+ * Constrói groupedOptions para o Select UI com optgroup, se houver 2+ grupos.
+ */
+export function buildGroupedCategoryOptions(
+  categories: Category[],
+  labelFn: (c: Category) => string = (c) => c.name
+): {
+  options: { value: string; label: string }[];
+  groupedOptions?: { group: string; options: { value: string; label: string }[] }[];
+} {
+  const grouped = groupCategoriesByGroup(categories);
+  const options = categories.map((c) => ({ value: c.id, label: labelFn(c) }));
+  if (grouped.length <= 1) return { options };
+  return {
+    options,
+    groupedOptions: grouped.map(([group, cats]) => ({
+      group,
+      options: cats.map((c) => ({ value: c.id, label: labelFn(c) })),
     })),
   };
 }

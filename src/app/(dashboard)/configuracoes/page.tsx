@@ -38,6 +38,8 @@ export default function ConfiguracoesPage() {
 
   const currentDay = selectedDay ?? closingDay;
 
+  const existingCategoryGroups = [...new Set(categories.map((c) => c.category_group).filter(Boolean))] as string[];
+
   const fetchCategories = useCallback(async () => {
     setCatLoading(true);
     const { data } = await supabase
@@ -250,7 +252,7 @@ export default function ConfiguracoesPage() {
           {catLoading ? (
             <TableSkeleton rows={5} cols={3} />
           ) : (
-            <CategoryList categories={categories} onRefresh={fetchCategories} />
+            <CategoryList categories={categories} existingGroups={existingCategoryGroups} onRefresh={fetchCategories} />
           )}
 
           <Modal
@@ -259,6 +261,7 @@ export default function ConfiguracoesPage() {
             title="Nova categoria"
           >
             <CategoryForm
+              existingGroups={existingCategoryGroups}
               onSuccess={() => {
                 setShowCatForm(false);
                 fetchCategories();

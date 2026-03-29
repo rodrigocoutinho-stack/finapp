@@ -74,6 +74,7 @@ export default function DashboardPage() {
           name: c.name,
           amount_cents: c.amount,
           percent: totalDespesas > 0 ? (c.amount / totalDespesas) * 100 : 0,
+          categoryGroup: c.categoryGroup,
         })),
         kpis: {
           savingsRate: data.savingsRate,

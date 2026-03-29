@@ -319,11 +319,26 @@ export function ImportReviewTable({
                         }`}
                       >
                         <option value="">Selecione...</option>
-                        {cats.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
+                        {(() => {
+                          const groups = new Map<string, typeof cats>();
+                          for (const c of cats) {
+                            const g = c.category_group ?? "Geral";
+                            if (!groups.has(g)) groups.set(g, []);
+                            groups.get(g)!.push(c);
+                          }
+                          if (groups.size <= 1) {
+                            return cats.map((c) => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ));
+                          }
+                          return [...groups.entries()].map(([group, items]) => (
+                            <optgroup key={group} label={group}>
+                              {items.map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </optgroup>
+                          ));
+                        })()}
                       </select>
                       {row.autoCategorized && row.categoryId && (
                         <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700">

@@ -155,24 +155,36 @@ export function CategoryRules() {
               required
             >
               <option value="">Selecione...</option>
-              {despesas.length > 0 && (
-                <optgroup label="Despesas">
-                  {despesas.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-              {receitas.length > 0 && (
-                <optgroup label="Receitas">
-                  {receitas.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
+              {despesas.length > 0 && (() => {
+                const groups = new Map<string, typeof despesas>();
+                for (const c of despesas) {
+                  const g = c.category_group ?? "Despesas";
+                  if (!groups.has(g)) groups.set(g, []);
+                  groups.get(g)!.push(c);
+                }
+                return [...groups.entries()].map(([group, cats]) => (
+                  <optgroup key={`d-${group}`} label={group === "Despesas" && groups.size === 1 ? "Despesas" : `Despesas › ${group}`}>
+                    {cats.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </optgroup>
+                ));
+              })()}
+              {receitas.length > 0 && (() => {
+                const groups = new Map<string, typeof receitas>();
+                for (const c of receitas) {
+                  const g = c.category_group ?? "Receitas";
+                  if (!groups.has(g)) groups.set(g, []);
+                  groups.get(g)!.push(c);
+                }
+                return [...groups.entries()].map(([group, cats]) => (
+                  <optgroup key={`r-${group}`} label={group === "Receitas" && groups.size === 1 ? "Receitas" : `Receitas › ${group}`}>
+                    {cats.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </optgroup>
+                ));
+              })()}
             </select>
           </div>
           <Button type="submit" loading={saving}>

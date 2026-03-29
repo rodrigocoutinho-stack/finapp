@@ -7,14 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { CategoryForm } from "./category-form";
 import { CategoryIcon } from "@/lib/category-icons";
+import { groupCategoriesByGroup } from "@/lib/utils";
 import type { Category } from "@/types/database";
 
 interface CategoryListProps {
   categories: Category[];
+  existingGroups?: string[];
   onRefresh: () => void;
 }
 
-export function CategoryList({ categories, onRefresh }: CategoryListProps) {
+export function CategoryList({ categories, existingGroups = [], onRefresh }: CategoryListProps) {
   const supabase = createClient();
   const { addToast } = useToast();
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -61,46 +63,66 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
     addToast("Categoria excluída.");
   }
 
-  function renderGroup(title: string, items: Category[]) {
+  const receitaGroups = groupCategoriesByGroup(receitas);
+  const despesaGroups = groupCategoriesByGroup(despesas);
+  const showGroupHeaders = (items: [string, Category[]][]) => items.length > 1;
+
+  function renderCategoryCard(cat: Category) {
+    return (
+      <div
+        key={cat.id}
+        className="flex items-center justify-between bg-card rounded-lg border border-border px-4 py-3"
+      >
+        <span className="flex items-center gap-2 text-on-surface">
+          <CategoryIcon name={cat.name} className="w-4 h-4 text-on-surface-muted" />
+          {cat.name}
+          {cat.is_essential && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+              Essencial
+            </span>
+          )}
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            className="text-xs"
+            onClick={() => setEditingCategory(cat)}
+          >
+            Editar
+          </Button>
+          <Button
+            variant="ghost"
+            className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 dark:bg-red-950"
+            onClick={() => {
+              setDeleteError("");
+              setDeletingCategory(cat);
+            }}
+          >
+            Excluir
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  function renderTypeSection(title: string, groups: [string, Category[]][]) {
+    const hasGroups = showGroupHeaders(groups);
     return (
       <div>
         <h2 className="text-lg font-semibold text-on-surface-heading mb-3">{title}</h2>
-        {items.length === 0 ? (
+        {groups.length === 0 || groups.every(([, items]) => items.length === 0) ? (
           <p className="text-on-surface-muted text-sm">Nenhuma categoria.</p>
         ) : (
           <div className="space-y-2">
-            {items.map((cat) => (
-              <div
-                key={cat.id}
-                className="flex items-center justify-between bg-card rounded-lg border border-border px-4 py-3"
-              >
-                <span className="flex items-center gap-2 text-on-surface">
-                  <CategoryIcon name={cat.name} className="w-4 h-4 text-on-surface-muted" />
-                  {cat.name}
-                  {cat.is_essential && (
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
-                      Essencial
-                    </span>
-                  )}
-                </span>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    className="text-xs"
-                    onClick={() => setEditingCategory(cat)}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950 dark:bg-red-950"
-                    onClick={() => {
-                      setDeleteError("");
-                      setDeletingCategory(cat);
-                    }}
-                  >
-                    Excluir
-                  </Button>
+            {groups.map(([groupName, items]) => (
+              <div key={groupName}>
+                {hasGroups && (
+                  <h3 className="text-xs font-medium text-on-surface-muted uppercase tracking-wide mt-4 mb-2 first:mt-0">
+                    {groupName}
+                  </h3>
+                )}
+                <div className="space-y-2">
+                  {items.map((cat) => renderCategoryCard(cat))}
                 </div>
               </div>
             ))}
@@ -113,8 +135,8 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
   return (
     <>
       <div className="grid gap-8 md:grid-cols-2">
-        {renderGroup("Receitas", receitas)}
-        {renderGroup("Despesas", despesas)}
+        {renderTypeSection("Receitas", receitaGroups)}
+        {renderTypeSection("Despesas", despesaGroups)}
       </div>
 
       <Modal
@@ -125,6 +147,7 @@ export function CategoryList({ categories, onRefresh }: CategoryListProps) {
         {editingCategory && (
           <CategoryForm
             category={editingCategory}
+            existingGroups={existingGroups}
             onSuccess={() => {
               setEditingCategory(null);
               onRefresh();

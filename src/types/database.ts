@@ -78,6 +78,7 @@ export type Database = {
           projection_type: "recurring" | "historical";
           budget_cents: number | null;
           is_essential: boolean;
+          category_group: string | null;
           created_at: string;
         };
         Insert: {
@@ -88,6 +89,7 @@ export type Database = {
           projection_type?: "recurring" | "historical";
           budget_cents?: number | null;
           is_essential?: boolean;
+          category_group?: string | null;
           created_at?: string;
         };
         Update: {
@@ -98,6 +100,7 @@ export type Database = {
           projection_type?: "recurring" | "historical";
           budget_cents?: number | null;
           is_essential?: boolean;
+          category_group?: string | null;
           created_at?: string;
         };
         Relationships: [

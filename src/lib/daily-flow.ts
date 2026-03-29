@@ -25,6 +25,7 @@ export interface FlowCategory {
   id: string;
   name: string;
   type: "receita" | "despesa";
+  categoryGroup: string | null;
 }
 
 export interface DailyFlowResult {
@@ -77,7 +78,7 @@ export async function calculateDailyFlow(
           .eq("is_active", true)
           .neq("type", "transferencia")
           .limit(1000),
-        supabase.from("categories").select("id, name, type"),
+        supabase.from("categories").select("id, name, type, category_group"),
       ]);
   } catch (err) {
     console.error("Erro ao carregar dados do fluxo diário:", err);
@@ -85,7 +86,7 @@ export async function calculateDailyFlow(
   }
 
   type RecurringRow = Database["public"]["Tables"]["recurring_transactions"]["Row"];
-  type CategoryRow = { id: string; name: string; type: "receita" | "despesa" };
+  type CategoryRow = { id: string; name: string; type: "receita" | "despesa"; category_group: string | null };
 
   const accounts = accountsRes.data ?? [];
   const transactions = transactionsRes.data ?? [];
@@ -97,9 +98,9 @@ export async function calculateDailyFlow(
     0
   );
 
-  const categoryMap = new Map<string, { name: string; type: "receita" | "despesa" }>();
+  const categoryMap = new Map<string, { name: string; type: "receita" | "despesa"; categoryGroup: string | null }>();
   for (const cat of categories) {
-    categoryMap.set(cat.id, { name: cat.name, type: cat.type });
+    categoryMap.set(cat.id, { name: cat.name, type: cat.type, categoryGroup: cat.category_group ?? null });
   }
 
   // Calculate opening balance for the competency period
@@ -276,7 +277,7 @@ export async function calculateDailyFlow(
   for (const catId of categoriesWithData) {
     const cat = categoryMap.get(catId);
     if (!cat) continue;
-    const fc: FlowCategory = { id: catId, name: cat.name, type: cat.type };
+    const fc: FlowCategory = { id: catId, name: cat.name, type: cat.type, categoryGroup: cat.categoryGroup };
     if (cat.type === "receita") receitas.push(fc);
     else despesas.push(fc);
   }

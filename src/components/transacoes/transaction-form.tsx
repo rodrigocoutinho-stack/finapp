@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { toCents, formatCurrency, buildGroupedAccountOptions } from "@/lib/utils";
+import { toCents, formatCurrency, buildGroupedAccountOptions, buildGroupedCategoryOptions } from "@/lib/utils";
 import { logAudit } from "@/lib/audit-log";
 import type { Account, Category, Transaction } from "@/types/database";
 
@@ -65,10 +65,7 @@ export function TransactionForm({
   const { groupedOptions: destGrouped } = buildGroupedAccountOptions(destAccounts, accountLabelFn);
   const destinationAccountOptions = destAccounts.map((a) => ({ value: a.id, label: accountLabelFn(a) }));
 
-  const categoryOptions = filteredCategories.map((c) => ({
-    value: c.id,
-    label: c.name,
-  }));
+  const { options: categoryOptions, groupedOptions: categoryGrouped } = buildGroupedCategoryOptions(filteredCategories);
 
   function clearFieldError(field: string) {
     setErrors((prev) => {
@@ -345,6 +342,7 @@ export function TransactionForm({
           value={categoryId}
           onChange={(e) => { setCategoryId(e.target.value); clearFieldError("category"); }}
           options={categoryOptions}
+          groupedOptions={categoryGrouped}
           placeholder="Selecione a categoria"
           error={errors.category}
           required
