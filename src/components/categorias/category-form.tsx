@@ -134,7 +134,8 @@ export function CategoryForm({ category, existingGroups = [], onSuccess, onCance
         </label>
         <input
           id="categoryGroup"
-          list="category-group-suggestions"
+          list={`category-group-suggestions-${category?.id ?? "new"}`}
+          autoComplete="off"
           value={categoryGroup}
           onChange={(e) => setCategoryGroup(e.target.value)}
           placeholder="Ex: Despesas Essenciais Fixas, Receitas PF"
@@ -142,7 +143,7 @@ export function CategoryForm({ category, existingGroups = [], onSuccess, onCance
           className="w-full rounded-lg border border-input-border bg-card px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-muted focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
         />
         {existingGroups.length > 0 && (
-          <datalist id="category-group-suggestions">
+          <datalist id={`category-group-suggestions-${category?.id ?? "new"}`}>
             {existingGroups.map((g) => (
               <option key={g} value={g} />
             ))}

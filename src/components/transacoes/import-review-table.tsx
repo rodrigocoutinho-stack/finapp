@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/ui/skeleton";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, groupCategoriesByGroup } from "@/lib/utils";
 import type { ParsedTransaction } from "@/lib/ofx-parser";
 import { logAudit } from "@/lib/audit-log";
 import type { Category } from "@/types/database";
@@ -320,18 +320,13 @@ export function ImportReviewTable({
                       >
                         <option value="">Selecione...</option>
                         {(() => {
-                          const groups = new Map<string, typeof cats>();
-                          for (const c of cats) {
-                            const g = c.category_group ?? "Geral";
-                            if (!groups.has(g)) groups.set(g, []);
-                            groups.get(g)!.push(c);
-                          }
-                          if (groups.size <= 1) {
+                          const grouped = groupCategoriesByGroup(cats);
+                          if (grouped.length <= 1) {
                             return cats.map((c) => (
                               <option key={c.id} value={c.id}>{c.name}</option>
                             ));
                           }
-                          return [...groups.entries()].map(([group, items]) => (
+                          return grouped.map(([group, items]) => (
                             <optgroup key={group} label={group}>
                               {items.map((c) => (
                                 <option key={c.id} value={c.id}>{c.name}</option>

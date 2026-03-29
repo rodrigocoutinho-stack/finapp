@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState } from "@/components/ui/empty-state";
+import { groupCategoriesByGroup } from "@/lib/utils";
 import { DataTable } from "@/components/ui/data-table";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import type { Category, CategoryRule } from "@/types/database";
@@ -156,14 +157,9 @@ export function CategoryRules() {
             >
               <option value="">Selecione...</option>
               {despesas.length > 0 && (() => {
-                const groups = new Map<string, typeof despesas>();
-                for (const c of despesas) {
-                  const g = c.category_group ?? "Despesas";
-                  if (!groups.has(g)) groups.set(g, []);
-                  groups.get(g)!.push(c);
-                }
-                return [...groups.entries()].map(([group, cats]) => (
-                  <optgroup key={`d-${group}`} label={group === "Despesas" && groups.size === 1 ? "Despesas" : `Despesas › ${group}`}>
+                const grouped = groupCategoriesByGroup(despesas);
+                return grouped.map(([group, cats]) => (
+                  <optgroup key={`d-${group}`} label={grouped.length === 1 ? "Despesas" : `Despesas › ${group}`}>
                     {cats.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -171,14 +167,9 @@ export function CategoryRules() {
                 ));
               })()}
               {receitas.length > 0 && (() => {
-                const groups = new Map<string, typeof receitas>();
-                for (const c of receitas) {
-                  const g = c.category_group ?? "Receitas";
-                  if (!groups.has(g)) groups.set(g, []);
-                  groups.get(g)!.push(c);
-                }
-                return [...groups.entries()].map(([group, cats]) => (
-                  <optgroup key={`r-${group}`} label={group === "Receitas" && groups.size === 1 ? "Receitas" : `Receitas › ${group}`}>
+                const grouped = groupCategoriesByGroup(receitas);
+                return grouped.map(([group, cats]) => (
+                  <optgroup key={`r-${group}`} label={grouped.length === 1 ? "Receitas" : `Receitas › ${group}`}>
                     {cats.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
