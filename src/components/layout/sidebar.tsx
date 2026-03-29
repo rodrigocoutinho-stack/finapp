@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -216,6 +216,171 @@ function NavIcon({ link }: { link: NavLink }) {
   );
 }
 
+function getLinkClass(pathname: string, href: string, indent = false) {
+  const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+  return `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+    indent ? "pl-9" : ""
+  } ${
+    active
+      ? "bg-slate-800 text-emerald-400"
+      : "text-on-surface-muted hover:text-white hover:bg-slate-800/60"
+  }`;
+}
+
+function isLinkActive(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname.startsWith(href);
+}
+
+// ── Grouped nav (expanded desktop + mobile) ──────────────────────────────
+
+interface GroupedNavProps {
+  pathname: string;
+  openGroups: Set<string>;
+  onToggleGroup: (id: string) => void;
+  alwaysOpen?: boolean;
+}
+
+function GroupedNav({ pathname, openGroups, onToggleGroup, alwaysOpen = false }: GroupedNavProps) {
+  return (
+    <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-1 space-y-0.5 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+      {/* Dashboard standalone */}
+      <Link href={dashboardLink.href} className={getLinkClass(pathname, dashboardLink.href)}>
+        <NavIcon link={dashboardLink} />
+        <span className="truncate">{dashboardLink.label}</span>
+      </Link>
+
+      {/* Groups */}
+      {navGroups.map((group) => {
+        const open = alwaysOpen || openGroups.has(group.id);
+        const hasActive = group.links.some((l) => isLinkActive(pathname, l.href));
+
+        return (
+          <div key={group.id}>
+            <button
+              onClick={() => !alwaysOpen && onToggleGroup(group.id)}
+              className={`flex items-center justify-between w-full px-3 py-2 mt-1 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors ${
+                hasActive
+                  ? "text-emerald-400"
+                  : "text-slate-500 hover:text-slate-300"
+              } ${alwaysOpen ? "cursor-default" : "cursor-pointer"}`}
+            >
+              <span>{group.label}</span>
+              {!alwaysOpen && (
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              )}
+            </button>
+
+            <div
+              className={`overflow-hidden transition-all duration-200 ${
+                open ? "max-h-48 opacity-100" : "max-h-0 opacity-0"
+              }`}
+            >
+              <div className="space-y-0.5 pb-1">
+                {group.links.map((link) => (
+                  <Link key={link.href} href={link.href} className={getLinkClass(pathname, link.href, true)}>
+                    <NavIcon link={link} />
+                    <span className="truncate">{link.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+// ── Collapsed icon-only nav ───────────────────────────────────────────────
+
+function CollapsedNav({ pathname }: { pathname: string }) {
+  return (
+    <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-1 space-y-0.5 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+      {[dashboardLink, ...allGroupLinks, configuracaoLink].map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          title={link.label}
+          className={`flex items-center justify-center p-2.5 rounded-lg transition-colors ${
+            isLinkActive(pathname, link.href)
+              ? "bg-slate-800 text-emerald-400"
+              : "text-on-surface-muted hover:text-white hover:bg-slate-800/60"
+          }`}
+        >
+          <NavIcon link={link} />
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+// ── Footer ───────────────────────────────────────────────────────────────
+
+interface SidebarFooterProps {
+  pathname: string;
+  fullName: string;
+  onLogout: () => void;
+  loggingOut: boolean;
+  collapsedMode?: boolean;
+}
+
+function SidebarFooter({ pathname, fullName, onLogout, loggingOut, collapsedMode = false }: SidebarFooterProps) {
+  if (collapsedMode) {
+    return (
+      <div className="px-2 py-4 border-t border-slate-700/50 flex flex-col items-center gap-2">
+        <UserAvatar name={fullName} size="sm" />
+        <button
+          onClick={onLogout}
+          disabled={loggingOut}
+          title="Sair"
+          className="p-2 rounded-lg text-on-surface-muted hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+          </svg>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3 py-4 border-t border-slate-700/50">
+      <Link href={configuracaoLink.href} className={`${getLinkClass(pathname, configuracaoLink.href)} mb-2`}>
+        <NavIcon link={configuracaoLink} />
+        <span className="truncate">{configuracaoLink.label}</span>
+      </Link>
+
+      <div className="flex items-center gap-3 px-3 py-2">
+        <UserAvatar name={fullName} size="sm" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-white truncate">{fullName || "Usuário"}</p>
+        </div>
+      </div>
+      <button
+        onClick={onLogout}
+        disabled={loggingOut}
+        className="flex items-center gap-3 px-3 py-2 mt-1 w-full rounded-lg text-sm font-medium text-on-surface-muted hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
+      >
+        <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+        </svg>
+        Sair
+      </button>
+    </div>
+  );
+}
+
+// ── Main Sidebar ─────────────────────────────────────────────────────────
+
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -249,18 +414,13 @@ export function Sidebar() {
     };
   }, [mobileOpen]);
 
-  async function handleLogout() {
+  const handleLogout = useCallback(async () => {
     setLoggingOut(true);
     await supabase.auth.signOut();
     router.push("/login");
-  }
+  }, [router]);
 
-  function isActive(href: string) {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
-  }
-
-  function toggleGroup(id: string) {
+  const toggleGroup = useCallback((id: string) => {
     setOpenGroups((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -270,151 +430,7 @@ export function Sidebar() {
       }
       return next;
     });
-  }
-
-  function linkClass(href: string, indent = false) {
-    const active = isActive(href);
-    return `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-      indent ? "pl-9" : ""
-    } ${
-      active
-        ? "bg-slate-800 text-emerald-400"
-        : "text-on-surface-muted hover:text-white hover:bg-slate-800/60"
-    }`;
-  }
-
-  // ── Grouped nav (expanded desktop + mobile) ──────────────────────────────
-  function GroupedNav({ alwaysOpen = false }: { alwaysOpen?: boolean }) {
-    return (
-      <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-1 space-y-0.5 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-        {/* Dashboard standalone */}
-        <Link href={dashboardLink.href} className={linkClass(dashboardLink.href)}>
-          <NavIcon link={dashboardLink} />
-          <span className="truncate">{dashboardLink.label}</span>
-        </Link>
-
-        {/* Groups */}
-        {navGroups.map((group) => {
-          const open = alwaysOpen || openGroups.has(group.id);
-          const hasActive = group.links.some((l) => isActive(l.href));
-
-          return (
-            <div key={group.id}>
-              {/* Group header */}
-              <button
-                onClick={() => !alwaysOpen && toggleGroup(group.id)}
-                className={`flex items-center justify-between w-full px-3 py-2 mt-1 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors ${
-                  hasActive
-                    ? "text-emerald-400"
-                    : "text-slate-500 hover:text-slate-300"
-                } ${alwaysOpen ? "cursor-default" : "cursor-pointer"}`}
-              >
-                <span>{group.label}</span>
-                {!alwaysOpen && (
-                  <svg
-                    className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2.5}
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                  </svg>
-                )}
-              </button>
-
-              {/* Group links */}
-              <div
-                className={`overflow-hidden transition-all duration-200 ${
-                  open ? "max-h-48 opacity-100" : "max-h-0 opacity-0"
-                }`}
-              >
-                <div className="space-y-0.5 pb-1">
-                  {group.links.map((link) => (
-                    <Link key={link.href} href={link.href} className={linkClass(link.href, true)}>
-                      <NavIcon link={link} />
-                      <span className="truncate">{link.label}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </nav>
-    );
-  }
-
-  // ── Collapsed icon-only nav ───────────────────────────────────────────────
-  function CollapsedNav() {
-    return (
-      <nav className="flex-1 min-h-0 overflow-y-auto px-2 py-1 space-y-0.5 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-        {[dashboardLink, ...allGroupLinks, configuracaoLink].map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            title={link.label}
-            className={`flex items-center justify-center p-2.5 rounded-lg transition-colors ${
-              isActive(link.href)
-                ? "bg-slate-800 text-emerald-400"
-                : "text-on-surface-muted hover:text-white hover:bg-slate-800/60"
-            }`}
-          >
-            <NavIcon link={link} />
-          </Link>
-        ))}
-      </nav>
-    );
-  }
-
-  // ── Footer ───────────────────────────────────────────────────────────────
-  function Footer({ collapsedMode = false }: { collapsedMode?: boolean }) {
-    if (collapsedMode) {
-      return (
-        <div className="px-2 py-4 border-t border-slate-700/50 flex flex-col items-center gap-2">
-          <UserAvatar name={fullName} size="sm" />
-          <button
-            onClick={handleLogout}
-            disabled={loggingOut}
-            title="Sair"
-            className="p-2 rounded-lg text-on-surface-muted hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-            </svg>
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="px-3 py-4 border-t border-slate-700/50">
-        {/* Configurações standalone */}
-        <Link href={configuracaoLink.href} className={`${linkClass(configuracaoLink.href)} mb-2`}>
-          <NavIcon link={configuracaoLink} />
-          <span className="truncate">{configuracaoLink.label}</span>
-        </Link>
-
-        {/* User + logout */}
-        <div className="flex items-center gap-3 px-3 py-2">
-          <UserAvatar name={fullName} size="sm" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{fullName || "Usuário"}</p>
-          </div>
-        </div>
-        <button
-          onClick={handleLogout}
-          disabled={loggingOut}
-          className="flex items-center gap-3 px-3 py-2 mt-1 w-full rounded-lg text-sm font-medium text-on-surface-muted hover:text-white hover:bg-slate-800/60 transition-colors disabled:opacity-50"
-        >
-          <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-          </svg>
-          Sair
-        </button>
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <>
@@ -455,8 +471,11 @@ export function Sidebar() {
           </button>
         )}
 
-        {collapsed ? <CollapsedNav /> : <GroupedNav />}
-        <Footer collapsedMode={collapsed} />
+        {collapsed
+          ? <CollapsedNav pathname={pathname} />
+          : <GroupedNav pathname={pathname} openGroups={openGroups} onToggleGroup={toggleGroup} />
+        }
+        <SidebarFooter pathname={pathname} fullName={fullName} onLogout={handleLogout} loggingOut={loggingOut} collapsedMode={collapsed} />
       </aside>
 
       {/* ── Mobile top bar ──────────────────────────────────────────────── */}
@@ -499,8 +518,8 @@ export function Sidebar() {
             FinApp
           </Link>
         </div>
-        <GroupedNav alwaysOpen />
-        <Footer />
+        <GroupedNav pathname={pathname} openGroups={openGroups} onToggleGroup={toggleGroup} alwaysOpen />
+        <SidebarFooter pathname={pathname} fullName={fullName} onLogout={handleLogout} loggingOut={loggingOut} />
       </aside>
     </>
   );
