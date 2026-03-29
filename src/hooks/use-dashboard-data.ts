@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getMonthRange, formatDate } from "@/lib/utils";
+import { getMonthRange } from "@/lib/utils";
 import { calculateForecast, type MonthForecast } from "@/lib/forecast";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
 import { detectRecurrences, type RecurrenceSuggestion } from "@/lib/recurrence-detection";
@@ -76,7 +76,6 @@ export function useDashboardData() {
     }
   }, [closingDay, prefsLoading]);
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const fetchData = useCallback(async () => {
     setLoading(true);
     const { start, end } = getMonthRange(year, month, closingDay);
