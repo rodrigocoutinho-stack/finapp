@@ -6,9 +6,10 @@ import { getMonthRange } from "@/lib/utils";
 import { calculateForecast, type MonthForecast } from "@/lib/forecast";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
 import { detectRecurrences, type RecurrenceSuggestion } from "@/lib/recurrence-detection";
+import { computeConsolidatedKPIs, type NetRevenueBlockBreakdown } from "@/lib/net-revenue";
 import { usePreferences } from "@/contexts/preferences-context";
 import { useToast } from "@/contexts/toast-context";
-import type { Account, Debt, Goal, Transaction, RecurringTransaction, MonthlyClosingRow } from "@/types/database";
+import type { Account, CategoryGroup, Debt, Goal, Transaction, RecurringTransaction, MonthlyClosingRow } from "@/types/database";
 
 export interface TransactionRow {
   id: string;
@@ -66,6 +67,7 @@ export function useDashboardData() {
   const [hasDivergentAccounts, setHasDivergentAccounts] = useState(false);
   const [existingClosing, setExistingClosing] = useState<MonthlyClosingRow | null>(null);
   const [previousClosing, setPreviousClosing] = useState<MonthlyClosingRow | null>(null);
+  const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
 
   // Sync initial year/month when closingDay loads
   useEffect(() => {
@@ -118,7 +120,7 @@ export function useDashboardData() {
         transactionsRes, forecastResult, accountsRes, pastExpensesRes,
         recurringDespesasRes, goalsRes, essentialCatsRes, reconTxnRes,
         debtsRes, closingRes, prevClosingRes, past3mFullRes,
-        existingRecRes, annualRes
+        existingRecRes, annualRes, categoryGroupsRes
       ] = await Promise.all([
         supabase
           .from("transactions")
@@ -133,14 +135,14 @@ export function useDashboardData() {
         supabase.from("accounts").select("*"),
         supabase
           .from("transactions")
-          .select("type, amount_cents, category_id")
+          .select("type, amount_cents, category_id, categories(category_group)")
           .eq("type", "despesa")
           .gte("date", globalStart)
           .lte("date", globalEnd)
           .limit(5000),
         supabase
           .from("recurring_transactions")
-          .select("type, amount_cents")
+          .select("type, amount_cents, categories(category_group)")
           .eq("is_active", true)
           .eq("type", "despesa")
           .limit(1000),
@@ -179,7 +181,7 @@ export function useDashboardData() {
         isCurrentMonthSelected
           ? supabase
               .from("transactions")
-              .select("id, user_id, account_id, category_id, type, amount_cents, description, date, created_at")
+              .select("id, user_id, account_id, category_id, type, amount_cents, description, date, created_at, categories(category_group)")
               .gte("date", globalStart)
               .lte("date", end)
               .limit(5000)
@@ -201,6 +203,10 @@ export function useDashboardData() {
               .gte("amount_cents", 50000)
               .limit(500)
           : Promise.resolve({ data: null }),
+        supabase
+          .from("category_groups")
+          .select("*")
+          .limit(100),
       ]);
 
       const txns = (transactionsRes.data as TransactionRow[]) ?? [];
@@ -208,6 +214,15 @@ export function useDashboardData() {
       setCurrentMonthForecast(
         forecastResult?.months.find((m) => m.isCurrentMonth) ?? null
       );
+      const loadedGroups = (categoryGroupsRes.data as CategoryGroup[] | null) ?? [];
+      setCategoryGroups(loadedGroups);
+      const netRevenueSet = new Set(
+        loadedGroups.filter((g) => g.is_net_revenue_block).map((g) => g.name)
+      );
+      const isPjExpense = (cat: { category_group: string | null } | null | undefined): boolean => {
+        const g = cat?.category_group ?? null;
+        return g !== null && netRevenueSet.has(g);
+      };
 
       // Accounts
       const accountsData = (accountsRes.data as Account[] | null) ?? [];
@@ -219,8 +234,15 @@ export function useDashboardData() {
       setReserveBalance(resBal);
       setHasReserveAccount(reserveAccts.length > 0);
 
-      // Average monthly expense (last 3 months)
-      const pastExpenses = (pastExpensesRes.data ?? []) as { type: string; amount_cents: number; category_id: string }[];
+      // Average monthly expense (last 3 months) — exclui blocos de receita líquida
+      type PastExpenseRow = {
+        type: string;
+        amount_cents: number;
+        category_id: string;
+        categories: { category_group: string | null } | null;
+      };
+      const pastExpensesAll = (pastExpensesRes.data ?? []) as PastExpenseRow[];
+      const pastExpenses = pastExpensesAll.filter((t) => !isPjExpense(t.categories));
       const totalPastExpenses = pastExpenses.reduce((sum, t) => sum + t.amount_cents, 0);
       const monthCount = pastMonthsRanges.length;
       setAvgMonthlyExpense(monthCount > 0 ? Math.round(totalPastExpenses / monthCount) : 0);
@@ -239,9 +261,18 @@ export function useDashboardData() {
         setAvgEssentialExpense(0);
       }
 
-      // Recurring despesas
-      const recurringDespesas = (recurringDespesasRes.data ?? []) as { type: string; amount_cents: number }[];
-      setTotalRecurringDespesas(recurringDespesas.reduce((sum, r) => sum + r.amount_cents, 0));
+      // Recurring despesas — exclui blocos de receita líquida
+      type RecurringDespesaRow = {
+        type: string;
+        amount_cents: number;
+        categories: { category_group: string | null } | null;
+      };
+      const recurringDespesas = (recurringDespesasRes.data ?? []) as RecurringDespesaRow[];
+      setTotalRecurringDespesas(
+        recurringDespesas
+          .filter((r) => !isPjExpense(r.categories))
+          .reduce((sum, r) => sum + r.amount_cents, 0)
+      );
 
       // Goals & Debts
       setDashGoals((goalsRes.data as Goal[] | null) ?? []);
@@ -270,16 +301,36 @@ export function useDashboardData() {
 
       // Recurrence detection + savings rates + annual provisions
       if (isCurrentMonthSelected) {
-        const past3mTransactions = (past3mFullRes.data as Transaction[] | null) ?? [];
+        type Past3mRow = Transaction & { categories: { category_group: string | null } | null };
+        const past3mTransactionsRaw = (past3mFullRes.data as Past3mRow[] | null) ?? [];
+        const past3mTransactions = past3mTransactionsRaw as Transaction[];
         const existingRecs = (existingRecRes.data as RecurringTransaction[] | null) ?? [];
         setRecurrenceSuggestions(detectRecurrences(past3mTransactions, existingRecs));
 
         const rates: number[] = [];
         for (const range of pastMonthsRanges) {
-          const monthTxns = past3mTransactions.filter((t) => t.date >= range.start && t.date <= range.end);
-          const rec = monthTxns.filter((t) => t.type === "receita").reduce((s, t) => s + t.amount_cents, 0);
-          const desp = monthTxns.filter((t) => t.type === "despesa").reduce((s, t) => s + t.amount_cents, 0);
-          if (rec > 0) rates.push(((rec - desp) / rec) * 100);
+          const monthTxns = past3mTransactionsRaw.filter((t) => t.date >= range.start && t.date <= range.end);
+          // Aplica a mesma lógica de consolidação (PJ líquido vira receita PF)
+          const blocks = new Map<string, { rec: number; desp: number }>();
+          let directRec = 0;
+          let directDesp = 0;
+          for (const t of monthTxns) {
+            if (t.type === "transferencia") continue;
+            const g = t.categories?.category_group ?? null;
+            const isNet = g !== null && netRevenueSet.has(g);
+            if (isNet) {
+              const b = blocks.get(g) ?? { rec: 0, desp: 0 };
+              if (t.type === "receita") b.rec += t.amount_cents;
+              else b.desp += t.amount_cents;
+              blocks.set(g, b);
+            } else {
+              if (t.type === "receita") directRec += t.amount_cents;
+              else if (t.type === "despesa") directDesp += t.amount_cents;
+            }
+          }
+          const blocksNet = Array.from(blocks.values()).reduce((s, b) => s + (b.rec - b.desp), 0);
+          const totalRec = directRec + blocksNet;
+          if (totalRec > 0) rates.push(((totalRec - directDesp) / totalRec) * 100);
         }
         setPastSavingsRates(rates);
 
@@ -328,20 +379,28 @@ export function useDashboardData() {
   }, [fetchData, prefsLoading]);
 
   // Derived calculations
-  const totalReceitas = useMemo(
-    () => transactions.filter((t) => t.type === "receita").reduce((sum, t) => sum + t.amount_cents, 0),
-    [transactions]
+  const netRevenueGroupNames = useMemo(
+    () => new Set(categoryGroups.filter((g) => g.is_net_revenue_block).map((g) => g.name)),
+    [categoryGroups]
   );
 
-  const totalDespesas = useMemo(
-    () => transactions.filter((t) => t.type === "despesa").reduce((sum, t) => sum + t.amount_cents, 0),
-    [transactions]
+  const consolidatedKPIs = useMemo(
+    () => computeConsolidatedKPIs(transactions, netRevenueGroupNames),
+    [transactions, netRevenueGroupNames]
   );
+
+  const totalReceitas = consolidatedKPIs.totalReceitasCents;
+  const totalDespesas = consolidatedKPIs.totalDespesasCents;
+  const netRevenueBlocks: NetRevenueBlockBreakdown[] = consolidatedKPIs.netRevenueBlocks;
 
   const chartData = useMemo(() => {
     const map = new Map<string, { amount: number; categoryGroup: string | null }>();
     transactions
       .filter((t) => t.type === "despesa")
+      .filter((t) => {
+        const g = t.categories?.category_group ?? null;
+        return !(g !== null && netRevenueGroupNames.has(g));
+      })
       .forEach((t) => {
         const catName = t.categories?.name ?? "Sem categoria";
         const catGroup = t.categories?.category_group ?? null;
@@ -355,7 +414,7 @@ export function useDashboardData() {
     return Array.from(map.entries())
       .map(([name, { amount, categoryGroup }]) => ({ name, amount, categoryGroup }))
       .sort((a, b) => b.amount - a.amount);
-  }, [transactions]);
+  }, [transactions, netRevenueGroupNames]);
 
   const recentTransactions = useMemo(() => transactions.slice(0, 5), [transactions]);
 
@@ -379,10 +438,13 @@ export function useDashboardData() {
     [hasReserveAccount, expenseBaseForKpis, reserveBalance]
   );
 
-  const forecastDespesas = useMemo(
-    () => currentMonthForecast?.forecastToDateDespesas ?? 0,
-    [currentMonthForecast]
-  );
+  const forecastDespesas = useMemo(() => {
+    if (!currentMonthForecast) return 0;
+    return currentMonthForecast.byCategory
+      .filter((c) => c.type === "despesa")
+      .filter((c) => !(c.categoryGroup !== null && netRevenueGroupNames.has(c.categoryGroup)))
+      .reduce((sum, c) => sum + c.forecastToDateAmount, 0);
+  }, [currentMonthForecast, netRevenueGroupNames]);
 
   const budgetDeviation = useMemo(
     () => forecastDespesas > 0 ? ((totalDespesas - forecastDespesas) / forecastDespesas) * 100 : null,
@@ -416,6 +478,8 @@ export function useDashboardData() {
     // KPI derived
     savingsRate, runway, reserveMonths, budgetDeviation, fixedExpensePct,
     chartData, closingMonthStr,
+    // Net revenue blocks (ex.: PJ)
+    netRevenueBlocks, netRevenueGroupNames, categoryGroups,
     // Insights
     pastSavingsRates, annualProvisions, hasDivergentAccounts,
     // Actions

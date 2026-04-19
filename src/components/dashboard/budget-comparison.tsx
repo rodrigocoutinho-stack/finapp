@@ -9,21 +9,40 @@ import type { MonthForecast, CategoryForecast } from "@/lib/forecast";
 interface BudgetComparisonProps {
   month: MonthForecast;
   closingDay?: number;
+  /** Grupos cujas categorias devem ser ocultadas (blocos de receita líquida como PJ) */
+  netRevenueGroupNames?: Set<string>;
 }
 
-export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProps) {
+export function BudgetComparison({ month, closingDay = 1, netRevenueGroupNames }: BudgetComparisonProps) {
   const [showReceitas, setShowReceitas] = useState(true);
   const [showDespesas, setShowDespesas] = useState(true);
 
   const { year, month: curMonth } = getCurrentCompetencyMonth(closingDay);
   const elapsed = getElapsedDays(year, curMonth, closingDay);
 
-  const receitas = month.byCategory.filter(
+  const visibleCategories = month.byCategory.filter(
+    (c) => !(c.categoryGroup !== null && netRevenueGroupNames?.has(c.categoryGroup))
+  );
+
+  const receitas = visibleCategories.filter(
     (c) => c.type === "receita" && (c.forecastToDateAmount > 0 || c.realAmount > 0)
   );
-  const despesas = month.byCategory.filter(
+  const despesas = visibleCategories.filter(
     (c) => c.type === "despesa" && (c.forecastToDateAmount > 0 || c.realAmount > 0)
   );
+
+  const forecastToDateReceitas = visibleCategories
+    .filter((c) => c.type === "receita")
+    .reduce((s, c) => s + c.forecastToDateAmount, 0);
+  const forecastToDateDespesas = visibleCategories
+    .filter((c) => c.type === "despesa")
+    .reduce((s, c) => s + c.forecastToDateAmount, 0);
+  const realReceitas = visibleCategories
+    .filter((c) => c.type === "receita")
+    .reduce((s, c) => s + c.realAmount, 0);
+  const realDespesas = visibleCategories
+    .filter((c) => c.type === "despesa")
+    .reduce((s, c) => s + c.realAmount, 0);
 
   if (receitas.length === 0 && despesas.length === 0) {
     return (
@@ -33,8 +52,8 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
     );
   }
 
-  const saldoPrevisto = month.forecastToDateReceitas - month.forecastToDateDespesas;
-  const saldoReal = month.realReceitas - month.realDespesas;
+  const saldoPrevisto = forecastToDateReceitas - forecastToDateDespesas;
+  const saldoReal = realReceitas - realDespesas;
   const saldoDiff = saldoReal - saldoPrevisto;
 
   // Budget alerts — use budget_cents as reference when defined
@@ -130,14 +149,14 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
                   </span>
                 </td>
                 <td className="text-right py-2.5 px-3 font-semibold text-on-surface-secondary tabular-nums">
-                  {formatCurrency(month.forecastToDateReceitas)}
+                  {formatCurrency(forecastToDateReceitas)}
                 </td>
                 <td className="text-right py-2.5 px-3 font-semibold text-on-surface-secondary tabular-nums">
-                  {formatCurrency(month.realReceitas)}
+                  {formatCurrency(realReceitas)}
                 </td>
                 <td className="text-right py-2.5 px-3 font-semibold tabular-nums">
                   <DiffBadge
-                    diff={month.realReceitas - month.forecastToDateReceitas}
+                    diff={realReceitas - forecastToDateReceitas}
                     type="receita"
                   />
                 </td>
@@ -173,14 +192,14 @@ export function BudgetComparison({ month, closingDay = 1 }: BudgetComparisonProp
                   </span>
                 </td>
                 <td className="text-right py-2.5 px-3 font-semibold text-on-surface-secondary border-t border-border-light tabular-nums">
-                  {formatCurrency(month.forecastToDateDespesas)}
+                  {formatCurrency(forecastToDateDespesas)}
                 </td>
                 <td className="text-right py-2.5 px-3 font-semibold text-on-surface-secondary border-t border-border-light tabular-nums">
-                  {formatCurrency(month.realDespesas)}
+                  {formatCurrency(realDespesas)}
                 </td>
                 <td className="text-right py-2.5 px-3 font-semibold border-t border-border-light tabular-nums">
                   <DiffBadge
-                    diff={month.realDespesas - month.forecastToDateDespesas}
+                    diff={realDespesas - forecastToDateDespesas}
                     type="despesa"
                   />
                 </td>

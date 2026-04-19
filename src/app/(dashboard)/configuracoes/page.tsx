@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/modal";
 import { CardSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { CategoryForm } from "@/components/categorias/category-form";
 import { CategoryList } from "@/components/categorias/category-list";
+import { CategoryGroupManager } from "@/components/categorias/category-group-manager";
 import { CategoryRules } from "@/components/categorias/category-rules";
 import { usePreferences } from "@/contexts/preferences-context";
 import { useToast } from "@/contexts/toast-context";
@@ -252,7 +253,10 @@ export default function ConfiguracoesPage() {
           {catLoading ? (
             <TableSkeleton rows={5} cols={3} />
           ) : (
-            <CategoryList categories={categories} existingGroups={existingCategoryGroups} onRefresh={fetchCategories} />
+            <div className="space-y-6">
+              <CategoryGroupManager existingGroupNames={existingCategoryGroups} />
+              <CategoryList categories={categories} existingGroups={existingCategoryGroups} onRefresh={fetchCategories} />
+            </div>
           )}
 
           <Modal

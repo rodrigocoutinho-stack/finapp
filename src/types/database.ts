@@ -580,6 +580,41 @@ export type Database = {
           },
         ];
       };
+      category_groups: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          is_net_revenue_block: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          is_net_revenue_block?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          is_net_revenue_block?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "category_groups_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       audit_logs: {
         Row: {
           id: string;
@@ -643,3 +678,4 @@ export type Goal = Database["public"]["Tables"]["goals"]["Row"];
 export type Debt = Database["public"]["Tables"]["debts"]["Row"];
 export type MonthlyClosingRow = Database["public"]["Tables"]["monthly_closings"]["Row"];
 export type AuditLog = Database["public"]["Tables"]["audit_logs"]["Row"];
+export type CategoryGroup = Database["public"]["Tables"]["category_groups"]["Row"];

@@ -6,6 +6,7 @@ import { useDashboardData } from "@/hooks/use-dashboard-data";
 import { useInvestmentData } from "@/hooks/use-investment-data";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { SummaryCards } from "@/components/dashboard/summary-cards";
+import { NetRevenueBlocks } from "@/components/dashboard/net-revenue-blocks";
 import { FinancialKPIs } from "@/components/dashboard/financial-kpis";
 import { FinancialInsights } from "@/components/dashboard/financial-insights";
 import { MonthPicker } from "@/components/dashboard/month-picker";
@@ -122,6 +123,14 @@ export default function DashboardPage() {
         <>
           <SummaryCards totalReceitas={data.totalReceitas} totalDespesas={data.totalDespesas} />
 
+          {data.netRevenueBlocks.length > 0 && (
+            <SectionErrorBoundary sectionName="Blocos de receita líquida">
+              <div className="mt-4">
+                <NetRevenueBlocks blocks={data.netRevenueBlocks} />
+              </div>
+            </SectionErrorBoundary>
+          )}
+
           <SectionErrorBoundary sectionName="KPIs">
             <div className="mt-4">
               <FinancialKPIs
@@ -170,7 +179,11 @@ export default function DashboardPage() {
                     <h2 className="text-lg font-semibold text-on-surface-heading mb-4">
                       Previsto vs Realizado
                     </h2>
-                    <BudgetComparison month={data.currentMonthForecast} closingDay={data.closingDay} />
+                    <BudgetComparison
+                      month={data.currentMonthForecast}
+                      closingDay={data.closingDay}
+                      netRevenueGroupNames={data.netRevenueGroupNames}
+                    />
                   </div>
                 </SectionErrorBoundary>
               )}
