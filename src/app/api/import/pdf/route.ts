@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, type GenerativeModel, type Part } from "@google/generative-ai";
 import { PDFDocument } from "pdf-lib";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit, PDF_IMPORT_LIMIT } from "@/lib/rate-limit";
@@ -124,6 +124,53 @@ function parseGeminiResponse(raw: string): {
   }
 
   return { transactions, errors };
+}
+
+/**
+ * Chama Gemini com retry: se a 1ª tentativa falhar (resposta vazia, JSON
+ * inválido ou array vazio), faz uma 2ª com `temperature: 0` — mais
+ * determinístico e costuma ser mais fiel em extração estruturada.
+ */
+async function extractWithRetry(
+  model: GenerativeModel,
+  parts: Part[]
+): Promise<{ transactions: ParsedTransaction[]; errors: string[]; usedRetry: boolean }> {
+  const attempts: Array<{ temperature?: number }> = [
+    {},             // 1ª: configuração padrão
+    { temperature: 0 }, // 2ª: determinística
+  ];
+
+  let lastErrors: string[] = ["A IA não retornou dados."];
+  for (let i = 0; i < attempts.length; i++) {
+    const { temperature } = attempts[i];
+    try {
+      const result = await model.generateContent(
+        {
+          contents: [{ role: "user", parts }],
+          ...(temperature !== undefined ? { generationConfig: { temperature } } : {}),
+        },
+        { timeout: 60000 }
+      );
+      const responseText = result.response.text();
+      if (responseText && responseText.trim().length > 0) {
+        const parsed = parseGeminiResponse(responseText);
+        if (parsed.transactions.length > 0) {
+          return { ...parsed, usedRetry: i > 0 };
+        }
+        lastErrors = parsed.errors.length > 0
+          ? parsed.errors
+          : ["A IA não conseguiu extrair transações do arquivo."];
+      } else {
+        lastErrors = ["A IA não retornou dados. O PDF pode estar vazio ou ilegível."];
+      }
+    } catch (err) {
+      // Re-lança apenas na última tentativa; senão, tenta de novo
+      if (i === attempts.length - 1) throw err;
+      lastErrors = [err instanceof Error ? err.message : "Erro de comunicação com a IA."];
+    }
+  }
+
+  return { transactions: [], errors: lastErrors, usedRetry: true };
 }
 
 function isOriginAllowed(request: NextRequest): boolean {
@@ -300,29 +347,9 @@ export async function POST(request: NextRequest) {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-      const result = await model.generateContent(
-        {
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: TEXT_EXTRACTION_PROMPT + extractedText }],
-            },
-          ],
-        },
-        { timeout: 60000 }
-      );
-
-      const responseText = result.response.text();
-
-      if (!responseText || responseText.trim().length === 0) {
-        return NextResponse.json({
-          success: false,
-          transactions: [],
-          errors: ["A IA não retornou dados a partir do texto extraído."],
-        });
-      }
-
-      const { transactions, errors } = parseGeminiResponse(responseText);
+      const { transactions, errors } = await extractWithRetry(model, [
+        { text: TEXT_EXTRACTION_PROMPT + extractedText },
+      ]);
 
       return NextResponse.json({
         success: transactions.length > 0,
@@ -361,37 +388,15 @@ export async function POST(request: NextRequest) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const result = await model.generateContent(
+    const { transactions, errors } = await extractWithRetry(model, [
       {
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                inlineData: {
-                  mimeType: "application/pdf",
-                  data: pdfBase64,
-                },
-              },
-              { text: EXTRACTION_PROMPT },
-            ],
-          },
-        ],
+        inlineData: {
+          mimeType: "application/pdf",
+          data: pdfBase64,
+        },
       },
-      { timeout: 60000 }
-    );
-
-    const responseText = result.response.text();
-
-    if (!responseText || responseText.trim().length === 0) {
-      return NextResponse.json({
-        success: false,
-        transactions: [],
-        errors: ["A IA não retornou dados. O PDF pode estar vazio ou ilegível."],
-      });
-    }
-
-    const { transactions, errors } = parseGeminiResponse(responseText);
+      { text: EXTRACTION_PROMPT },
+    ]);
 
     return NextResponse.json({
       success: transactions.length > 0,

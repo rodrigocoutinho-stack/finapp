@@ -101,7 +101,32 @@ export function ImportUpload({ accounts, onParsed, onCSVLoaded, onPDFLoaded }: I
   }
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-lg mx-auto space-y-4">
+      <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 p-4">
+        <div className="flex gap-3">
+          <svg
+            className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div className="text-sm text-emerald-800 dark:text-emerald-200">
+            <p className="font-semibold mb-1">Prefira OFX/QFX sempre que possível</p>
+            <p className="text-emerald-700 dark:text-emerald-300 leading-relaxed">
+              É o formato ideal: leitura instantânea, gratuita e 100% precisa — nada sai do seu dispositivo.
+              A maioria dos bancos (Nubank, Itaú, Bradesco, Inter, BTG) oferece OFX tanto para extrato quanto
+              para fatura de cartão, geralmente em &quot;Extratos&quot; ou &quot;Exportar&quot;.
+              <br />
+              Use PDF apenas quando o banco não disponibilizar OFX — a extração via IA é mais lenta
+              e pode falhar em layouts incomuns.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-card rounded-xl shadow-sm border border-border p-6 space-y-6">
         <div>
           <h2 className="text-lg font-semibold text-on-surface">
