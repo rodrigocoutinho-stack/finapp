@@ -124,6 +124,7 @@ export type Database = {
           amount_cents: number;
           description: string;
           date: string;
+          competency_month: string | null;
           created_at: string;
         };
         Insert: {
@@ -136,6 +137,7 @@ export type Database = {
           amount_cents: number;
           description: string;
           date: string;
+          competency_month?: string | null;
           created_at?: string;
         };
         Update: {
@@ -148,6 +150,7 @@ export type Database = {
           amount_cents?: number;
           description?: string;
           date?: string;
+          competency_month?: string | null;
           created_at?: string;
         };
         Relationships: [

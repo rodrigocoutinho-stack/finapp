@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { DataTable } from "@/components/ui/data-table";
 import { formatCurrency, formatMonthLabel } from "@/lib/utils";
 import { getCompetencyRange, getCurrentCompetencyMonth } from "@/lib/closing-day";
+import { deriveCompetencyMonth } from "@/lib/competency";
 import { usePreferences } from "@/contexts/preferences-context";
 import { useChartColors } from "@/lib/use-chart-colors";
 
@@ -98,24 +99,49 @@ export function GroupReportModal({ open, onClose, groupName, accountIds }: Group
     const earliest = ranges[0].start;
     const latest = ranges[ranges.length - 1].end;
 
-    const { data: txns } = await supabase
-      .from("transactions")
-      .select("type, amount_cents, date")
-      .in("account_id", accountIds)
-      .neq("type", "transferencia")
-      .gte("date", earliest)
-      .lte("date", latest)
-      .limit(10000);
+    // Busca amplo (por date) + também as que têm override apontando para
+    // alguma competência do período, mesmo com date fora do range.
+    const rangeLabels = new Set(ranges.map((r) => r.yearMonth));
+    const [byDateRes, byCompetencyRes] = await Promise.all([
+      supabase
+        .from("transactions")
+        .select("type, amount_cents, date, competency_month")
+        .in("account_id", accountIds)
+        .neq("type", "transferencia")
+        .gte("date", earliest)
+        .lte("date", latest)
+        .limit(10000),
+      supabase
+        .from("transactions")
+        .select("type, amount_cents, date, competency_month")
+        .in("account_id", accountIds)
+        .neq("type", "transferencia")
+        .in("competency_month", Array.from(rangeLabels))
+        .limit(10000),
+    ]);
+
+    const txns = [
+      ...((byDateRes.data as Array<{ type: string; amount_cents: number; date: string; competency_month: string | null }>) ?? []),
+      ...((byCompetencyRes.data as Array<{ type: string; amount_cents: number; date: string; competency_month: string | null }>) ?? []),
+    ];
+    // Dedupe pela tupla (date + amount_cents + competency_month) — ids não estão no select
+    const seen = new Set<string>();
+    const uniqueTxns = txns.filter((t) => {
+      const k = `${t.date}|${t.amount_cents}|${t.type}|${t.competency_month ?? ""}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
 
     const monthMap = new Map<string, { receitas: number; despesas: number }>();
     for (const r of ranges) {
       monthMap.set(r.yearMonth, { receitas: 0, despesas: 0 });
     }
 
-    for (const tx of txns ?? []) {
-      const range = ranges.find((r) => tx.date >= r.start && tx.date <= r.end);
-      if (!range) continue;
-      const bucket = monthMap.get(range.yearMonth)!;
+    for (const tx of uniqueTxns) {
+      const competency = tx.competency_month ?? deriveCompetencyMonth(tx.date, closingDay);
+      const bucket = monthMap.get(competency);
+      if (!bucket) continue;
       if (tx.type === "receita") {
         bucket.receitas += tx.amount_cents;
       } else {

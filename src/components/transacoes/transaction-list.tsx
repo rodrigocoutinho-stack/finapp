@@ -125,7 +125,17 @@ export function TransactionList({
       key: "date",
       header: "Data",
       render: (t: TransactionWithRelations) => (
-        <span className="text-on-surface-secondary">{formatDate(t.date)}</span>
+        <div className="flex flex-col">
+          <span className="text-on-surface-secondary">{formatDate(t.date)}</span>
+          {t.competency_month && (
+            <span
+              className="mt-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 w-fit"
+              title="Competência diferente da data"
+            >
+              Competência {t.competency_month}
+            </span>
+          )}
+        </div>
       ),
     },
     {

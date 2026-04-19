@@ -17,6 +17,7 @@ import {
 import { getMonthRange, getMonthName, formatDate } from "@/lib/utils";
 import { exportToCsv, type CsvColumn } from "@/lib/csv-export";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
+import { buildCompetencyOrFilter, toCompetencyLabel } from "@/lib/competency";
 import { usePreferences } from "@/contexts/preferences-context";
 import { useToast } from "@/contexts/toast-context";
 import type { Account, Category } from "@/types/database";
@@ -33,6 +34,7 @@ interface TransactionWithRelations {
   amount_cents: number;
   description: string;
   date: string;
+  competency_month: string | null;
   created_at: string;
   accounts: { name: string } | null;
   categories: { name: string } | null;
@@ -133,8 +135,7 @@ function TransacoesContent() {
       let query = supabase
         .from("transactions")
         .select("*, accounts:accounts!account_id(name), categories(name), destination_accounts:accounts!destination_account_id(name)", { count: "exact" })
-        .gte("date", start)
-        .lte("date", end)
+        .or(buildCompetencyOrFilter(toCompetencyLabel(year, month), start, end))
         .order("date", { ascending: false });
 
       if (filters.categoryId) {
@@ -152,7 +153,7 @@ function TransacoesContent() {
 
       return query;
     },
-    [filters]
+    [filters, year, month]
   );
 
   const fetchData = useCallback(async () => {

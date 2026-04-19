@@ -7,6 +7,7 @@ import { calculateForecast, type MonthForecast } from "@/lib/forecast";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
 import { detectRecurrences, type RecurrenceSuggestion } from "@/lib/recurrence-detection";
 import { computeConsolidatedKPIs, type NetRevenueBlockBreakdown } from "@/lib/net-revenue";
+import { buildCompetencyOrFilter, toCompetencyLabel } from "@/lib/competency";
 import { usePreferences } from "@/contexts/preferences-context";
 import { useToast } from "@/contexts/toast-context";
 import type { Account, CategoryGroup, Debt, Goal, Transaction, RecurringTransaction, MonthlyClosingRow } from "@/types/database";
@@ -124,9 +125,8 @@ export function useDashboardData() {
       ] = await Promise.all([
         supabase
           .from("transactions")
-          .select("id, type, amount_cents, description, date, destination_account_id, categories(name, category_group), accounts:accounts!account_id(name), destination_accounts:accounts!destination_account_id(name)")
-          .gte("date", start)
-          .lte("date", end)
+          .select("id, type, amount_cents, description, date, competency_month, destination_account_id, categories(name, category_group), accounts:accounts!account_id(name), destination_accounts:accounts!destination_account_id(name)")
+          .or(buildCompetencyOrFilter(toCompetencyLabel(year, month), start, end))
           .order("date", { ascending: false })
           .limit(2000),
         isCurrentMonthSelected

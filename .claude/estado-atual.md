@@ -83,7 +83,26 @@ Screenshot em `e2e-46-receita-liquida-pj-dashboard.png`.
 - Script `npm run lint` falha no Next 16 (comportamento conhecido; usar
   verificacao no IDE ou rodar eslint direto).
 
+## Adicional — Competencia por transacao (desacoplada da data)
+
+Migration 025 adiciona `transactions.competency_month` (YYYY-MM, nullable).
+Quando preenchido, sobrepoe a competencia derivada de `date` + `closing_day`.
+
+Arquivos entregues:
+- `supabase/migrations/025_competency_override.sql` — coluna + CHECK + indice.
+- `src/lib/competency.ts` — deriveCompetencyMonth, getEffectiveCompetency,
+  toCompetencyLabel, buildCompetencyOrFilter.
+- `src/lib/competency.test.ts` — 10 casos unitarios.
+- Form de transacao ganhou campo "Competencia" (tipo month) com valor default
+  derivado; se o valor bater com a derivacao, salva NULL (evita redundancia).
+- Lista de transacoes mostra badge "Competencia YYYY-MM" quando ha override.
+- Queries de dashboard/forecast/transacoes/group-report passam a respeitar
+  override via `.or()` PostgREST. Reconciliacao e fluxo diario continuam
+  usando `date`.
+
+Pendente: aplicar migration 025 no Supabase antes de testar em producao.
+
 ## Proxima Acao Sugerida
-Deploy para producao (Vercel/GitHub) via commit e push. Opcionalmente,
-estender a logica de bloco net_revenue para o Relatorio PDF mensal e para
-`daily-flow.ts` (hoje ambos ainda nao aplicam a consolidacao).
+Deploy para producao (Vercel/GitHub) via commit e push. Aplicar migration 025
+no Supabase. Opcionalmente, estender a logica de bloco net_revenue para o
+Relatorio PDF mensal e para `daily-flow.ts`.

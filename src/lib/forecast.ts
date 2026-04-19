@@ -8,6 +8,7 @@ import {
   getRecurringDateInCompetency,
   getCompetencyLabel,
 } from "@/lib/closing-day";
+import { buildCompetencyOrFilter } from "@/lib/competency";
 import { isRecurringActiveInMonth } from "@/lib/utils";
 
 export interface CategoryForecast {
@@ -51,6 +52,7 @@ interface TransactionRow {
   type: "receita" | "despesa";
   amount_cents: number;
   date: string;
+  competency_month: string | null;
 }
 
 interface RecurringRow extends RecurringTransaction {
@@ -96,10 +98,9 @@ export async function calculateForecast(
         includeCurrentMonth
           ? supabase
               .from("transactions")
-              .select("category_id, type, amount_cents, date")
+              .select("category_id, type, amount_cents, date, competency_month")
               .neq("type", "transferencia")
-              .gte("date", currentRange.start)
-              .lte("date", todayStr)
+              .or(buildCompetencyOrFilter(currentCompetencyLabel, currentRange.start, todayStr))
               .limit(5000)
           : Promise.resolve({ data: null }),
       ]);
@@ -357,20 +358,24 @@ async function getHistoricalTransactions(
 
   const { data } = await supabase
     .from("transactions")
-    .select("category_id, type, amount_cents, date")
+    .select("category_id, type, amount_cents, date, competency_month")
     .neq("type", "transferencia")
     .gte("date", startRange.start)
     .lte("date", endRange.end);
 
   const transactions = (data as TransactionRow[]) ?? [];
 
-  // Count distinct competency months per category
+  // Count distinct competency months per category (respeitando override)
   const categoryMonthSets = new Map<string, Set<string>>();
   for (const t of transactions) {
-    // Determine which competency month this transaction belongs to
-    const tDate = new Date(t.date + "T00:00:00");
-    const { year: tYear, month: tMonth } = getCurrentCompetencyMonth(closingDay, tDate);
-    const key = `${tYear}-${tMonth}`;
+    let key: string;
+    if (t.competency_month) {
+      key = t.competency_month;
+    } else {
+      const tDate = new Date(t.date + "T00:00:00");
+      const { year: tYear, month: tMonth } = getCurrentCompetencyMonth(closingDay, tDate);
+      key = `${tYear}-${tMonth}`;
+    }
     let s = categoryMonthSets.get(t.category_id);
     if (!s) {
       s = new Set<string>();

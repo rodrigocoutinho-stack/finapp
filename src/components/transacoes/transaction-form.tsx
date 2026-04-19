@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { toCents, formatCurrency, buildGroupedAccountOptions, buildGroupedCategoryOptions } from "@/lib/utils";
 import { logAudit } from "@/lib/audit-log";
+import { deriveCompetencyMonth } from "@/lib/competency";
+import { usePreferences } from "@/contexts/preferences-context";
 import type { Account, Category, Transaction } from "@/types/database";
 
 const transactionTypeOptions = [
@@ -35,6 +37,7 @@ export function TransactionForm({
   onCancel,
 }: TransactionFormProps) {
   const supabase = createClient();
+  const { closingDay } = usePreferences();
   const [type, setType] = useState<TransactionType>(
     transaction?.type ?? defaultType ?? "despesa"
   );
@@ -49,6 +52,9 @@ export function TransactionForm({
   const [description, setDescription] = useState(transaction?.description ?? "");
   const [date, setDate] = useState(
     transaction?.date ?? new Date().toISOString().split("T")[0]
+  );
+  const [competencyOverride, setCompetencyOverride] = useState<string>(
+    transaction?.competency_month ?? ""
   );
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -111,10 +117,21 @@ export function TransactionForm({
       }
     }
 
+    if (competencyOverride && !/^\d{4}-(0[1-9]|1[0-2])$/.test(competencyOverride)) {
+      newErrors.competency = "Competência inválida. Use o formato AAAA-MM.";
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
+
+    // Se o override bate com a derivação padrão, grava null (evita dados redundantes)
+    const derivedCompetency = deriveCompetencyMonth(date, closingDay);
+    const competencyMonthToSave =
+      competencyOverride && competencyOverride !== derivedCompetency
+        ? competencyOverride
+        : null;
 
     setLoading(true);
 
@@ -175,6 +192,7 @@ export function TransactionForm({
           destination_account_id: isTransfer ? destinationAccountId : null,
           description,
           date,
+          competency_month: competencyMonthToSave,
         })
         .eq("id", transaction.id);
 
@@ -225,6 +243,7 @@ export function TransactionForm({
         destination_account_id: isTransfer ? destinationAccountId : null,
         description,
         date,
+        competency_month: competencyMonthToSave,
       });
 
       if (error) {
@@ -367,6 +386,17 @@ export function TransactionForm({
         onChange={(e) => { setDate(e.target.value); clearFieldError("date"); }}
         error={errors.date}
         required
+      />
+
+      <Input
+        id="competency"
+        label="Competência"
+        type="month"
+        value={competencyOverride || deriveCompetencyMonth(date, closingDay)}
+        onChange={(e) => { setCompetencyOverride(e.target.value); clearFieldError("competency"); }}
+        helpText={`Por padrão, ${deriveCompetencyMonth(date, closingDay)} (baseado na data e no dia de fechamento). Edite se a transação pertence a outro mês contábil — ex.: conta de abril paga em maio.`}
+        error={errors.competency}
+        optional
       />
 
       <div className="flex gap-3 justify-end pt-2">
