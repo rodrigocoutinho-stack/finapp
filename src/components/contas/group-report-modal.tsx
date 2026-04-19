@@ -102,10 +102,17 @@ export function GroupReportModal({ open, onClose, groupName, accountIds }: Group
     // Busca amplo (por date) + também as que têm override apontando para
     // alguma competência do período, mesmo com date fora do range.
     const rangeLabels = new Set(ranges.map((r) => r.yearMonth));
+    type ReportTxn = {
+      id: string;
+      type: string;
+      amount_cents: number;
+      date: string;
+      competency_month: string | null;
+    };
     const [byDateRes, byCompetencyRes] = await Promise.all([
       supabase
         .from("transactions")
-        .select("type, amount_cents, date, competency_month")
+        .select("id, type, amount_cents, date, competency_month")
         .in("account_id", accountIds)
         .neq("type", "transferencia")
         .gte("date", earliest)
@@ -113,7 +120,7 @@ export function GroupReportModal({ open, onClose, groupName, accountIds }: Group
         .limit(10000),
       supabase
         .from("transactions")
-        .select("type, amount_cents, date, competency_month")
+        .select("id, type, amount_cents, date, competency_month")
         .in("account_id", accountIds)
         .neq("type", "transferencia")
         .in("competency_month", Array.from(rangeLabels))
@@ -121,15 +128,14 @@ export function GroupReportModal({ open, onClose, groupName, accountIds }: Group
     ]);
 
     const txns = [
-      ...((byDateRes.data as Array<{ type: string; amount_cents: number; date: string; competency_month: string | null }>) ?? []),
-      ...((byCompetencyRes.data as Array<{ type: string; amount_cents: number; date: string; competency_month: string | null }>) ?? []),
+      ...((byDateRes.data as ReportTxn[]) ?? []),
+      ...((byCompetencyRes.data as ReportTxn[]) ?? []),
     ];
-    // Dedupe pela tupla (date + amount_cents + competency_month) — ids não estão no select
+    // Dedupe por id — preserva transações reais com mesmo valor/data/tipo
     const seen = new Set<string>();
     const uniqueTxns = txns.filter((t) => {
-      const k = `${t.date}|${t.amount_cents}|${t.type}|${t.competency_month ?? ""}`;
-      if (seen.has(k)) return false;
-      seen.add(k);
+      if (seen.has(t.id)) return false;
+      seen.add(t.id);
       return true;
     });
 

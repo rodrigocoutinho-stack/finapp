@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/ui/page-header";
@@ -39,7 +39,10 @@ export default function ConfiguracoesPage() {
 
   const currentDay = selectedDay ?? closingDay;
 
-  const existingCategoryGroups = [...new Set(categories.map((c) => c.category_group).filter(Boolean))] as string[];
+  const existingCategoryGroups = useMemo(
+    () => [...new Set(categories.map((c) => c.category_group).filter(Boolean))] as string[],
+    [categories]
+  );
 
   const fetchCategories = useCallback(async () => {
     setCatLoading(true);

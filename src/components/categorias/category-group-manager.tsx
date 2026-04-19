@@ -43,17 +43,19 @@ export function CategoryGroupManager({ existingGroupNames }: CategoryGroupManage
         name,
         is_net_revenue_block: false,
       }));
-      const { data: inserted } = await supabase
+      const { data: inserted, error } = await supabase
         .from("category_groups")
-        .insert(rows)
+        .upsert(rows, { onConflict: "user_id,name", ignoreDuplicates: true })
         .select();
-      if (inserted && inserted.length > 0) {
+      if (error) {
+        addToast("Erro ao sincronizar grupos de categoria.", "error");
+      } else if (inserted && inserted.length > 0) {
         setGroups((prev) => [...prev, ...(inserted as CategoryGroup[])].sort((a, b) => a.name.localeCompare(b.name)));
       }
     }
 
     setLoading(false);
-  }, [existingGroupNames]);
+  }, [existingGroupNames, addToast]);
 
   useEffect(() => {
     fetchGroups();
