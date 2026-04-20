@@ -8,13 +8,16 @@ import { TableSkeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate, groupCategoriesByGroup } from "@/lib/utils";
 import type { ParsedTransaction } from "@/lib/ofx-parser";
 import { logAudit } from "@/lib/audit-log";
+import { buildSuggestionIndex, type HistoricalTxn } from "@/lib/category-suggestion";
 import type { Category } from "@/types/database";
+
+type SuggestionSource = "rule" | "history" | "ai" | null;
 
 interface ReviewRow extends ParsedTransaction {
   selected: boolean;
   categoryId: string;
   isDuplicate: boolean;
-  autoCategorized: boolean;
+  suggestionSource: SuggestionSource;
 }
 
 interface ImportResult {
@@ -54,7 +57,7 @@ export function ImportReviewTable({
     [categories]
   );
 
-  // Detect duplicates and apply auto-categorization rules on mount
+  // Detect duplicates and apply auto-categorization (rule > history > AI) on mount
   useEffect(() => {
     async function checkDuplicatesAndRules() {
       setLoading(true);
@@ -64,7 +67,14 @@ export function ImportReviewTable({
       const minDate = dates.reduce((a, b) => (a < b ? a : b));
       const maxDate = dates.reduce((a, b) => (a > b ? a : b));
 
-      const [existingRes, rulesRes] = await Promise.all([
+      // Janela de 12 meses para histórico de categorização
+      const historyCutoff = new Date();
+      historyCutoff.setFullYear(historyCutoff.getFullYear() - 1);
+      const historyCutoffStr = historyCutoff.toISOString().split("T")[0];
+
+      const validCategoryIds = new Set(categories.map((c) => c.id));
+
+      const [existingRes, rulesRes, historyRes] = await Promise.all([
         supabase
           .from("transactions")
           .select("date, amount_cents, description")
@@ -74,6 +84,13 @@ export function ImportReviewTable({
         supabase
           .from("category_rules")
           .select("pattern, category_id"),
+        supabase
+          .from("transactions")
+          .select("description, category_id, type")
+          .gte("date", historyCutoffStr)
+          .not("category_id", "is", null)
+          .neq("type", "transferencia")
+          .limit(5000),
       ]);
 
       const existingSet = new Set(
@@ -84,21 +101,38 @@ export function ImportReviewTable({
       );
 
       const rules = (rulesRes.data ?? []) as { pattern: string; category_id: string }[];
+      const history = (historyRes.data ?? []) as HistoricalTxn[];
+      const suggestionIndex = buildSuggestionIndex(history);
 
       const reviewRows: ReviewRow[] = transactions.map((t) => {
         const key = `${t.date}|${t.amount_cents}|${t.description.toLowerCase()}`;
         const isDuplicate = existingSet.has(key);
 
-        // Auto-categorize using rules
+        // Fonte 1: Regra explícita
         let matchedCategoryId = "";
-        let autoCategorized = false;
+        let source: SuggestionSource = null;
         const descLower = t.description.toLowerCase();
         for (const rule of rules) {
           if (descLower.includes(rule.pattern.toLowerCase())) {
             matchedCategoryId = rule.category_id;
-            autoCategorized = true;
+            source = "rule";
             break;
           }
+        }
+
+        // Fonte 2: Histórico do usuário (se regra não bateu)
+        if (!matchedCategoryId) {
+          const fromHistory = suggestionIndex.lookup(t.description, t.type);
+          if (fromHistory && validCategoryIds.has(fromHistory)) {
+            matchedCategoryId = fromHistory;
+            source = "history";
+          }
+        }
+
+        // Fonte 3: Sugestão da IA (do próprio ParsedTransaction, só no PDF)
+        if (!matchedCategoryId && t.suggested_category_id && validCategoryIds.has(t.suggested_category_id)) {
+          matchedCategoryId = t.suggested_category_id;
+          source = "ai";
         }
 
         return {
@@ -106,7 +140,7 @@ export function ImportReviewTable({
           selected: !isDuplicate,
           categoryId: matchedCategoryId,
           isDuplicate,
-          autoCategorized,
+          suggestionSource: source,
         };
       });
 
@@ -115,7 +149,7 @@ export function ImportReviewTable({
     }
 
     checkDuplicatesAndRules();
-  }, [transactions, accountId]);
+  }, [transactions, accountId, categories]);
 
   function toggleRow(index: number) {
     setRows((prev) =>
@@ -139,7 +173,11 @@ export function ImportReviewTable({
 
   function setCategory(index: number, categoryId: string) {
     setRows((prev) =>
-      prev.map((r, i) => (i === index ? { ...r, categoryId } : r))
+      prev.map((r, i) =>
+        i === index
+          ? { ...r, categoryId, suggestionSource: null } // troca manual limpa a flag
+          : r
+      )
     );
   }
 
@@ -335,10 +373,8 @@ export function ImportReviewTable({
                           ));
                         })()}
                       </select>
-                      {row.autoCategorized && row.categoryId && (
-                        <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700">
-                          Auto
-                        </span>
+                      {row.suggestionSource && row.categoryId && (
+                        <SuggestionBadge source={row.suggestionSource} />
                       )}
                     </div>
                   </td>
@@ -385,5 +421,34 @@ export function ImportReviewTable({
         </div>
       </div>
     </div>
+  );
+}
+
+function SuggestionBadge({ source }: { source: "rule" | "history" | "ai" }) {
+  const config = {
+    rule: {
+      label: "Regra",
+      title: "Sugestão por regra de importação cadastrada",
+      classes: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+    },
+    history: {
+      label: "Histórico",
+      title: "Sugestão com base em transações passadas suas",
+      classes: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
+    },
+    ai: {
+      label: "IA",
+      title: "Sugestão da IA ao ler o PDF — revise antes de confirmar",
+      classes: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+    },
+  }[source];
+
+  return (
+    <span
+      className={`shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${config.classes}`}
+      title={config.title}
+    >
+      {config.label}
+    </span>
   );
 }

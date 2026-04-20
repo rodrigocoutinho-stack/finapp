@@ -14,7 +14,8 @@ const EXTRACTION_FORMAT_AND_RULES = `Retorne APENAS um JSON array válido (sem m
     "date": "YYYY-MM-DD",
     "description": "descrição da transação",
     "amount": 123.45,
-    "type": "despesa"
+    "type": "despesa",
+    "suggested_category": "nome exato da categoria da lista, ou null"
   }
 ]
 
@@ -25,28 +26,41 @@ Regras:
 - description: texto da transação como aparece na fatura
 - Se uma transação é parcelada (ex: "PARCELA 3/12"), inclua na descrição
 - Ignore linhas de total, subtotal, saldo anterior, limite disponível
+- suggested_category: escolha UMA categoria da lista fornecida que melhor descreva a transação, copiando o nome EXATAMENTE. Se incerto, use null — não invente nomes.
 - Se não conseguir extrair transações, retorne []`;
 
-const EXTRACTION_PROMPT = `Você é um extrator de dados de faturas e extratos bancários brasileiros.
+function buildCategoriesHint(categories: Array<{ name: string; type: "receita" | "despesa" }>): string {
+  if (categories.length === 0) return "";
+  const receitas = categories.filter((c) => c.type === "receita").map((c) => `- ${c.name}`).join("\n");
+  const despesas = categories.filter((c) => c.type === "despesa").map((c) => `- ${c.name}`).join("\n");
+  return `\n\nCategorias disponíveis do usuário (use estas no campo suggested_category):\n\nReceitas:\n${receitas || "(nenhuma)"}\n\nDespesas:\n${despesas || "(nenhuma)"}\n`;
+}
+
+function buildExtractionPrompt(categoriesHint: string): string {
+  return `Você é um extrator de dados de faturas e extratos bancários brasileiros.
 
 Analise o PDF e extraia TODAS as transações individuais.
 
-${EXTRACTION_FORMAT_AND_RULES}`;
+${EXTRACTION_FORMAT_AND_RULES}${categoriesHint}`;
+}
 
-const TEXT_EXTRACTION_PROMPT = `Você é um extrator de dados de faturas e extratos bancários brasileiros.
+function buildTextExtractionPrompt(categoriesHint: string): string {
+  return `Você é um extrator de dados de faturas e extratos bancários brasileiros.
 
 O texto abaixo foi extraído de um PDF de fatura/extrato bancário. Analise e extraia TODAS as transações individuais.
 
-${EXTRACTION_FORMAT_AND_RULES}
+${EXTRACTION_FORMAT_AND_RULES}${categoriesHint}
 
 Texto extraído do PDF:
 `;
+}
 
 interface GeminiTransaction {
   date: unknown;
   description: unknown;
   amount: unknown;
   type: unknown;
+  suggested_category?: unknown;
 }
 
 function validateDate(value: unknown): string | null {
@@ -58,7 +72,10 @@ function validateDate(value: unknown): string | null {
   return value;
 }
 
-function parseGeminiResponse(raw: string): {
+function parseGeminiResponse(
+  raw: string,
+  categoryNameToId?: Map<string, string>
+): {
   transactions: ParsedTransaction[];
   errors: string[];
 } {
@@ -115,11 +132,22 @@ function parseGeminiResponse(raw: string): {
       continue;
     }
 
+    let suggestedCategoryId: string | null = null;
+    if (
+      categoryNameToId &&
+      typeof item.suggested_category === "string" &&
+      item.suggested_category.trim().length > 0
+    ) {
+      const key = item.suggested_category.trim().toLowerCase();
+      suggestedCategoryId = categoryNameToId.get(key) ?? null;
+    }
+
     transactions.push({
       date,
       amount_cents: Math.round(amount * 100),
       type,
       description,
+      suggested_category_id: suggestedCategoryId,
     });
   }
 
@@ -133,7 +161,8 @@ function parseGeminiResponse(raw: string): {
  */
 async function extractWithRetry(
   model: GenerativeModel,
-  parts: Part[]
+  parts: Part[],
+  categoryNameToId?: Map<string, string>
 ): Promise<{ transactions: ParsedTransaction[]; errors: string[]; usedRetry: boolean }> {
   const attempts: Array<{ temperature?: number }> = [
     {},             // 1ª: configuração padrão
@@ -153,7 +182,7 @@ async function extractWithRetry(
       );
       const responseText = result.response.text();
       if (responseText && responseText.trim().length > 0) {
-        const parsed = parseGeminiResponse(responseText);
+        const parsed = parseGeminiResponse(responseText, categoryNameToId);
         if (parsed.transactions.length > 0) {
           return { ...parsed, usedRetry: i > 0 };
         }
@@ -171,6 +200,28 @@ async function extractWithRetry(
   }
 
   return { transactions: [], errors: lastErrors, usedRetry: true };
+}
+
+/**
+ * Busca categorias do usuário (só receita/despesa) e monta:
+ *   - hint em texto para injetar no prompt
+ *   - mapa name.toLowerCase() → id para converter a resposta do Gemini
+ */
+async function loadUserCategories(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<{ hint: string; nameToId: Map<string, string> }> {
+  const { data } = await supabase
+    .from("categories")
+    .select("id, name, type")
+    .in("type", ["receita", "despesa"]);
+
+  const categories = (data ?? []) as Array<{ id: string; name: string; type: "receita" | "despesa" }>;
+  const nameToId = new Map<string, string>();
+  for (const c of categories) {
+    nameToId.set(c.name.trim().toLowerCase(), c.id);
+  }
+
+  return { hint: buildCategoriesHint(categories), nameToId };
 }
 
 function isOriginAllowed(request: NextRequest): boolean {
@@ -344,12 +395,15 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      const { hint, nameToId } = await loadUserCategories(supabase);
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-      const { transactions, errors } = await extractWithRetry(model, [
-        { text: TEXT_EXTRACTION_PROMPT + extractedText },
-      ]);
+      const { transactions, errors } = await extractWithRetry(
+        model,
+        [{ text: buildTextExtractionPrompt(hint) + extractedText }],
+        nameToId
+      );
 
       return NextResponse.json({
         success: transactions.length > 0,
@@ -385,18 +439,23 @@ export async function POST(request: NextRequest) {
   ).toString("base64");
 
   try {
+    const { hint, nameToId } = await loadUserCategories(supabase);
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const { transactions, errors } = await extractWithRetry(model, [
-      {
-        inlineData: {
-          mimeType: "application/pdf",
-          data: pdfBase64,
+    const { transactions, errors } = await extractWithRetry(
+      model,
+      [
+        {
+          inlineData: {
+            mimeType: "application/pdf",
+            data: pdfBase64,
+          },
         },
-      },
-      { text: EXTRACTION_PROMPT },
-    ]);
+        { text: buildExtractionPrompt(hint) },
+      ],
+      nameToId
+    );
 
     return NextResponse.json({
       success: transactions.length > 0,

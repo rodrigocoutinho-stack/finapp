@@ -3,6 +3,11 @@ export interface ParsedTransaction {
   amount_cents: number;
   type: "receita" | "despesa";
   description: string;
+  /**
+   * Categoria sugerida pela origem da importação (ex.: Gemini na fatura PDF).
+   * Null quando a origem não propõe categoria (OFX/CSV).
+   */
+  suggested_category_id?: string | null;
 }
 
 export interface OFXParseResult {
