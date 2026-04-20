@@ -42,7 +42,7 @@ Sufixo obrigatorio: **"Teste E2E"** em todos os nomes/descricoes (facilita clean
 - Snapshot, preencher form:
   - `name` = "Conta Teste E2E"
   - `type` = "banco"
-  - `balance` = "10000" (R$ 10.000,00 — saldo inicial para vincular a metas)
+  - `initialBalance` = "10000" (R$ 10.000,00 — saldo inicial; ID real do campo é `initialBalance`, não `balance`)
 - Clicar "Criar conta"
 - `browser_wait_for` texto "Conta criada com sucesso."
 - Screenshot `e2e-02-conta-criada.png`
