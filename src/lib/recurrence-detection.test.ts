@@ -13,6 +13,7 @@ function makeTxn(overrides: Partial<Transaction> = {}): Transaction {
     amount_cents: 10000,
     description: "Netflix",
     date: "2026-01-15",
+    competency_month: null,
     created_at: "2026-01-15",
     ...overrides,
   };
