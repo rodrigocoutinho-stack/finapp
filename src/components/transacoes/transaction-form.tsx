@@ -14,6 +14,7 @@ import type { Account, Category, Transaction } from "@/types/database";
 const transactionTypeOptions = [
   { value: "despesa", label: "Despesa" },
   { value: "receita", label: "Receita" },
+  { value: "investimento", label: "Investimento" },
   { value: "transferencia", label: "Transferência" },
 ];
 

@@ -26,6 +26,7 @@ export function CategoryList({ categories, existingGroups = [], onRefresh }: Cat
 
   const receitas = categories.filter((c) => c.type === "receita");
   const despesas = categories.filter((c) => c.type === "despesa");
+  const investimentos = categories.filter((c) => c.type === "investimento");
 
   async function handleDelete() {
     if (!deletingCategory) return;
@@ -65,6 +66,7 @@ export function CategoryList({ categories, existingGroups = [], onRefresh }: Cat
 
   const receitaGroups = groupCategoriesByGroup(receitas);
   const despesaGroups = groupCategoriesByGroup(despesas);
+  const investimentoGroups = groupCategoriesByGroup(investimentos);
   const showGroupHeaders = (items: [string, Category[]][]) => items.length > 1;
 
   function renderCategoryCard(cat: Category) {
@@ -134,9 +136,10 @@ export function CategoryList({ categories, existingGroups = [], onRefresh }: Cat
 
   return (
     <>
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-8 md:grid-cols-3">
         {renderTypeSection("Receitas", receitaGroups)}
         {renderTypeSection("Despesas", despesaGroups)}
+        {renderTypeSection("Investimentos", investimentoGroups)}
       </div>
 
       <Modal

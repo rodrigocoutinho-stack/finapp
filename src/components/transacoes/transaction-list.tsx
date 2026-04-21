@@ -186,7 +186,9 @@ export function TransactionList({
               ? "text-emerald-600"
               : t.type === "transferencia"
                 ? "text-blue-600 dark:text-blue-400"
-                : "text-rose-600"
+                : t.type === "investimento"
+                  ? "text-violet-600 dark:text-violet-400"
+                  : "text-rose-600"
           }`}
         >
           {t.type === "receita" ? "+" : t.type === "transferencia" ? "" : "-"} {formatCurrency(t.amount_cents)}

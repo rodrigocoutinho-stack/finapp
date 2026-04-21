@@ -12,6 +12,7 @@ import type { Category } from "@/types/database";
 const categoryTypeOptions = [
   { value: "receita", label: "Receita" },
   { value: "despesa", label: "Despesa" },
+  { value: "investimento", label: "Investimento" },
 ];
 
 const projectionTypeOptions = [

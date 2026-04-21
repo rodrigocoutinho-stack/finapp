@@ -31,7 +31,7 @@ interface TransactionWithRelations {
   account_id: string;
   category_id: string | null;
   destination_account_id: string | null;
-  type: "receita" | "despesa" | "transferencia";
+  type: "receita" | "despesa" | "transferencia" | "investimento";
   amount_cents: number;
   description: string;
   date: string;
@@ -65,7 +65,7 @@ function TransacoesContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [formDefaultType, setFormDefaultType] = useState<"receita" | "despesa" | "transferencia" | undefined>();
+  const [formDefaultType, setFormDefaultType] = useState<"receita" | "despesa" | "transferencia" | "investimento" | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -100,11 +100,17 @@ function TransacoesContent() {
     });
   }, []);
 
-  // Auto-open form from query param (?novo=receita|despesa|transferencia)
+  // Auto-open form from query param (?novo=receita|despesa|transferencia|investimento)
   const novoParam = searchParams.get("novo");
 
   useEffect(() => {
-    if ((novoParam === "receita" || novoParam === "despesa" || novoParam === "transferencia") && !loading) {
+    if (
+      (novoParam === "receita" ||
+        novoParam === "despesa" ||
+        novoParam === "transferencia" ||
+        novoParam === "investimento") &&
+      !loading
+    ) {
       setFormDefaultType(novoParam);
       setShowForm(true);
       router.replace("/transacoes", { scroll: false });
@@ -181,7 +187,12 @@ function TransacoesContent() {
       if (filters.accountId) {
         query = query.eq("account_id", filters.accountId);
       }
-      if (filters.type === "receita" || filters.type === "despesa" || filters.type === "transferencia") {
+      if (
+        filters.type === "receita" ||
+        filters.type === "despesa" ||
+        filters.type === "transferencia" ||
+        filters.type === "investimento"
+      ) {
         query = query.eq("type", filters.type);
       }
       if (filters.search) {
@@ -243,7 +254,13 @@ function TransacoesContent() {
         {
           header: "Tipo",
           accessor: (r) =>
-            r.type === "receita" ? "Receita" : r.type === "transferencia" ? "Transferência" : "Despesa",
+            r.type === "receita"
+              ? "Receita"
+              : r.type === "transferencia"
+                ? "Transferência"
+                : r.type === "investimento"
+                  ? "Investimento"
+                  : "Despesa",
         },
         { header: "Valor", accessor: (r) => (r.amount_cents / 100).toFixed(2).replace(".", ",") },
         { header: "Conta", accessor: (r) => r.accounts?.name ?? "" },
