@@ -1,67 +1,112 @@
 # Estado Atual — FinApp
 
-Ultima atualizacao: 2026-04-19
+Ultima atualizacao: 2026-04-21
 
 ## Status
 Build OK. Testes 211/211 verdes. TypeScript strict sem erros. E2E (Playwright)
-APROVADO. Deploy em producao OK (commits 311a5d3 → 29877cd).
+APROVADO. Deploy em producao OK. Base populada com 229 transacoes reais de
+5 contas/cartoes (Inter PJ, Santander, Santander Cartao, C6, C6 Cartao) via
+bulk-import + merge-transfers.
+
+## Ultima entrega (nova sessao 2026-04-21)
+
+### Ordenacao de colunas na aba Transacoes
+- `src/components/ui/data-table.tsx`: extensao opt-in — `Column.sortable`,
+  `Column.sortKey`, props `sortState` / `onSortChange`, icone de seta no
+  header clicavel, `aria-sort` aplicado. Zero impacto em tabelas que nao
+  usarem as novas props.
+- `src/components/transacoes/transaction-list.tsx`: 5 colunas ordenaveis
+  (date, description, category, account, amount), repasse das props.
+- `src/app/(dashboard)/transacoes/page.tsx`: novo state `sortState`,
+  handler com toggle asc -> desc -> null (volta ao default `date desc`),
+  reset de `currentPage` em cada troca, mapa coluna -> `.order()`:
+  - `category` usa `.order("categories(name)", { nullsFirst: false })`.
+  - `account` usa `.order("accounts(name)", { nullsFirst: false })`.
+  - Tie-breaker por `id` para paginacao estavel.
+  - Export CSV herda a ordenacao por usar o mesmo `buildFilteredQuery`.
+- Bug descoberto em teste Playwright e corrigido: a opcao
+  `referencedTable` do Supabase JS gera `<table>.order=<col>` — isso
+  ordena DENTRO do embed, nao o parent. Para ordenar transactions
+  pelo campo do embed, a sintaxe correta e passar
+  `"<table>(<col>)"` como primeiro argumento de `.order()`. PostgREST
+  entao gera `order=accounts(name).asc.nullslast` no order principal.
+- Validado E2E via Playwright + network requests: todas as 5 colunas
+  (date, description, category, account, amount) ordenam server-side
+  com toggle asc/desc/null. `npm run build` OK.
 
 ## Entregas da sessao
 
-### 1. Receita liquida PJ (master-detail)
-Grupo de categoria com flag `is_net_revenue_block` consolida receitas − despesas
-em linha unica de receita PF, com drill-down. Migrations 023/024 + lib
-`src/lib/net-revenue.ts` + bloco expansivel no dashboard + gestor de grupos em
-Configuracoes. Plano completo em `.claude/plans/receita-liquida-pj.md`.
+### 1. Bulk import de extratos/faturas reais
+- `scripts/bulk-import.mjs` + `scripts/parsers/{santander,c6}.mjs` +
+  `scripts/extract-pdf-text.mjs` + `scripts/parse-local.mjs` +
+  `scripts/merge-transfers.mjs`.
+- Pipeline: OFX/CSV direto -> pdfjs-dist (texto local) -> parser regex do
+  banco -> fallback Gemini apenas se local nao reconhece formato.
+- Flags: `--dry-run` (default), `--commit`, `--only=X`, `--skip=Y`.
+- Dedupe por (account, date, amount_cents, description, type). Inclusao de
+  `type` na chave corrigiu colisao de estorno+cobranca do mesmo dia/valor
+  (caso C6: APPLE.COM/BILL 17/01 R$ 139,90 credito vs debito).
+- Service role bypass RLS; UPDATE direto em `accounts.balance_cents`.
 
-### 2. Competencia contabil por transacao
-Campo `transactions.competency_month` (YYYY-MM, nullable) sobrepoe a derivacao
-padrao (`date + closing_day`). Lib `src/lib/competency.ts` com helpers +
-helper para filtro `.or()` do PostgREST. Campo month picker no form + badge na
-lista quando ha override. Migration 025. Reconciliacao e fluxo diario seguem
-usando `date`. Validado em caso: conta de abril paga em maio.
+### 2. Parsers deterministicos
+- **Santander** (3 formatos auto-detectados): `consolidado_mensal` (mensal
+  DD/MM com sinal pos-valor `X,XX-`), `corrente_online` (DD/MM/YYYY
+  explicito), `fatura_cartao` (2 colunas, regex global + dedup).
+- **C6**: parser de CSV de fatura (separador `;`, traz categoria nativa como
+  `suggested_category`).
+- Normalizacao de texto pdfjs: remove `=== PAGE N ===`, colapsa
+  "Ag e ncia" -> "Agencia", remove disclaimers de rodape.
 
-### 3. Importacao — retry + banner OFX
-- `extractWithRetry` em `api/import/pdf/route.ts`: 2 tentativas (padrao + temp 0).
-- Banner verde em `/transacoes/importar` priorizando OFX/QFX sobre PDF.
-- Decidido nao migrar para Claude API: plano Max nao cobre uso em apps de
-  terceiros; custo seria 20-100x maior que Gemini Flash para mesma tarefa.
+### 3. Base populada (2026-04-21)
 
-### 4. Auto-categorizacao na importacao (3 fontes em cascata)
-- Regra explicita (`category_rules`) — padrao hoje.
-- Historico do usuario (`src/lib/category-suggestion.ts`): indexa 12 meses de
-  transacoes categorizadas por tokens da descricao + tipo; score >=2 em 2-token
-  ou >=3 em 1-token. 12 testes unitarios.
-- Sugestao da IA no PDF: prompt do Gemini passa a lista de categorias do
-  usuario; servidor mapeia nome->id com guard anti-invencao.
-- Badges diferenciam fonte (Regra/Historico/IA) em `import-review-table`.
+| Conta | Grupo | Txns | Saldo |
+|---|---|---|---|
+| Inter PJ | PJ | 24 | R$ 0,00 |
+| Santander | PF | 79 | R$ 1.635,61 |
+| Santander Cartao | PF | 77 | R$ 1.926,69 |
+| C6 | PF | 26 | -R$ 1.431,78 |
+| C6 Cartao | PF | 23 | R$ 4.716,06 |
 
-### 5. Revisao de codigo — 3 correcoes aplicadas
-- `existingCategoryGroups` memoizado (evita re-render infinito + INSERTs
-  duplicados).
-- Dedupe em `group-report-modal` por `id` (evita descartar transacoes reais
-  com mesmo valor/data).
-- `upsert(onConflict:ignoreDuplicates)` + toast em erro para sincronizacao
-  de grupos.
+- Contas PF tratadas com `account_group = "PF"` (convencao curta do projeto,
+  ver `src/lib/utils.test.ts:220`).
+- Conta "Conta PJ" de teste (com 3 transacoes) excluida.
+- Saldos batem com extratos quando informado (Santander 17/04 = R$ 1.635,61);
+  demais precisam de reconciliacao via UI (Contas -> Reconciliar).
 
-### 6. Fix pontual
-- Mock de `Transaction` em `recurrence-detection.test.ts` atualizado para
-  incluir `competency_month: null` (nao-opcional depois da migration 025).
-- Skill `/e2e-test` corrigida: ID do campo saldo inicial e `initialBalance`,
-  nao `balance`.
+### 4. Conversao de transferencias (merge-transfers)
+- 22 pares (despesa em A <-> receita de mesmo valor em B em +-1 dia)
+  convertidos em `type=transferencia` com `destination_account_id`.
+- Volume consolidado: R$ 79.997,55 deixou de ser dupla-contado em KPIs.
+- Pares principais: Inter PJ -> Santander (distribuicoes PJ->PF 5 pares,
+  R$ 55k), Santander <-> C6 (PIX proprios, 8 pares), pagamentos de fatura
+  de cartao (C6/Santander Cartao recebendo, 6 pares).
+- Saldos preservados (movimento fisico ja estava em balance_cents).
+- Filtro anti-falso-positivo: SALARIO, DIVIDENDO, RENDIMENTO,
+  JUROS DE APLIC nao viram transferencia.
 
-## Validacao E2E (2026-04-19)
-Teste Playwright completo aprovado: login → criacao de 8 entidades (conta,
-categorias, transacoes, recorrentes, investimento) → validacao de dashboard
-consolidado (Receitas R$18.200 com bloco PJ R$8.200 + 5k salario + 5k teste)
-→ cleanup total sem residuos. Zero erros de console. Screenshots `e2e-00` a
-`e2e-60`.
+### 5. Documentacao de uso
+- `scripts/README.md` — guia completo: convencao de pastas, FOLDER_MAP,
+  flags, parsers, como adicionar banco novo, limitacoes, output files.
 
 ## Hipoteses Abertas
-- Dropdowns de categoria (transaction-form/recurring-form) mostram opcoes flat
-  em vez de optgroup quando filtrado por tipo.
+- Dropdowns de categoria (transaction-form/recurring-form) mostram opcoes
+  flat em vez de optgroup quando filtrado por tipo.
+- Seed de ~30 regras de importacao tipicas (UBER, IFOOD, NETFLIX, mercados
+  etc.) resolveria o "sem categoria" inicial em novos usuarios — util
+  tambem para proximas cargas antes que o historico cresca.
+- Portar parsers `scripts/parsers/*.mjs` para `src/lib/import-parsers/` e
+  integrar em `/api/import/pdf` e novo `/api/import/csv`, com testes
+  unitarios (fixtures congeladas em `.claude/pdf-raw/`). Escopo minimo:
+  Santander PF conta, Santander cartao, C6 CSV.
 
 ## Debitos Tecnicos / Riscos Conhecidos
+- 229 transacoes no banco em sua maioria sem categoria: revisao manual ou
+  criar regras. Apos categorizar algumas, o histórico passa a alimentar
+  cascata em futuras importacoes.
+- Parsers regex sao frageis a mudancas de layout do banco. Precisa
+  telemetria/testes com fixtures para detectar regressao.
+- Saldos de contas nao-reconciliadas (Inter PJ R$ 0, C6 -R$ 1.431, cartoes)
+  precisam ajuste via Contas -> Reconciliar.
 - Rate limiting in-memory nao persiste entre cold starts.
 - CSP mantem `unsafe-inline` para scripts e styles.
 - `toCents()` nao trata strings com separador de milhar.
@@ -77,7 +122,7 @@ consolidado (Receitas R$18.200 com bloco PJ R$8.200 + 5k salario + 5k teste)
 - Script `npm run lint` quebrado no Next 16 (bug conhecido do CLI).
 
 ## Proxima Acao Sugerida
-Considerar seed de regras de importacao comuns (~30 patterns tipicos: UBER,
-IFOOD, NETFLIX, SPOTIFY, mercados etc.) para novos usuarios — melhora
-auto-categorizacao do dia 1. Alternativamente, estender logica de bloco
-net_revenue para o Relatorio PDF mensal.
+Commitar a entrega de ordenacao (3 arquivos src + docs). Opcional:
+aplicar melhorias de baixa severidade da revisao — `aria-label`
+descritivo no botao de ordenacao e clarificar a expressao de opacidade
+do `SortIcon` em `data-table.tsx`.

@@ -14,6 +14,7 @@ import {
   EMPTY_FILTERS,
   type TransactionFiltersState,
 } from "@/components/transacoes/transaction-filters";
+import type { SortState } from "@/components/ui/data-table";
 import { getMonthRange, getMonthName, formatDate } from "@/lib/utils";
 import { exportToCsv, type CsvColumn } from "@/lib/csv-export";
 import { getCurrentCompetencyMonth } from "@/lib/closing-day";
@@ -72,7 +73,17 @@ function TransacoesContent() {
   const [filters, setFilters] = useState<TransactionFiltersState>(EMPTY_FILTERS);
   const [searchInput, setSearchInput] = useState("");
   const [exporting, setExporting] = useState(false);
+  const [sortState, setSortState] = useState<SortState | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSortChange = useCallback((key: string) => {
+    setCurrentPage(1);
+    setSortState((prev) => {
+      if (!prev || prev.key !== key) return { key, direction: "asc" };
+      if (prev.direction === "asc") return { key, direction: "desc" };
+      return null;
+    });
+  }, []);
 
   const prevMonth = useCallback(() => {
     setCurrentPage(1);
@@ -135,8 +146,34 @@ function TransacoesContent() {
       let query = supabase
         .from("transactions")
         .select("*, accounts:accounts!account_id(name), categories(name), destination_accounts:accounts!destination_account_id(name)", { count: "exact" })
-        .or(buildCompetencyOrFilter(toCompetencyLabel(year, month), start, end))
-        .order("date", { ascending: false });
+        .or(buildCompetencyOrFilter(toCompetencyLabel(year, month), start, end));
+
+      if (sortState) {
+        const ascending = sortState.direction === "asc";
+        switch (sortState.key) {
+          case "date":
+            query = query.order("date", { ascending });
+            break;
+          case "description":
+            query = query.order("description", { ascending });
+            break;
+          case "amount":
+            query = query.order("amount_cents", { ascending });
+            break;
+          case "category":
+            query = query.order("categories(name)", { ascending, nullsFirst: false });
+            break;
+          case "account":
+            query = query.order("accounts(name)", { ascending, nullsFirst: false });
+            break;
+          default:
+            query = query.order("date", { ascending: false });
+        }
+      } else {
+        query = query.order("date", { ascending: false });
+      }
+      // Tie-breaker for stable pagination
+      query = query.order("id", { ascending: false });
 
       if (filters.categoryId) {
         query = query.eq("category_id", filters.categoryId);
@@ -153,7 +190,7 @@ function TransacoesContent() {
 
       return query;
     },
-    [filters, year, month]
+    [filters, year, month, sortState]
   );
 
   const fetchData = useCallback(async () => {
@@ -299,6 +336,8 @@ function TransacoesContent() {
           accounts={accounts}
           categories={categories}
           onRefresh={handleRefresh}
+          sortState={sortState}
+          onSortChange={handleSortChange}
           pagination={totalPages > 1 ? {
             currentPage,
             totalPages,

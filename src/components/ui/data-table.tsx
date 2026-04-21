@@ -3,6 +3,24 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "./skeleton";
 
+function SortIcon({ direction }: { direction: SortDirection | null }) {
+  return (
+    <svg
+      className="w-3 h-3 shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M7 15l5 5 5-5" opacity={direction === "desc" ? 1 : direction === "asc" ? 0.25 : 0.4} />
+      <path d="M7 9l5-5 5 5" opacity={direction === "asc" ? 1 : direction === "desc" ? 0.25 : 0.4} />
+    </svg>
+  );
+}
+
 export interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -17,6 +35,15 @@ interface Column<T> {
   render: (item: T) => React.ReactNode;
   className?: string;
   headerClassName?: string;
+  sortable?: boolean;
+  sortKey?: string;
+}
+
+export type SortDirection = "asc" | "desc";
+
+export interface SortState {
+  key: string;
+  direction: SortDirection;
 }
 
 interface DataTableProps<T> {
@@ -27,6 +54,8 @@ interface DataTableProps<T> {
   emptyMessage?: string;
   loading?: boolean;
   pagination?: PaginationProps;
+  sortState?: SortState | null;
+  onSortChange?: (key: string) => void;
 }
 
 export function DataTable<T>({
@@ -37,6 +66,8 @@ export function DataTable<T>({
   emptyMessage = "Nenhum registro encontrado.",
   loading = false,
   pagination,
+  sortState,
+  onSortChange,
 }: DataTableProps<T>) {
   if (loading) {
     return (
@@ -77,14 +108,44 @@ export function DataTable<T>({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border-light bg-surface-alt">
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={`text-left px-4 py-3 font-medium text-on-surface-secondary ${col.headerClassName ?? ""}`}
-                >
-                  {col.header}
-                </th>
-              ))}
+              {columns.map((col) => {
+                const sortKey = col.sortKey ?? col.key;
+                const isSortable = !!col.sortable && !!onSortChange;
+                const isActive = isSortable && sortState?.key === sortKey;
+                const direction = isActive ? sortState!.direction : null;
+                const isRightAligned = (col.headerClassName ?? "").includes("text-right");
+
+                return (
+                  <th
+                    key={col.key}
+                    aria-sort={
+                      isActive
+                        ? direction === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : isSortable
+                          ? "none"
+                          : undefined
+                    }
+                    className={`text-left px-4 py-3 font-medium text-on-surface-secondary ${col.headerClassName ?? ""}`}
+                  >
+                    {isSortable ? (
+                      <button
+                        type="button"
+                        onClick={() => onSortChange!(sortKey)}
+                        className={`inline-flex items-center gap-1 select-none hover:text-on-surface transition-colors ${
+                          isRightAligned ? "flex-row-reverse" : ""
+                        } ${isActive ? "text-on-surface" : ""}`}
+                      >
+                        <span>{col.header}</span>
+                        <SortIcon direction={direction} />
+                      </button>
+                    ) : (
+                      col.header
+                    )}
+                  </th>
+                );
+              })}
               {actions && (
                 <th className="text-right px-4 py-3 font-medium text-on-surface-secondary">
                   Ações

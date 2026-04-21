@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/contexts/toast-context";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { DataTable, type PaginationProps } from "@/components/ui/data-table";
+import { DataTable, type PaginationProps, type SortState } from "@/components/ui/data-table";
 import { TransactionForm } from "./transaction-form";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { logAudit } from "@/lib/audit-log";
@@ -23,6 +23,8 @@ interface TransactionListProps {
   categories: Category[];
   onRefresh: () => void;
   pagination?: PaginationProps;
+  sortState?: SortState | null;
+  onSortChange?: (key: string) => void;
 }
 
 export function TransactionList({
@@ -31,6 +33,8 @@ export function TransactionList({
   categories,
   onRefresh,
   pagination,
+  sortState,
+  onSortChange,
 }: TransactionListProps) {
   const supabase = createClient();
   const { addToast } = useToast();
@@ -124,6 +128,7 @@ export function TransactionList({
     {
       key: "date",
       header: "Data",
+      sortable: true,
       render: (t: TransactionWithRelations) => (
         <div className="flex flex-col">
           <span className="text-on-surface-secondary">{formatDate(t.date)}</span>
@@ -141,6 +146,7 @@ export function TransactionList({
     {
       key: "description",
       header: "Descrição",
+      sortable: true,
       render: (t: TransactionWithRelations) => (
         <span className="text-on-surface">{t.description}</span>
       ),
@@ -148,6 +154,7 @@ export function TransactionList({
     {
       key: "category",
       header: "Categoria",
+      sortable: true,
       render: (t: TransactionWithRelations) => (
         <span className="text-on-surface-secondary">
           {t.type === "transferencia" ? "Transferência" : (t.categories?.name ?? "-")}
@@ -157,6 +164,7 @@ export function TransactionList({
     {
       key: "account",
       header: "Conta",
+      sortable: true,
       render: (t: TransactionWithRelations) => (
         <span className="text-on-surface-secondary">
           {t.type === "transferencia"
@@ -168,6 +176,7 @@ export function TransactionList({
     {
       key: "amount",
       header: "Valor",
+      sortable: true,
       headerClassName: "text-right",
       className: "text-right",
       render: (t: TransactionWithRelations) => (
@@ -194,6 +203,8 @@ export function TransactionList({
         keyExtractor={(t) => t.id}
         emptyMessage="Nenhuma transação encontrada neste mês."
         pagination={pagination}
+        sortState={sortState}
+        onSortChange={onSortChange}
         actions={(t) => (
           <div className="flex gap-1 justify-end">
             <Button
