@@ -74,7 +74,7 @@ export type Database = {
           id: string;
           user_id: string;
           name: string;
-          type: "receita" | "despesa";
+          type: "receita" | "despesa" | "investimento";
           projection_type: "recurring" | "historical";
           budget_cents: number | null;
           is_essential: boolean;
@@ -85,7 +85,7 @@ export type Database = {
           id?: string;
           user_id: string;
           name: string;
-          type: "receita" | "despesa";
+          type: "receita" | "despesa" | "investimento";
           projection_type?: "recurring" | "historical";
           budget_cents?: number | null;
           is_essential?: boolean;
@@ -96,7 +96,7 @@ export type Database = {
           id?: string;
           user_id?: string;
           name?: string;
-          type?: "receita" | "despesa";
+          type?: "receita" | "despesa" | "investimento";
           projection_type?: "recurring" | "historical";
           budget_cents?: number | null;
           is_essential?: boolean;
@@ -120,7 +120,7 @@ export type Database = {
           account_id: string;
           category_id: string | null;
           destination_account_id: string | null;
-          type: "receita" | "despesa" | "transferencia";
+          type: "receita" | "despesa" | "transferencia" | "investimento";
           amount_cents: number;
           description: string;
           date: string;
@@ -133,7 +133,7 @@ export type Database = {
           account_id: string;
           category_id?: string | null;
           destination_account_id?: string | null;
-          type: "receita" | "despesa" | "transferencia";
+          type: "receita" | "despesa" | "transferencia" | "investimento";
           amount_cents: number;
           description: string;
           date: string;
@@ -146,7 +146,7 @@ export type Database = {
           account_id?: string;
           category_id?: string | null;
           destination_account_id?: string | null;
-          type?: "receita" | "despesa" | "transferencia";
+          type?: "receita" | "despesa" | "transferencia" | "investimento";
           amount_cents?: number;
           description?: string;
           date?: string;
@@ -191,7 +191,7 @@ export type Database = {
           account_id: string;
           category_id: string | null;
           destination_account_id: string | null;
-          type: "receita" | "despesa" | "transferencia";
+          type: "receita" | "despesa" | "transferencia" | "investimento";
           amount_cents: number;
           description: string;
           day_of_month: number;
@@ -206,7 +206,7 @@ export type Database = {
           account_id: string;
           category_id?: string | null;
           destination_account_id?: string | null;
-          type: "receita" | "despesa" | "transferencia";
+          type: "receita" | "despesa" | "transferencia" | "investimento";
           amount_cents: number;
           description: string;
           day_of_month: number;
@@ -221,7 +221,7 @@ export type Database = {
           account_id?: string;
           category_id?: string | null;
           destination_account_id?: string | null;
-          type?: "receita" | "despesa" | "transferencia";
+          type?: "receita" | "despesa" | "transferencia" | "investimento";
           amount_cents?: number;
           description?: string;
           day_of_month?: number;
@@ -534,6 +534,7 @@ export type Database = {
           month: string;
           total_income_cents: number;
           total_expense_cents: number;
+          total_investment_cents: number;
           savings_rate: number | null;
           runway_months: number | null;
           reserve_months: number | null;
@@ -549,6 +550,7 @@ export type Database = {
           month: string;
           total_income_cents: number;
           total_expense_cents: number;
+          total_investment_cents?: number;
           savings_rate?: number | null;
           runway_months?: number | null;
           reserve_months?: number | null;
@@ -564,6 +566,7 @@ export type Database = {
           month?: string;
           total_income_cents?: number;
           total_expense_cents?: number;
+          total_investment_cents?: number;
           savings_rate?: number | null;
           runway_months?: number | null;
           reserve_months?: number | null;

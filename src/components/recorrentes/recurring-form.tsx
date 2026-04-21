@@ -15,7 +15,7 @@ const transactionTypeOptions = [
   { value: "transferencia", label: "Transferência" },
 ];
 
-type TransactionType = "receita" | "despesa" | "transferencia";
+type TransactionType = "receita" | "despesa" | "transferencia" | "investimento";
 
 const scheduleTypeOptions = [
   { value: "recurring", label: "Recorrente (sem prazo)" },

@@ -17,7 +17,7 @@ const transactionTypeOptions = [
   { value: "transferencia", label: "Transferência" },
 ];
 
-type TransactionType = "receita" | "despesa" | "transferencia";
+type TransactionType = "receita" | "despesa" | "transferencia" | "investimento";
 
 interface TransactionFormProps {
   transaction?: Transaction;

@@ -3,7 +3,7 @@ import type { Transaction, RecurringTransaction } from "@/types/database";
 export interface RecurrenceSuggestion {
   description: string;
   avgAmountCents: number;
-  type: "receita" | "despesa";
+  type: "receita" | "despesa" | "investimento";
   occurrences: number;
   estimatedDay: number;
 }
@@ -28,7 +28,7 @@ export function detectRecurrences(
   // Group transactions by normalized description
   const groups = new Map<
     string,
-    { original: string; type: "receita" | "despesa"; entries: { amount_cents: number; date: string }[] }
+    { original: string; type: "receita" | "despesa" | "investimento"; entries: { amount_cents: number; date: string }[] }
   >();
 
   for (const t of transactions) {

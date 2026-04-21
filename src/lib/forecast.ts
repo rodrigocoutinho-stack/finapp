@@ -15,7 +15,7 @@ export interface CategoryForecast {
   categoryId: string;
   categoryName: string;
   categoryGroup: string | null;
-  type: "receita" | "despesa";
+  type: "receita" | "despesa" | "investimento";
   projectedAmount: number;
   forecastAmount: number;
   forecastToDateAmount: number;
@@ -49,7 +49,7 @@ export interface ForecastResult {
 
 interface TransactionRow {
   category_id: string;
-  type: "receita" | "despesa";
+  type: "receita" | "despesa" | "investimento";
   amount_cents: number;
   date: string;
   competency_month: string | null;

@@ -323,10 +323,10 @@ function DiffBadge({
   type,
 }: {
   diff: number;
-  type: "receita" | "despesa";
+  type: "receita" | "despesa" | "investimento";
 }) {
   // Receitas: positive diff is good (earned more than expected)
-  // Despesas: positive diff is bad (spent more than expected)
+  // Despesas/Investimento: positive diff is bad (spent/allocated more than expected)
   const isGood = type === "receita" ? diff >= 0 : diff <= 0;
   const color = isGood ? "text-emerald-600" : "text-rose-600";
 
