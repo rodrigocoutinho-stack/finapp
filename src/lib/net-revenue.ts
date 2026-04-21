@@ -11,7 +11,7 @@
  */
 
 export interface TransactionLike {
-  type: "receita" | "despesa" | "transferencia";
+  type: "receita" | "despesa" | "transferencia" | "investimento";
   amount_cents: number;
   categories: { name: string; category_group: string | null } | null;
 }
@@ -31,6 +31,7 @@ export interface NetRevenueBlockBreakdown {
 export interface ConsolidatedKPIs {
   totalReceitasCents: number;
   totalDespesasCents: number;
+  totalInvestimentosCents: number;
   netRevenueBlocks: NetRevenueBlockBreakdown[];
   /** Apenas receitas diretas PF (sem somar o líquido dos blocos) */
   directReceitasCents: number;
@@ -49,9 +50,16 @@ export function computeConsolidatedKPIs(
 
   let directReceitasCents = 0;
   let totalDespesasCents = 0;
+  let totalInvestimentosCents = 0;
 
   for (const t of transactions) {
     if (t.type === "transferencia") continue;
+    if (t.type === "investimento") {
+      // Investimento NÃO entra em receita nem despesa nem em blocos de receita líquida —
+      // é alocação de um ganho já computado e tem KPI próprio.
+      totalInvestimentosCents += t.amount_cents;
+      continue;
+    }
 
     const groupName = t.categories?.category_group ?? null;
     const isNetBlock = groupName !== null && netRevenueGroupNames.has(groupName);
@@ -119,6 +127,7 @@ export function computeConsolidatedKPIs(
   return {
     totalReceitasCents: directReceitasCents + blocksLiquidoTotal,
     totalDespesasCents,
+    totalInvestimentosCents,
     netRevenueBlocks,
     directReceitasCents,
   };
@@ -131,13 +140,14 @@ export function computeConsolidatedKPIs(
 export interface ForecastCategoryLike {
   categoryName: string;
   categoryGroup: string | null;
-  type: "receita" | "despesa";
+  type: "receita" | "despesa" | "investimento";
   amount: number;
 }
 
 export interface ConsolidatedForecastKPIs {
   totalReceitasCents: number;
   totalDespesasCents: number;
+  totalInvestimentosCents: number;
   netRevenueBlocks: NetRevenueBlockBreakdown[];
 }
 
@@ -149,8 +159,13 @@ export function computeConsolidatedForecastKPIs(
 
   let directReceitas = 0;
   let totalDespesas = 0;
+  let totalInvestimentos = 0;
 
   for (const c of categories) {
+    if (c.type === "investimento") {
+      totalInvestimentos += c.amount;
+      continue;
+    }
     const isNetBlock = c.categoryGroup !== null && netRevenueGroupNames.has(c.categoryGroup);
 
     if (isNetBlock) {
@@ -202,6 +217,7 @@ export function computeConsolidatedForecastKPIs(
   return {
     totalReceitasCents: directReceitas + blocksLiquidoTotal,
     totalDespesasCents: totalDespesas,
+    totalInvestimentosCents: totalInvestimentos,
     netRevenueBlocks,
   };
 }

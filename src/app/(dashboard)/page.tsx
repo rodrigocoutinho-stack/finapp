@@ -121,7 +121,7 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          <SummaryCards totalReceitas={data.totalReceitas} totalDespesas={data.totalDespesas} />
+          <SummaryCards totalReceitas={data.totalReceitas} totalDespesas={data.totalDespesas} totalInvestimentos={data.totalInvestimentos} />
 
           {data.netRevenueBlocks.length > 0 && (
             <SectionErrorBoundary sectionName="Blocos de receita líquida">
@@ -248,6 +248,7 @@ export default function DashboardPage() {
             forecast={data.currentMonthForecast}
             totalReceitas={data.totalReceitas}
             totalDespesas={data.totalDespesas}
+            totalInvestimentos={data.totalInvestimentos}
             savingsRate={data.savingsRate}
             month={data.closingMonthStr}
             runwayMonths={data.runway}

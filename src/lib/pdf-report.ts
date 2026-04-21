@@ -9,7 +9,7 @@ export interface ReportTransaction {
   description: string;
   category: string;
   account: string;
-  type: "receita" | "despesa" | "transferencia";
+  type: "receita" | "despesa" | "transferencia" | "investimento";
   amount_cents: number;
 }
 

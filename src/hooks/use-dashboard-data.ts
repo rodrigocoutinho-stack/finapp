@@ -14,7 +14,7 @@ import type { Account, CategoryGroup, Debt, Goal, Transaction, RecurringTransact
 
 export interface TransactionRow {
   id: string;
-  type: "receita" | "despesa" | "transferencia";
+  type: "receita" | "despesa" | "transferencia" | "investimento";
   amount_cents: number;
   description: string;
   date: string;
@@ -316,6 +316,7 @@ export function useDashboardData() {
           let directDesp = 0;
           for (const t of monthTxns) {
             if (t.type === "transferencia") continue;
+            if (t.type === "investimento") continue; // investimento não entra no savings rate
             const g = t.categories?.category_group ?? null;
             const isNet = g !== null && netRevenueSet.has(g);
             if (isNet) {
@@ -391,6 +392,7 @@ export function useDashboardData() {
 
   const totalReceitas = consolidatedKPIs.totalReceitasCents;
   const totalDespesas = consolidatedKPIs.totalDespesasCents;
+  const totalInvestimentos = consolidatedKPIs.totalInvestimentosCents;
   const netRevenueBlocks: NetRevenueBlockBreakdown[] = consolidatedKPIs.netRevenueBlocks;
 
   const chartData = useMemo(() => {
@@ -471,7 +473,7 @@ export function useDashboardData() {
     dashAccounts, dashGoals, dashDebts,
     recurrenceSuggestions, existingClosing, previousClosing,
     // KPI inputs
-    totalReceitas, totalDespesas, totalAccountBalance,
+    totalReceitas, totalDespesas, totalInvestimentos, totalAccountBalance,
     avgMonthlyExpense, avgEssentialExpense, hasEssentialCategories,
     reserveBalance, hasReserveAccount, reserveTargetMonths,
     totalRecurringDespesas, forecastDespesas,

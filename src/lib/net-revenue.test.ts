@@ -7,7 +7,7 @@ import {
 } from "./net-revenue";
 
 function tx(
-  type: "receita" | "despesa" | "transferencia",
+  type: "receita" | "despesa" | "transferencia" | "investimento",
   amount_cents: number,
   categoryName: string,
   categoryGroup: string | null
@@ -95,6 +95,39 @@ describe("computeConsolidatedKPIs", () => {
     expect(result.netRevenueBlocks[0].netCents).toBe(450000);
     expect(result.netRevenueBlocks[1].groupName).toBe("PJ B");
     expect(result.netRevenueBlocks[1].netCents).toBe(260000);
+  });
+
+  it("caso 4.5: investimento NÃO entra em receitas/despesas, é exposto em totalInvestimentosCents", () => {
+    const transactions: TransactionLike[] = [
+      tx("receita", 500000, "Salário", "Receitas PF"),
+      tx("despesa", 100000, "Aluguel", "Despesas Essenciais Fixas"),
+      tx("investimento", 200000, "Aporte Tesouro", "Investimentos e Reserva"),
+      tx("investimento", 50000, "Reserva", "Investimentos e Reserva"),
+    ];
+    const result = computeConsolidatedKPIs(transactions, new Set());
+
+    expect(result.totalReceitasCents).toBe(500000);
+    expect(result.totalDespesasCents).toBe(100000);
+    expect(result.totalInvestimentosCents).toBe(250000);
+    // Savings rate manual: (500000 - 100000) / 500000 = 80%  (antes: 150k de despesa → (500-350)/500 = 30%)
+    // — é exatamente a correção que motiva esta mudança.
+  });
+
+  it("caso 4.6: investimento não entra em bloco de receita líquida mesmo com grupo PJ", () => {
+    const transactions: TransactionLike[] = [
+      tx("receita", 500000, "PJ Serviços", "Pessoa Jurídica"),
+      tx("despesa", 50000, "PJ Impostos", "Pessoa Jurídica"),
+      // Hipótese extrema: categoria de investimento com grupo PJ — não deveria entrar no bloco
+      tx("investimento", 100000, "Aporte via PJ", "Pessoa Jurídica"),
+    ];
+    const result = computeConsolidatedKPIs(transactions, new Set(["Pessoa Jurídica"]));
+
+    // Bloco PJ líquido = 500k - 50k = 450k (aporte NÃO entra como despesa)
+    expect(result.totalReceitasCents).toBe(450000);
+    expect(result.totalDespesasCents).toBe(0);
+    expect(result.totalInvestimentosCents).toBe(100000);
+    expect(result.netRevenueBlocks[0].grossDespesasCents).toBe(50000);
+    expect(result.netRevenueBlocks[0].netCents).toBe(450000);
   });
 
   it("caso 5: transferências são ignoradas", () => {

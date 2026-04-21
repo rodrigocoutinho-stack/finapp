@@ -5,13 +5,14 @@ import { formatCurrency } from "@/lib/utils";
 interface SummaryCardsProps {
   totalReceitas: number;
   totalDespesas: number;
+  totalInvestimentos: number;
 }
 
-export function SummaryCards({ totalReceitas, totalDespesas }: SummaryCardsProps) {
+export function SummaryCards({ totalReceitas, totalDespesas, totalInvestimentos }: SummaryCardsProps) {
   const saldo = totalReceitas - totalDespesas;
 
   return (
-    <div className="grid gap-3 sm:gap-5 sm:grid-cols-3">
+    <div className="grid gap-3 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4">
       {/* Receitas */}
       <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
         <div className="flex items-center gap-4">
@@ -46,6 +47,23 @@ export function SummaryCards({ totalReceitas, totalDespesas }: SummaryCardsProps
         </div>
       </div>
 
+      {/* Investido */}
+      <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center justify-center w-11 h-11 rounded-full bg-violet-50 dark:bg-violet-950">
+            <svg className="w-5 h-5 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125C16.5 3.504 17.004 3 17.625 3h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-xs font-medium text-on-surface-muted uppercase tracking-wide">Investido</p>
+            <p className="text-xl font-bold text-violet-600 dark:text-violet-400 tabular-nums">
+              {formatCurrency(totalInvestimentos)}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Saldo */}
       <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
         <div className="flex items-center gap-4">
@@ -55,7 +73,9 @@ export function SummaryCards({ totalReceitas, totalDespesas }: SummaryCardsProps
             </svg>
           </div>
           <div>
-            <p className="text-xs font-medium text-on-surface-muted uppercase tracking-wide">Saldo</p>
+            <p className="text-xs font-medium text-on-surface-muted uppercase tracking-wide" title="Receitas − Despesas (Investimento é destino da geração, não subtrator)">
+              Geração do mês
+            </p>
             <p
               className={`text-xl font-bold tabular-nums ${
                 saldo >= 0 ? "text-blue-600" : "text-rose-600"

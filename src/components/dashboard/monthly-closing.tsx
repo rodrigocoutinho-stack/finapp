@@ -13,6 +13,7 @@ interface MonthlyClosingProps {
   forecast: MonthForecast;
   totalReceitas: number;
   totalDespesas: number;
+  totalInvestimentos: number;
   savingsRate: number | null;
   month: string; // YYYY-MM
   runwayMonths: number | null;
@@ -29,6 +30,7 @@ export function MonthlyClosing({
   forecast,
   totalReceitas,
   totalDespesas,
+  totalInvestimentos,
   savingsRate,
   month,
   runwayMonths,
@@ -99,6 +101,7 @@ export function MonthlyClosing({
       month,
       total_income_cents: totalReceitas,
       total_expense_cents: totalDespesas,
+      total_investment_cents: totalInvestimentos,
       savings_rate: savingsRate !== null ? Math.round(savingsRate * 100) / 100 : null,
       runway_months: runwayMonths !== null ? Math.round(runwayMonths * 10) / 10 : null,
       reserve_months: reserveMonths !== null ? Math.round(reserveMonths * 10) / 10 : null,
@@ -159,6 +162,7 @@ export function MonthlyClosing({
 
   const prevIncome = previousClosing?.total_income_cents ?? null;
   const prevExpense = previousClosing?.total_expense_cents ?? null;
+  const prevInvestment = previousClosing?.total_investment_cents ?? null;
 
   return (
     <div className="space-y-6">
@@ -191,7 +195,13 @@ export function MonthlyClosing({
             delta={prevExpense !== null ? formatDelta(totalDespesas, prevExpense) : undefined}
           />
           <SummaryItem
-            label="Saldo"
+            label="Investido"
+            value={formatCurrency(totalInvestimentos)}
+            color="text-violet-600 dark:text-violet-400"
+            delta={prevInvestment !== null ? formatDelta(totalInvestimentos, prevInvestment) : undefined}
+          />
+          <SummaryItem
+            label="Geração do mês"
             value={`${saldo >= 0 ? "+" : ""}${formatCurrency(saldo)}`}
             color={saldo >= 0 ? "text-emerald-600" : "text-rose-600"}
           />
