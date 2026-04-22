@@ -127,7 +127,7 @@ export function DataTable<T>({
                           ? "none"
                           : undefined
                     }
-                    className={`text-left px-4 py-3 font-medium text-on-surface-secondary ${col.headerClassName ?? ""}`}
+                    className={`text-left px-3 py-3 font-medium text-on-surface-secondary ${col.headerClassName ?? ""}`}
                   >
                     {isSortable ? (
                       <button
@@ -147,7 +147,7 @@ export function DataTable<T>({
                 );
               })}
               {actions && (
-                <th className="text-right px-4 py-3 font-medium text-on-surface-secondary">
+                <th className="text-right px-3 py-3 font-medium text-on-surface-secondary">
                   Ações
                 </th>
               )}
@@ -160,12 +160,12 @@ export function DataTable<T>({
                 className="border-b border-border-light hover:bg-hover"
               >
                 {columns.map((col) => (
-                  <td key={col.key} className={`px-4 py-3 ${col.className ?? ""}`}>
+                  <td key={col.key} className={`px-3 py-3 ${col.className ?? ""}`}>
                     {col.render(item)}
                   </td>
                 ))}
                 {actions && (
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-3 py-3 text-right">
                     {actions(item)}
                   </td>
                 )}

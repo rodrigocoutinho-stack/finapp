@@ -1,6 +1,6 @@
 # Estado Atual — FinApp
 
-Ultima atualizacao: 2026-04-21
+Ultima atualizacao: 2026-04-22
 
 ## Status
 Build OK. Testes 213/213 verdes. TypeScript strict sem erros. 4o tipo de
@@ -8,6 +8,15 @@ transacao `investimento` em producao (merge em main + migrations 026/027
 aplicadas no Supabase remoto). Base populada com 229 transacoes reais de
 5 contas/cartoes; 1 transacao reclassificada de despesa para investimento
 (R$ 24.000 via script `reclassify-investments.mjs`).
+
+Ajuste de layout 2026-04-22: redistribuicao interna da tabela de
+Transacoes SEM aumentar largura do container (mantido `max-w-6xl` para
+caber a 100% de zoom). Mudancas: (1) DataTable padding de celula `px-4`
+-> `px-3` (ganha ~24px horizontais internos por linha), (2) colunas
+Data (110px) e Valor (140px) com largura fixa + `whitespace-nowrap`,
+(3) coluna Valor com `tabular-nums` e NBSP entre sinal e numero.
+Resolve quebra do "+" em valores de 5 digitos (R$ 30.630,00) sem
+estourar a viewport.
 
 ## Ultima entrega (sessao 2026-04-21)
 

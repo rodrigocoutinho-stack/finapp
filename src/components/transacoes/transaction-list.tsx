@@ -129,6 +129,8 @@ export function TransactionList({
       key: "date",
       header: "Data",
       sortable: true,
+      headerClassName: "w-[110px] whitespace-nowrap",
+      className: "w-[110px] whitespace-nowrap",
       render: (t: TransactionWithRelations) => (
         <div className="flex flex-col">
           <span className="text-on-surface-secondary">{formatDate(t.date)}</span>
@@ -177,11 +179,11 @@ export function TransactionList({
       key: "amount",
       header: "Valor",
       sortable: true,
-      headerClassName: "text-right",
-      className: "text-right",
+      headerClassName: "text-right w-[140px] whitespace-nowrap",
+      className: "text-right whitespace-nowrap",
       render: (t: TransactionWithRelations) => (
         <span
-          className={`font-medium ${
+          className={`font-medium tabular-nums ${
             t.type === "receita"
               ? "text-emerald-600"
               : t.type === "transferencia"
@@ -191,7 +193,7 @@ export function TransactionList({
                   : "text-rose-600"
           }`}
         >
-          {t.type === "receita" ? "+" : t.type === "transferencia" ? "" : "-"} {formatCurrency(t.amount_cents)}
+          {t.type === "receita" ? "+" : t.type === "transferencia" ? "" : "-"}&nbsp;{formatCurrency(t.amount_cents)}
         </span>
       ),
     },
