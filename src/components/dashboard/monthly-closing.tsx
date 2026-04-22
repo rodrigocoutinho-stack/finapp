@@ -47,8 +47,9 @@ export function MonthlyClosing({
   const [saving, setSaving] = useState(false);
   const [notes, setNotes] = useState(existingClosing?.notes ?? "");
 
-  // Geração do mês = caixa efetivamente livre após despesas E investimentos.
-  const saldo = totalReceitas - totalDespesas - totalInvestimentos;
+  // Geração do mês = Receitas − Despesas. Investimento é classificação do destino,
+  // não subtrator da geração.
+  const saldo = totalReceitas - totalDespesas;
   const isClosed = !!existingClosing;
 
   // Top 3 deviations
@@ -78,8 +79,8 @@ export function MonthlyClosing({
     const names = bustedCategories.slice(0, 2).map((c) => c.categoryName).join(" e ");
     suggestions.push(`As categorias ${names} ultrapassaram o limite. Considere ajustar tetos ou hábitos de consumo.`);
   }
-  if (saldo < 0) {
-    suggestions.push("A geração do mês ficou negativa — receitas não cobriram despesas + investimentos. Priorize reduzir consumo ou ajustar o ritmo de aportes.");
+  if (totalDespesas > totalReceitas) {
+    suggestions.push("Você gastou mais do que ganhou este mês. Priorize reduzir despesas ou buscar renda extra.");
   }
   if (savingsRate !== null && savingsRate >= 20) {
     suggestions.push("Boa disciplina financeira! Considere direcionar parte da poupança para investimentos.");
