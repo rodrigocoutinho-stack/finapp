@@ -37,8 +37,10 @@ function RecorrentesContent() {
   const initialDescription = rawDesc ? rawDesc.slice(0, 200) : undefined;
 
   const rawTipo = searchParams.get("tipo");
-  const initialType: "receita" | "despesa" | "transferencia" | undefined =
-    rawTipo === "receita" || rawTipo === "despesa" || rawTipo === "transferencia" ? rawTipo : undefined;
+  const initialType: "receita" | "despesa" | "transferencia" | "investimento" | undefined =
+    rawTipo === "receita" || rawTipo === "despesa" || rawTipo === "transferencia" || rawTipo === "investimento"
+      ? rawTipo
+      : undefined;
 
   const rawValor = searchParams.get("valor");
   const parsedValor = rawValor ? parseInt(rawValor, 10) : NaN;

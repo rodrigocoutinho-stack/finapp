@@ -153,7 +153,9 @@ export function RecurringList({
             ? "text-emerald-600"
             : r.type === "transferencia"
               ? "text-blue-600 dark:text-blue-400"
-              : "text-rose-600"
+              : r.type === "investimento"
+                ? "text-violet-600 dark:text-violet-400"
+                : "text-rose-600"
         }>
           {r.type === "receita" ? "+" : r.type === "transferencia" ? "" : "-"} {formatCurrency(r.amount_cents)}
         </span>

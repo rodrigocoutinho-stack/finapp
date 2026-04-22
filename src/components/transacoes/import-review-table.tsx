@@ -13,7 +13,8 @@ import type { Category } from "@/types/database";
 
 type SuggestionSource = "rule" | "history" | "ai" | null;
 
-interface ReviewRow extends ParsedTransaction {
+interface ReviewRow extends Omit<ParsedTransaction, "type"> {
+  type: "receita" | "despesa" | "investimento";
   selected: boolean;
   categoryId: string;
   isDuplicate: boolean;
@@ -56,6 +57,13 @@ export function ImportReviewTable({
     () => categories.filter((c) => c.type === "despesa"),
     [categories]
   );
+  const investimentos = useMemo(
+    () => categories.filter((c) => c.type === "investimento"),
+    [categories]
+  );
+
+  const categoriesForType = (t: "receita" | "despesa" | "investimento"): Category[] =>
+    t === "receita" ? receitas : t === "investimento" ? investimentos : despesas;
 
   // Detect duplicates and apply auto-categorization (rule > history > AI) on mount
   useEffect(() => {
@@ -181,6 +189,16 @@ export function ImportReviewTable({
     );
   }
 
+  function setType(index: number, newType: "receita" | "despesa" | "investimento") {
+    setRows((prev) =>
+      prev.map((r, i) =>
+        i === index
+          ? { ...r, type: newType, categoryId: "", suggestionSource: null }
+          : r
+      )
+    );
+  }
+
   const selectedRows = rows.filter((r) => r.selected);
   const selectedCount = selectedRows.length;
   const duplicateCount = rows.filter((r) => r.isDuplicate).length;
@@ -297,7 +315,13 @@ export function ImportReviewTable({
           </thead>
           <tbody className="divide-y divide-slate-200">
             {rows.map((row, i) => {
-              const cats = row.type === "receita" ? receitas : despesas;
+              const cats = categoriesForType(row.type);
+              const amountColor =
+                row.type === "receita"
+                  ? "text-emerald-600"
+                  : row.type === "investimento"
+                    ? "text-violet-600 dark:text-violet-400"
+                    : "text-rose-600";
               return (
                 <tr
                   key={i}
@@ -324,26 +348,21 @@ export function ImportReviewTable({
                   <td className="px-3 py-2 text-sm text-on-surface max-w-[300px] truncate">
                     {row.description}
                   </td>
-                  <td
-                    className={`px-3 py-2 text-sm text-right whitespace-nowrap font-medium ${
-                      row.type === "receita"
-                        ? "text-emerald-600"
-                        : "text-rose-600"
-                    }`}
-                  >
+                  <td className={`px-3 py-2 text-sm text-right whitespace-nowrap font-medium ${amountColor}`}>
                     {row.type === "receita" ? "+" : "-"}
                     {formatCurrency(row.amount_cents)}
                   </td>
                   <td className="px-3 py-2 text-sm text-center">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        row.type === "receita"
-                          ? "bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200"
-                          : "bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200"
-                      }`}
+                    <select
+                      value={row.type}
+                      onChange={(e) => setType(i, e.target.value as "receita" | "despesa" | "investimento")}
+                      className="rounded border border-input-border bg-card px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      title="Reclassificar tipo"
                     >
-                      {row.type === "receita" ? "Receita" : "Despesa"}
-                    </span>
+                      <option value="receita">Receita</option>
+                      <option value="despesa">Despesa</option>
+                      <option value="investimento">Investimento</option>
+                    </select>
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1.5">
