@@ -11,6 +11,7 @@ interface ForecastTableProps {
 export function ForecastTable({ months }: ForecastTableProps) {
   const [showReceitas, setShowReceitas] = useState(false);
   const [showDespesas, setShowDespesas] = useState(false);
+  const [showInvestimentos, setShowInvestimentos] = useState(false);
 
   if (months.length === 0 || months.every((m) => m.byCategory.length === 0)) {
     return (
@@ -23,6 +24,7 @@ export function ForecastTable({ months }: ForecastTableProps) {
   const allCategories = months[0].byCategory;
   const receitas = allCategories.filter((c) => c.type === "receita");
   const despesas = allCategories.filter((c) => c.type === "despesa");
+  const investimentos = allCategories.filter((c) => c.type === "investimento");
 
   return (
     <div className="space-y-3">
@@ -229,6 +231,94 @@ export function ForecastTable({ months }: ForecastTableProps) {
               </>
             )}
 
+            {/* Investimentos header */}
+            {investimentos.length > 0 && (
+              <>
+                <tr
+                  className="cursor-pointer hover:bg-violet-50/50 dark:hover:bg-violet-950/30 transition-colors"
+                  tabIndex={0}
+                  role="button"
+                  aria-expanded={showInvestimentos}
+                  onClick={() => setShowInvestimentos(!showInvestimentos)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setShowInvestimentos(!showInvestimentos);
+                    }
+                  }}
+                >
+                  <td className="py-2.5 pr-4 font-semibold text-violet-700 dark:text-violet-300 border-t border-border-light">
+                    <span className="flex items-center gap-1.5">
+                      <ChevronIcon open={showInvestimentos} />
+                      Investimentos
+                    </span>
+                  </td>
+                  {months.map((m) => (
+                    <td
+                      key={m.label}
+                      className={`text-right py-2.5 px-3 font-semibold text-violet-700 dark:text-violet-300 border-t border-border-light ${
+                        m.isCurrentMonth ? "bg-emerald-50/50" : ""
+                      }`}
+                    >
+                      {formatCurrency(m.totalInvestimentos)}
+                      {m.isCurrentMonth && (
+                        <div className="text-[10px] font-normal text-on-surface-muted mt-0.5">
+                          Real {formatCurrency(m.realInvestimentos)} · Prev{" "}
+                          {formatCurrency(m.forecastInvestimentos)}
+                        </div>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+
+                {showInvestimentos &&
+                  investimentos.map((cat) => (
+                    <tr
+                      key={cat.categoryId}
+                      className="hover:bg-surface-alt transition-colors"
+                    >
+                      <td className="py-1.5 pr-4 pl-6 text-on-surface-secondary">
+                        <span className="flex items-center gap-2">
+                          <ProjectionIcon
+                            projectionType={cat.projectionType}
+                            hasPontual={cat.hasPontual}
+                            color="violet"
+                          />
+                          {cat.categoryName}
+                        </span>
+                      </td>
+                      {months.map((m) => {
+                        const monthCat = m.byCategory.find(
+                          (c) => c.categoryId === cat.categoryId
+                        );
+                        return (
+                          <td
+                            key={m.label}
+                            className={`text-right py-1.5 px-3 text-on-surface-secondary ${
+                              m.isCurrentMonth ? "bg-emerald-50/50" : ""
+                            }`}
+                          >
+                            {monthCat ? (
+                              <div>
+                                {formatCurrency(monthCat.projectedAmount)}
+                                {m.isCurrentMonth && (
+                                  <div className="text-[10px] text-on-surface-muted mt-0.5">
+                                    Real {formatCurrency(monthCat.realAmount)} · Prev{" "}
+                                    {formatCurrency(monthCat.forecastAmount)}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+              </>
+            )}
+
             {/* Saldo */}
             <tr className="border-t-2 border-border">
               <td className="py-3 pr-4 font-semibold text-on-surface-heading">Saldo</td>
@@ -280,10 +370,12 @@ function ProjectionIcon({
 }: {
   projectionType: "recurring" | "historical";
   hasPontual: boolean;
-  color: "emerald" | "rose";
+  color: "emerald" | "rose" | "violet";
 }) {
-  const solid = color === "emerald" ? "bg-emerald-500" : "bg-rose-500";
-  const light = color === "emerald" ? "bg-emerald-300" : "bg-rose-300";
+  const solid =
+    color === "emerald" ? "bg-emerald-500" : color === "violet" ? "bg-violet-500" : "bg-rose-500";
+  const light =
+    color === "emerald" ? "bg-emerald-300" : color === "violet" ? "bg-violet-300" : "bg-rose-300";
 
   if (projectionType === "historical") {
     return (

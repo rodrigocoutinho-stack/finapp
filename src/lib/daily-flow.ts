@@ -24,7 +24,7 @@ export interface DayColumn {
 export interface FlowCategory {
   id: string;
   name: string;
-  type: "receita" | "despesa";
+  type: "receita" | "despesa" | "investimento";
   categoryGroup: string | null;
 }
 
@@ -32,8 +32,11 @@ export interface DailyFlowResult {
   days: DayColumn[];
   receitas: FlowCategory[];
   despesas: FlowCategory[];
+  investimentos: FlowCategory[];
   totalEntradas: number[];
   totalSaidas: number[];
+  /** Total de investimentos por dia. Já contabilizado no saldo como saída (dinheiro saiu da conta), mas exposto à parte para visualização. */
+  totalInvestimentos: number[];
 }
 
 export async function calculateDailyFlow(
@@ -42,7 +45,7 @@ export async function calculateDailyFlow(
   month: number,
   closingDay: number = 1
 ): Promise<DailyFlowResult> {
-  const emptyResult: DailyFlowResult = { days: [], receitas: [], despesas: [], totalEntradas: [], totalSaidas: [] };
+  const emptyResult: DailyFlowResult = { days: [], receitas: [], despesas: [], investimentos: [], totalEntradas: [], totalSaidas: [], totalInvestimentos: [] };
 
   let competencyLabel: string;
   let firstDay: string;
@@ -86,7 +89,7 @@ export async function calculateDailyFlow(
   }
 
   type RecurringRow = Database["public"]["Tables"]["recurring_transactions"]["Row"];
-  type CategoryRow = { id: string; name: string; type: "receita" | "despesa"; category_group: string | null };
+  type CategoryRow = { id: string; name: string; type: "receita" | "despesa" | "investimento"; category_group: string | null };
 
   const accounts = accountsRes.data ?? [];
   const transactions = transactionsRes.data ?? [];
@@ -98,7 +101,7 @@ export async function calculateDailyFlow(
     0
   );
 
-  const categoryMap = new Map<string, { name: string; type: "receita" | "despesa"; categoryGroup: string | null }>();
+  const categoryMap = new Map<string, { name: string; type: "receita" | "despesa" | "investimento"; categoryGroup: string | null }>();
   for (const cat of categories) {
     categoryMap.set(cat.id, { name: cat.name, type: cat.type, categoryGroup: cat.category_group ?? null });
   }
@@ -112,14 +115,15 @@ export async function calculateDailyFlow(
   let openingDay1: number;
 
   if (isCurrentMonth) {
-    // Reverse real transactions of this period from the current balance
+    // Reverse real transactions of this period from the current balance.
+    // Investimento conta como saída física (dinheiro saiu da conta), junto com despesa.
     const realReceitasThisPeriod = transactions
       .filter((t) => t.type === "receita")
       .reduce((sum, t) => sum + t.amount_cents, 0);
-    const realDespesasThisPeriod = transactions
-      .filter((t) => t.type === "despesa")
+    const realSaidasThisPeriod = transactions
+      .filter((t) => t.type === "despesa" || t.type === "investimento")
       .reduce((sum, t) => sum + t.amount_cents, 0);
-    openingDay1 = totalBalance - realReceitasThisPeriod + realDespesasThisPeriod;
+    openingDay1 = totalBalance - realReceitasThisPeriod + realSaidasThisPeriod;
   } else if (isFutureMonth) {
     openingDay1 = totalBalance;
 
@@ -214,6 +218,7 @@ export async function calculateDailyFlow(
   const days: DayColumn[] = [];
   const totalEntradas: number[] = [];
   const totalSaidas: number[] = [];
+  const totalInvestimentos: number[] = [];
   const categoriesWithData = new Set<string>();
 
   let runningBalance = openingDay1;
@@ -222,37 +227,36 @@ export async function calculateDailyFlow(
     const byCategoryId = new Map<string, { total: number; source: "real" | "planned" }>();
     let dayEntradas = 0;
     let daySaidas = 0;
+    let dayInvestimentos = 0;
+
+    const processMap = (catMap: Map<string, number> | undefined, source: "real" | "planned") => {
+      if (!catMap) return;
+      for (const [catId, signedAmount] of catMap) {
+        byCategoryId.set(catId, { total: Math.abs(signedAmount), source });
+        categoriesWithData.add(catId);
+        if (signedAmount > 0) {
+          dayEntradas += signedAmount;
+        } else {
+          const catType = categoryMap.get(catId)?.type;
+          if (catType === "investimento") {
+            dayInvestimentos += Math.abs(signedAmount);
+          } else {
+            daySaidas += Math.abs(signedAmount);
+          }
+        }
+      }
+    };
 
     if (cDay.isPast) {
-      const catMap = realByDateCategory.get(cDay.date);
-      if (catMap) {
-        for (const [catId, signedAmount] of catMap) {
-          byCategoryId.set(catId, {
-            total: Math.abs(signedAmount),
-            source: "real",
-          });
-          categoriesWithData.add(catId);
-          if (signedAmount > 0) dayEntradas += signedAmount;
-          else daySaidas += Math.abs(signedAmount);
-        }
-      }
+      processMap(realByDateCategory.get(cDay.date), "real");
     } else {
-      const catMap = plannedByDateCategory.get(cDay.date);
-      if (catMap) {
-        for (const [catId, signedAmount] of catMap) {
-          byCategoryId.set(catId, {
-            total: Math.abs(signedAmount),
-            source: "planned",
-          });
-          categoriesWithData.add(catId);
-          if (signedAmount > 0) dayEntradas += signedAmount;
-          else daySaidas += Math.abs(signedAmount);
-        }
-      }
+      processMap(plannedByDateCategory.get(cDay.date), "planned");
     }
 
     const openingBalance = runningBalance;
-    runningBalance = runningBalance + dayEntradas - daySaidas;
+    // Investimento reduz o caixa igual a despesa (saída física). Geração = Rec − Desp
+    // fica em outro eixo (KPI do dashboard); aqui é fluxo de caixa efetivo.
+    runningBalance = runningBalance + dayEntradas - daySaidas - dayInvestimentos;
 
     days.push({
       day: cDay.dayLabel,
@@ -268,22 +272,26 @@ export async function calculateDailyFlow(
 
     totalEntradas.push(dayEntradas);
     totalSaidas.push(daySaidas);
+    totalInvestimentos.push(dayInvestimentos);
   }
 
   // Filter categories that have data
   const receitas: FlowCategory[] = [];
   const despesas: FlowCategory[] = [];
+  const investimentos: FlowCategory[] = [];
 
   for (const catId of categoriesWithData) {
     const cat = categoryMap.get(catId);
     if (!cat) continue;
     const fc: FlowCategory = { id: catId, name: cat.name, type: cat.type, categoryGroup: cat.categoryGroup };
     if (cat.type === "receita") receitas.push(fc);
+    else if (cat.type === "investimento") investimentos.push(fc);
     else despesas.push(fc);
   }
 
   receitas.sort((a, b) => a.name.localeCompare(b.name));
   despesas.sort((a, b) => a.name.localeCompare(b.name));
+  investimentos.sort((a, b) => a.name.localeCompare(b.name));
 
-  return { days, receitas, despesas, totalEntradas, totalSaidas };
+  return { days, receitas, despesas, investimentos, totalEntradas, totalSaidas, totalInvestimentos };
 }

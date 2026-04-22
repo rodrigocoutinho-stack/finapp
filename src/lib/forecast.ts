@@ -31,15 +31,20 @@ export interface MonthForecast {
   byCategory: CategoryForecast[];
   totalReceitas: number;
   totalDespesas: number;
+  totalInvestimentos: number;
+  /** Geração do mês = Receitas − Despesas. Investimento NÃO subtrai. */
   saldo: number;
   forecastReceitas: number;
   forecastDespesas: number;
+  forecastInvestimentos: number;
   forecastSaldo: number;
   forecastToDateReceitas: number;
   forecastToDateDespesas: number;
+  forecastToDateInvestimentos: number;
   forecastToDateSaldo: number;
   realReceitas: number;
   realDespesas: number;
+  realInvestimentos: number;
   realSaldo: number;
 }
 
@@ -278,12 +283,20 @@ export async function calculateForecast(
       .filter((c) => c.type === "despesa")
       .reduce((sum, c) => sum + c.projectedAmount, 0);
 
+    const totalInvestimentos = byCategory
+      .filter((c) => c.type === "investimento")
+      .reduce((sum, c) => sum + c.projectedAmount, 0);
+
     const forecastReceitas = byCategory
       .filter((c) => c.type === "receita")
       .reduce((sum, c) => sum + c.forecastAmount, 0);
 
     const forecastDespesas = byCategory
       .filter((c) => c.type === "despesa")
+      .reduce((sum, c) => sum + c.forecastAmount, 0);
+
+    const forecastInvestimentos = byCategory
+      .filter((c) => c.type === "investimento")
       .reduce((sum, c) => sum + c.forecastAmount, 0);
 
     const forecastToDateReceitas = byCategory
@@ -294,6 +307,10 @@ export async function calculateForecast(
       .filter((c) => c.type === "despesa")
       .reduce((sum, c) => sum + c.forecastToDateAmount, 0);
 
+    const forecastToDateInvestimentos = byCategory
+      .filter((c) => c.type === "investimento")
+      .reduce((sum, c) => sum + c.forecastToDateAmount, 0);
+
     const realReceitas = byCategory
       .filter((c) => c.type === "receita")
       .reduce((sum, c) => sum + c.realAmount, 0);
@@ -302,21 +319,30 @@ export async function calculateForecast(
       .filter((c) => c.type === "despesa")
       .reduce((sum, c) => sum + c.realAmount, 0);
 
+    const realInvestimentos = byCategory
+      .filter((c) => c.type === "investimento")
+      .reduce((sum, c) => sum + c.realAmount, 0);
+
     months.push({
       label,
       isCurrentMonth,
       byCategory,
       totalReceitas,
       totalDespesas,
+      totalInvestimentos,
+      // Saldo = Geração do mês. Investimento não subtrai (é destino da geração).
       saldo: totalReceitas - totalDespesas,
       forecastReceitas,
       forecastDespesas,
+      forecastInvestimentos,
       forecastSaldo: forecastReceitas - forecastDespesas,
       forecastToDateReceitas,
       forecastToDateDespesas,
+      forecastToDateInvestimentos,
       forecastToDateSaldo: forecastToDateReceitas - forecastToDateDespesas,
       realReceitas,
       realDespesas,
+      realInvestimentos,
       realSaldo: realReceitas - realDespesas,
     });
   }

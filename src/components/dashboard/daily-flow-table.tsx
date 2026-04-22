@@ -10,9 +10,10 @@ interface DailyFlowTableProps {
 }
 
 export function DailyFlowTable({ data }: DailyFlowTableProps) {
-  const { days, receitas, despesas, totalEntradas, totalSaidas } = data;
+  const { days, receitas, despesas, investimentos, totalEntradas, totalSaidas, totalInvestimentos } = data;
   const [showReceitas, setShowReceitas] = useState(true);
   const [showDespesas, setShowDespesas] = useState(true);
+  const [showInvestimentos, setShowInvestimentos] = useState(true);
   const todayRef = useRef<HTMLTableCellElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +36,7 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
 
   const hasReceitas = receitas.length > 0;
   const hasDespesas = despesas.length > 0;
+  const hasInvestimentos = investimentos.length > 0;
 
   function cellBg(day: typeof days[0], isHeader = false): string {
     if (day.isToday) return isHeader ? "bg-amber-100 dark:bg-amber-900/40" : "bg-amber-50/60 dark:bg-amber-950/40";
@@ -195,6 +197,76 @@ export function DailyFlowTable({ data }: DailyFlowTableProps) {
 
                 {showDespesas &&
                   despesas.map((cat) => (
+                    <tr
+                      key={cat.id}
+                      className="hover:bg-surface-alt transition-colors border-b border-border-light"
+                    >
+                      <td className="sticky left-0 z-10 bg-card py-1 pr-2 pl-5 text-on-surface-secondary max-w-[160px]">
+                        <span className="flex items-center gap-1.5 truncate">
+                          <CategoryIcon name={cat.name} className="w-3.5 h-3.5 text-on-surface-muted shrink-0" />
+                          {cat.name}
+                        </span>
+                      </td>
+                      {days.map((day) => {
+                        const entry = day.byCategoryId.get(cat.id);
+                        if (!entry || entry.total === 0) {
+                          return (
+                            <td key={day.day} className={`text-right py-1 px-1 ${cellBg(day)}`}>
+                              &nbsp;
+                            </td>
+                          );
+                        }
+                        const isPlanned = entry.source === "planned";
+                        return (
+                          <td
+                            key={day.day}
+                            className={`text-right py-1 px-1 ${cellBg(day)} ${
+                              isPlanned ? "text-blue-600 italic" : "text-on-surface-secondary"
+                            }`}
+                          >
+                            {formatCompact(entry.total)}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+              </>
+            )}
+
+            {/* Investimentos */}
+            {hasInvestimentos && (
+              <>
+                <tr
+                  className="cursor-pointer hover:bg-violet-50/50 dark:hover:bg-violet-950/30 transition-colors border-b border-border-light"
+                  tabIndex={0}
+                  role="button"
+                  aria-expanded={showInvestimentos}
+                  onClick={() => setShowInvestimentos(!showInvestimentos)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setShowInvestimentos(!showInvestimentos);
+                    }
+                  }}
+                >
+                  <td className="sticky left-0 z-10 bg-card py-1.5 pr-2 font-semibold text-violet-700 dark:text-violet-300">
+                    <span className="flex items-center gap-1">
+                      <ChevronIcon open={showInvestimentos} />
+                      Investido
+                    </span>
+                  </td>
+                  {days.map((day, i) => (
+                    <td
+                      key={day.day}
+                      className={`text-right py-1.5 px-1 font-semibold text-violet-700 dark:text-violet-300 ${cellBg(day)}`}
+                    >
+                      {totalInvestimentos[i] > 0 ? formatCompact(totalInvestimentos[i]) : ""}
+                    </td>
+                  ))}
+                </tr>
+
+                {showInvestimentos &&
+                  investimentos.map((cat) => (
                     <tr
                       key={cat.id}
                       className="hover:bg-surface-alt transition-colors border-b border-border-light"
