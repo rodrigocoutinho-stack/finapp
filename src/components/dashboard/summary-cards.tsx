@@ -9,7 +9,9 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ totalReceitas, totalDespesas, totalInvestimentos }: SummaryCardsProps) {
-  const saldo = totalReceitas - totalDespesas;
+  // Geração do mês = caixa efetivamente livre após despesas E investimentos.
+  // Investimento, embora seja classificado à parte, é uma saída real de caixa.
+  const saldo = totalReceitas - totalDespesas - totalInvestimentos;
 
   return (
     <div className="grid gap-3 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -73,7 +75,7 @@ export function SummaryCards({ totalReceitas, totalDespesas, totalInvestimentos 
             </svg>
           </div>
           <div>
-            <p className="text-xs font-medium text-on-surface-muted uppercase tracking-wide" title="Receitas − Despesas (Investimento é destino da geração, não subtrator)">
+            <p className="text-xs font-medium text-on-surface-muted uppercase tracking-wide" title="Receitas − Despesas − Investido. Mede o caixa efetivamente livre após todas as saídas.">
               Geração do mês
             </p>
             <p
